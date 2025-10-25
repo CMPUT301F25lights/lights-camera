@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Lotterize</string>
+    <string name="title_home">Home</string>
+    <string name="title_EventsRegistered">Events Registered</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_Profile">Profile</string>
+    <string name="title_addEvents">add events</string>
+    <string name="title_AddEvents">Add Events</string>
+    <string name="logout">Logout</string>
+</resources>
