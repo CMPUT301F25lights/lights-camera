@@ -46,6 +46,7 @@ public class HomeFragment extends Fragment {
             if (value != null && !value.isEmpty()){
                 eventList.clear();
                 for (QueryDocumentSnapshot snapshot: value){
+                    String eventOwner = snapshot.getString("eventOwner");
                     String eventName = snapshot.getString("eventName");
                     String date = snapshot.getString("date");
                     long totalSpots = snapshot.getLong("totalSpots") != null ? snapshot.getLong("totalSpots") : 0L;
@@ -56,7 +57,7 @@ public class HomeFragment extends Fragment {
                     long sampleSize = snapshot.getLong("sampleSize") != null ? snapshot.getLong("sampleSize") : 0L;
                     ArrayList<String> waitList = new ArrayList<>();// Figure out how to do waitlist
 
-                    eventList.add(new Event(eventName,date,location,totalSpots,waitListLength,description,entrantsLimit,sampleSize,waitList));
+                    eventList.add(new Event(eventOwner, eventName,date,location,totalSpots,waitListLength,description,entrantsLimit,sampleSize,waitList));
                 }
             }
         });

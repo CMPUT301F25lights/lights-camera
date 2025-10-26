@@ -20,7 +20,7 @@ public class Event {
 
     // qr code
 
-    public Event(String eventName, String date, String location,
+    public Event(String eventOwner, String eventName, String date, String location,
                  long totalSpots, long waitListLength, String description, long entrantsLimit, long sampleSize,ArrayList<String> waitList){
         this.eventName = eventName;
         this.date = date;
@@ -33,6 +33,9 @@ public class Event {
         this.waitList = waitList;
     }
 
+    public String getEventOwner(){
+        return eventOwner;
+    }
     public ArrayList<String> getWaitList(){
         return waitList;
     }

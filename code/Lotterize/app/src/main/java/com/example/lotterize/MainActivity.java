@@ -25,11 +25,22 @@ import java.util.Arrays;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+
+    private FirebaseFirestore db;
+    private CollectionReference events;
     private Button userButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // uncomment code to custom add event to the data base
+//        db = FirebaseFirestore.getInstance();
+//        events = db.collection("events");
+//        DocumentReference docRef = events.document("eventA");
+//        ArrayList<String> waitList = new ArrayList<>();
+//        String[] arr = {"a","b","c","d"};
+//        waitList.addAll(Arrays.asList(arr));
+//        docRef.set(new Event("a", "a", "a", "a", 2, 2, "a", 2, 2, waitList));
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
