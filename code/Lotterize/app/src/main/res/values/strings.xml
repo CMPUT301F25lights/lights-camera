@@ -7,4 +7,5 @@
     <string name="title_addEvents">add events</string>
     <string name="title_AddEvents">Add Events</string>
     <string name="logout">Logout</string>
+    <string name="search_events">Search Events</string>
 </resources>
