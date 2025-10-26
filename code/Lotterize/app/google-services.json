@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "726342811745",
+    "project_id": "lotterizedb",
+    "storage_bucket": "lotterizedb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:726342811745:android:d0eb59f5d4fc72f3efea20",
+        "android_client_info": {
+          "package_name": "com.example.lotterize"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJH19Z3qOB3o8LuIGB-EA9vul7Thn2TAc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
