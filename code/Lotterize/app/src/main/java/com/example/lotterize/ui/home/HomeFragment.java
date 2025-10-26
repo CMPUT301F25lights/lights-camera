@@ -18,6 +18,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class HomeFragment extends Fragment {
     private FirebaseFirestore db;
@@ -32,8 +34,11 @@ public class HomeFragment extends Fragment {
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
+
+        eventList = new ArrayList<>();
         events.addSnapshotListener((value,error) ->{
             if (error != null){
                 Log.e("Firestore", error.toString());
@@ -43,13 +48,13 @@ public class HomeFragment extends Fragment {
                 for (QueryDocumentSnapshot snapshot: value){
                     String eventName = snapshot.getString("eventName");
                     String date = snapshot.getString("date");
-                    int totalSpots = Integer.parseInt(snapshot.getString("totalSpots"));
+                    long totalSpots = snapshot.getLong("totalSpots") != null ? snapshot.getLong("totalSpots") : 0L;
                     String location = snapshot.getString("location");
-                    int waitListLength = Integer.parseInt(snapshot.getString("waitListLength"));
+                    long waitListLength = snapshot.getLong("waitListLength") != null ? snapshot.getLong("waitListLength") : 0L;
                     String description = snapshot.getString("description");
-                    int entrantsLimit = Integer.parseInt(snapshot.getString("entrantsLimit"));
-                    int sampleSize = Integer.parseInt(snapshot.getString("sampleSize"));
-                    ArrayList<String> waitList = new ArrayList<>(); // Figure out how to do waitlist
+                    long entrantsLimit = snapshot.getLong("entrantsLimit") != null ? snapshot.getLong("entrantsLimit") : 0L;
+                    long sampleSize = snapshot.getLong("sampleSize") != null ? snapshot.getLong("sampleSize") : 0L;
+                    ArrayList<String> waitList = new ArrayList<>();// Figure out how to do waitlist
 
                     eventList.add(new Event(eventName,date,location,totalSpots,waitListLength,description,entrantsLimit,sampleSize,waitList));
                 }

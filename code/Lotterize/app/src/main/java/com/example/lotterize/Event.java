@@ -10,18 +10,18 @@ public class Event {
     private String eventName;
     private String date;
     private String location;
-    private int totalSpots;
-    private int waitListLength;
+    private long totalSpots;
+    private long waitListLength;
     private String description;
-    private int entrantsLimit;
-    private int sampleSize;
+    private long entrantsLimit;
+    private long sampleSize;
 
     // poster image
 
     // qr code
 
     public Event(String eventName, String date, String location,
-                 int totalSpots, int waitListLength, String description, int entrantsLimit, int sampleSize,ArrayList<String> waitList){
+                 long totalSpots, long waitListLength, String description, long entrantsLimit, long sampleSize,ArrayList<String> waitList){
         this.eventName = eventName;
         this.date = date;
         this. totalSpots = totalSpots;
@@ -48,11 +48,11 @@ public class Event {
         return location;
     }
 
-    public int getTotalSpots() {
+    public long getTotalSpots() {
         return totalSpots;
     }
 
-    public int getWaitListLength() {
+    public long getWaitListLength() {
         return waitListLength;
     }
 
@@ -60,11 +60,11 @@ public class Event {
         return description;
     }
 
-    public int getEntrantsLimit() {
+    public long getEntrantsLimit() {
         return entrantsLimit;
     }
 
-    public int getSampleSize() {
+    public long getSampleSize() {
         return sampleSize;
     }
 }
