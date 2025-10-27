@@ -24,4 +24,11 @@ public class Notification {
     public String getMessage() {
         return message;
     }
+
+    public static void notifySelectedEntrants(ArrayList<User> chosen, Event event) {
+        for (User u : chosen) {
+            System.out.println("Notification sent to " + u.getEmail() +
+                    " for event " + event.getEventName());
+        }
+    }
 }

@@ -4,6 +4,10 @@ import com.google.firebase.firestore.auth.User;
 
 import java.util.ArrayList;
 
+/**
+ * I added a lottery method into Event and changed some code in notification as well to
+ * notify people of selection.
+ */
 public class Event {
 
     private User owner;
@@ -40,6 +44,21 @@ public class Event {
         this.description = description;
         this.entrantsLimit = entrantsLimit;
         this.sampleSize = sampleSize;
+    }
+
+    public void runLottery() {
+        if (waitList.size() == 0) return;
+
+        ArrayList<User> pool = new ArrayList<>(waitList);
+
+        while (selectedList.size() < sampleSize && !pool.isEmpty()) {
+            int randomIndex = (int)(Math.random() * pool.size());
+            User chosen = pool.remove(randomIndex);
+            selectedList.add(chosen);
+        }
+
+        // notify selected entrants
+        Notification.notifySelectedEntrants(selectedList, this);
     }
 
     public User getOwner(){
