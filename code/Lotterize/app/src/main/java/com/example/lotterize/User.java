@@ -8,6 +8,7 @@ public class User {
     private String email;
     private String coordinates;
 
+    
     public User(String name, String phoneNumber, String email, String coordinates) {
         this.name = name;
         this.phoneNumber = phoneNumber;
