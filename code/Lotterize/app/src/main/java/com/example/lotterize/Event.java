@@ -1,11 +1,11 @@
 package com.example.lotterize;
 
-import com.google.firebase.firestore.auth.User;
 
 import java.util.ArrayList;
 
 public class Event {
 
+    private long eventId;
     private User owner;
     private ArrayList<User> waitList;
     private ArrayList<User> selectedList;
@@ -24,9 +24,10 @@ public class Event {
 
     // qr code
 
-    public Event(User owner, ArrayList<User> waitList, ArrayList<User> selectedList,ArrayList<User> cancelledList, ArrayList<User> finalList,
+    public Event(long eventId, User owner, ArrayList<User> waitList, ArrayList<User> selectedList,ArrayList<User> cancelledList, ArrayList<User> finalList,
                  long eventName, long date, long registrationDeadline, String location, long totalSpots,
                  String description, long entrantsLimit, long sampleSize){
+        this.eventId = eventId;
         this.owner = owner;
         this.waitList = waitList;
         this.selectedList = selectedList;
@@ -42,6 +43,9 @@ public class Event {
         this.sampleSize = sampleSize;
     }
 
+    public long getEventId(){
+        return eventId;
+    }
     public User getOwner(){
         return owner;
     }
