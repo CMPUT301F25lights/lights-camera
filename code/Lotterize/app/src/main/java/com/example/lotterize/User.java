@@ -3,17 +3,17 @@ package com.example.lotterize;
 public class User {
 
     private String name;
-    private long id;
+    private long userId;
     private String phoneNumber;
     private String email;
     private String coordinates;
 
-    public User(String name, String phoneNumber, String email, String coordinates) {
+    public User(long userId, String name, String phoneNumber, String email, String coordinates) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.email = email;
         this.coordinates = coordinates;
-        this.id = 0; // implement later
+        this.userId = userId;
     }
 
     public String getName() {
@@ -32,7 +32,7 @@ public class User {
         return coordinates;
     }
 
-    public long getId() {
-        return id;
+    public long getUserId() {
+        return userId;
     }
 }
