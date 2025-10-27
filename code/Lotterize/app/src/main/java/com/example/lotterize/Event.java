@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 /**
  * I added a lottery method into Event and changed some code in notification as well to
- * notify people of selection
+ * notify people of their selection.
  */
 public class Event {
 
