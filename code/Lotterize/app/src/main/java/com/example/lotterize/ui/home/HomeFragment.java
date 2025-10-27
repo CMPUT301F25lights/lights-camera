@@ -39,28 +39,28 @@ public class HomeFragment extends Fragment {
         events = db.collection("events");
 
         eventList = new ArrayList<>();
-        events.addSnapshotListener((value,error) ->{
-            if (error != null){
-                Log.e("Firestore", error.toString());
-            }
-            if (value != null && !value.isEmpty()){
-                eventList.clear();
-                for (QueryDocumentSnapshot snapshot: value){
-                    String eventOwner = snapshot.getString("eventOwner");
-                    String eventName = snapshot.getString("eventName");
-                    String date = snapshot.getString("date");
-                    long totalSpots = snapshot.getLong("totalSpots") != null ? snapshot.getLong("totalSpots") : 0L;
-                    String location = snapshot.getString("location");
-                    long waitListLength = snapshot.getLong("waitListLength") != null ? snapshot.getLong("waitListLength") : 0L;
-                    String description = snapshot.getString("description");
-                    long entrantsLimit = snapshot.getLong("entrantsLimit") != null ? snapshot.getLong("entrantsLimit") : 0L;
-                    long sampleSize = snapshot.getLong("sampleSize") != null ? snapshot.getLong("sampleSize") : 0L;
-                    ArrayList<String> waitList = new ArrayList<>();// Figure out how to do waitlist
-
-                    eventList.add(new Event(eventOwner, eventName,date,location,totalSpots,waitListLength,description,entrantsLimit,sampleSize,waitList));
-                }
-            }
-        });
+//        events.addSnapshotListener((value,error) ->{
+//            if (error != null){
+//                Log.e("Firestore", error.toString());
+//            }
+//            if (value != null && !value.isEmpty()){
+//                eventList.clear();
+//                for (QueryDocumentSnapshot snapshot: value){
+//                    User owner = snapshot.getString("eventOwner");
+//                    String eventName = snapshot.getString("eventName");
+//                    String date = snapshot.getString("date");
+//                    long totalSpots = snapshot.getLong("totalSpots") != null ? snapshot.getLong("totalSpots") : 0L;
+//                    String location = snapshot.getString("location");
+//                    long waitListLength = snapshot.getLong("waitListLength") != null ? snapshot.getLong("waitListLength") : 0L;
+//                    String description = snapshot.getString("description");
+//                    long entrantsLimit = snapshot.getLong("entrantsLimit") != null ? snapshot.getLong("entrantsLimit") : 0L;
+//                    long sampleSize = snapshot.getLong("sampleSize") != null ? snapshot.getLong("sampleSize") : 0L;
+//                    ArrayList<String> waitList = new ArrayList<>();// Figure out how to do waitlist
+//
+//                    eventList.add(new Event(eventOwner, eventName,date,location,totalSpots,waitListLength,description,entrantsLimit,sampleSize,waitList));
+//                }
+//            }
+//        });
 
         return root;
     }

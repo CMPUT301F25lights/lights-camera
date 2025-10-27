@@ -1,17 +1,21 @@
 package com.example.lotterize;
 
+import com.google.firebase.firestore.auth.User;
+
 import java.util.ArrayList;
-import java.util.Calendar;
 
 public class Event {
 
-    private String eventOwner;
-    private ArrayList<String> waitList;
-    private String eventName;
-    private String date;
+    private User owner;
+    private ArrayList<User> waitList;
+    private ArrayList<User> selectedList;
+    private ArrayList<User> cancelledList;
+    private ArrayList<User> finalList;
+    private long eventName;
+    private long date;
+    private long registrationDeadline;
     private String location;
     private long totalSpots;
-    private long waitListLength;
     private String description;
     private long entrantsLimit;
     private long sampleSize;
@@ -20,50 +24,68 @@ public class Event {
 
     // qr code
 
-    public Event(String eventOwner, String eventName, String date, String location,
-                 long totalSpots, long waitListLength, String description, long entrantsLimit, long sampleSize,ArrayList<String> waitList){
+    public Event(User owner, ArrayList<User> waitList, ArrayList<User> selectedList,ArrayList<User> cancelledList, ArrayList<User> finalList,
+                 long eventName, long date, long registrationDeadline, String location, long totalSpots,
+                 String description, long entrantsLimit, long sampleSize){
+        this.owner = owner;
+        this.waitList = waitList;
+        this.selectedList = selectedList;
+        this.cancelledList = cancelledList;
+        this.finalList = finalList;
         this.eventName = eventName;
         this.date = date;
-        this. totalSpots = totalSpots;
+        this.registrationDeadline = registrationDeadline;
         this.location = location;
-        this.waitListLength = waitListLength;
+        this.totalSpots = totalSpots;
         this.description = description;
         this.entrantsLimit = entrantsLimit;
         this.sampleSize = sampleSize;
-        this.waitList = waitList;
     }
 
-    public String getEventOwner(){
-        return eventOwner;
+    public User getOwner(){
+        return owner;
     }
-    public ArrayList<String> getWaitList(){
+
+    public ArrayList<User> getWaitList(){
         return waitList;
     }
-    public String getEventName(){
+
+    public ArrayList<User> getSelectedList(){
+        return selectedList;
+    }
+
+    public ArrayList<User> getCancelledList(){
+        return cancelledList;
+    }
+
+    public ArrayList<User> getFinalList(){
+        return finalList;
+    }
+
+    public long getEventName(){
         return eventName;
     }
 
-    public String getDate(){
+    public long getDate(){
         return date;
+    }
+
+    public long getRegistrationDeadline(){
+        return registrationDeadline;
     }
 
     public String getLocation(){
         return location;
     }
 
-    public long getTotalSpots() {
+    public long getTotalSpots(){
         return totalSpots;
     }
-
-    public long getWaitListLength() {
-        return waitListLength;
-    }
-
-    public String getDescription() {
+    public String getDescription(){
         return description;
     }
 
-    public long getEntrantsLimit() {
+    public long getEntrantsLimit(){
         return entrantsLimit;
     }
 
