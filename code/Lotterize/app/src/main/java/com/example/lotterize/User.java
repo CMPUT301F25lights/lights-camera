@@ -1,38 +1,29 @@
 package com.example.lotterize;
 
+import java.util.ArrayList;
+
 public class User {
 
-    private String name;
     private long id;
+    private Boolean receiveNotifications;
+    private String name;
     private String phoneNumber;
+    private String locationCoordinates;
     private String email;
-    private String coordinates;
+    private ArrayList<Long> deviceId;
+    private ArrayList<Long> eventIdRegistered;
+    private ArrayList<Long> eventIdOwned;
 
-    public User(String name, String phoneNumber, String email, String coordinates) {
+    public User(long id, Boolean receiveNotifications, String name, String phoneNumber, String locationCoordinates, String email,
+                ArrayList<Long> deviceId, ArrayList<Long> eventIdRegistered, ArrayList<Long> eventIdOwned) {
+        this.id = id;
+        this.receiveNotifications = receiveNotifications;
         this.name = name;
         this.phoneNumber = phoneNumber;
+        this.locationCoordinates = locationCoordinates;
         this.email = email;
-        this.coordinates = coordinates;
-        this.id = 0; // implement later
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getCoordinates() {
-        return coordinates;
-    }
-
-    public long getId() {
-        return id;
+        this.deviceId = deviceId;
+        this.eventIdRegistered = eventIdRegistered;
+        this.eventIdOwned = eventIdOwned;
     }
 }
