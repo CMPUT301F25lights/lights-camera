@@ -23,7 +23,7 @@ public class HomeViewModel extends ViewModel {
         "6. Congragulations! You are now officially attending the event! <br>" +
         " <br>"+
         "<b><u>How participants are chosen:</u></b> <br>" +
-        "    Each event has a total number of available position (n) that can be filled. When the organizer clicks the button, " +
+        "    Each event has a total number of available positions (n) that can be filled. When the organizer clicks the button, " +
         "the system sends n invitations randomly to people on the waiting list. If anyone on the waiting list declines the " +
         "invitation, the system sends another random person on the waiting list a invitation. This is repeated until the total " +
         "number of available positions are filled. Good Luck!"

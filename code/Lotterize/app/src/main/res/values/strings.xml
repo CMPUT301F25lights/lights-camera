@@ -8,4 +8,6 @@
     <string name="title_AddEvents">Add Events</string>
     <string name="logout">Logout</string>
     <string name="search_events">Search Events</string>
+    <string name="sample_text">sample_text</string>
+    <string name="view_details">View Details</string>
 </resources>
