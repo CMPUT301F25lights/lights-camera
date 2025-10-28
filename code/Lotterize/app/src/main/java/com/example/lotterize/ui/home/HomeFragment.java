@@ -54,15 +54,6 @@ public class HomeFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
 
-        events.get().addOnSuccessListener(snapshot -> {
-            Event newEvent = new Event(0, 0, new ArrayList<>(), new ArrayList<>(),new ArrayList<>(),
-                    new ArrayList<>(),"THE BEST EVENT", Timestamp.now(), Timestamp.now(), "Edmonton", 10,
-                    "THIS IS THE BEST EVENT EVER. CALL YOUR CATS, DOGS, AND MOTHERS. YOU WILL NOT REGRET IT \n JK YOU MIGHT",
-                    9,5,"qrCode goes here");
-            events.add(newEvent);
-        });
-
-
         events.orderBy("date", Query.Direction.DESCENDING).limit(10).get().addOnSuccessListener(snapshot -> {
             eventList.addAll(snapshot.getDocuments());
             eventsArray.notifyDataSetChanged();

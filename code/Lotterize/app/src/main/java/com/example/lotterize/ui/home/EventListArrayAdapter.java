@@ -44,7 +44,7 @@ public class EventListArrayAdapter extends ArrayAdapter<DocumentSnapshot> {
         DocumentSnapshot event = getItem(position);
         TextView eventName = view.findViewById(R.id.event_name);
         TextView eventDescription = view.findViewById(R.id.event_short_description);
-        eventName.setText(event.getString("name"));
+        eventName.setText(event.getString("eventName"));
         eventDescription.setText(event.getString("description"));
         Button eventDetails = view.findViewById(R.id.event_details_button);
         eventDetails.setOnClickListener(new View.OnClickListener() {
