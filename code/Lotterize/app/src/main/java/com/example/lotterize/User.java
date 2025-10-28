@@ -1,19 +1,40 @@
 package com.example.lotterize;
 
+import java.util.ArrayList;
+
 public class User {
 
+    private long id;
+    private Boolean receiveNotifications;
     private String name;
-    private long userId;
     private String phoneNumber;
+    private String locationCoordinates;
     private String email;
-    private String coordinates;
+    private ArrayList<Long> deviceId;
+    private ArrayList<Long> eventIdRegistered;
+    private ArrayList<Long> eventIdOwned;
+    private boolean wantNotification;
 
-    public User(long userId, String name, String phoneNumber, String email, String coordinates) {
+    public User(long id, Boolean receiveNotifications, String name, String phoneNumber, String locationCoordinates, String email,
+                ArrayList<Long> deviceId, ArrayList<Long> eventIdRegistered, ArrayList<Long> eventIdOwned) {
+        this.id = id;
+        this.receiveNotifications = receiveNotifications;
         this.name = name;
         this.phoneNumber = phoneNumber;
+        this.locationCoordinates = locationCoordinates;
         this.email = email;
-        this.coordinates = coordinates;
-        this.userId = userId;
+        this.deviceId = deviceId;
+        this.eventIdRegistered = eventIdRegistered;
+        this.eventIdOwned = eventIdOwned;
+        wantNotification = true;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public Boolean getReceiveNotifications() {
+        return receiveNotifications;
     }
 
     public String getName() {
@@ -24,15 +45,30 @@ public class User {
         return phoneNumber;
     }
 
-    public String getEmail() {
+    public String getLocationCoordinates() {
+        return locationCoordinates;
+    }
+
+    public String getEmail(){
         return email;
     }
 
-    public String getCoordinates() {
-        return coordinates;
+    public ArrayList<Long> getDeviceId() {
+        return deviceId;
     }
 
-    public long getUserId() {
-        return userId;
+    public ArrayList<Long> getEventIdRegistered() {
+        return eventIdRegistered;
+    }
+    public ArrayList<Long> getEventIdOwned() {
+        return eventIdOwned;
+    }
+    public void turnOnNotification(){
+        wantNotification = true;
+    }
+
+    public void turnOffNotification() {
+        wantNotification = false;
     }
 }
+
