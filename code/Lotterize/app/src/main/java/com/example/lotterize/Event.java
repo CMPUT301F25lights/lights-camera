@@ -1,80 +1,87 @@
 package com.example.lotterize;
 
 
+import com.google.firebase.Timestamp;
 import java.util.ArrayList;
 
 public class Event {
 
     private long eventId;
-    private User owner;
-    private ArrayList<User> waitList;
-    private ArrayList<User> selectedList;
-    private ArrayList<User> cancelledList;
-    private ArrayList<User> finalList;
-    private long eventName;
-    private long date;
-    private long registrationDeadline;
+    private long ownerId;
+    private ArrayList<Long> waitList;
+    private ArrayList<Long> selectedList;
+    private ArrayList<Long> cancelledList;
+    private ArrayList<Long> finalList;
+    private String eventName;
+    private Timestamp date;
+    private Timestamp registrationStart;
+    private Timestamp registrationDeadline;
     private String location;
     private long totalSpots;
     private String description;
     private long entrantsLimit;
-    private long sampleSize;
+    private String qrCode;
 
     // poster image
 
-    // qr code
 
-    public Event(long eventId, User owner, ArrayList<User> waitList, ArrayList<User> selectedList,ArrayList<User> cancelledList, ArrayList<User> finalList,
-                 long eventName, long date, long registrationDeadline, String location, long totalSpots,
-                 String description, long entrantsLimit, long sampleSize){
+    public Event(long eventId, long ownerId, ArrayList<Long> waitList, ArrayList<Long> selectedList, ArrayList<Long>cancelledList,
+                 ArrayList<Long> finalList, String eventName, Timestamp date, Timestamp registrationStart, Timestamp registrationDeadline, String location,
+                 long totalSpots, String description, long entrantsLimit, String qrCode){
         this.eventId = eventId;
-        this.owner = owner;
+        this.ownerId = ownerId;
         this.waitList = waitList;
         this.selectedList = selectedList;
         this.cancelledList = cancelledList;
         this.finalList = finalList;
         this.eventName = eventName;
         this.date = date;
+        this.registrationStart = registrationStart;
         this.registrationDeadline = registrationDeadline;
         this.location = location;
         this.totalSpots = totalSpots;
         this.description = description;
         this.entrantsLimit = entrantsLimit;
-        this.sampleSize = sampleSize;
+        this.qrCode = qrCode;
     }
 
-    public long getEventId(){
+    public long getEventId() {
         return eventId;
     }
-    public User getOwner(){
-        return owner;
+
+    public long getOwnerId() {
+        return ownerId;
     }
 
-    public ArrayList<User> getWaitList(){
+    public ArrayList<Long> getWaitList() {
         return waitList;
     }
 
-    public ArrayList<User> getSelectedList(){
+    public ArrayList<Long> getSelectedList() {
         return selectedList;
     }
 
-    public ArrayList<User> getCancelledList(){
+    public ArrayList<Long> getCancelledList() {
         return cancelledList;
     }
 
-    public ArrayList<User> getFinalList(){
+    public ArrayList<Long> getFinalList() {
         return finalList;
     }
 
-    public long getEventName(){
+    public String getEventName() {
         return eventName;
     }
 
-    public long getDate(){
+    public Timestamp getDate(){
         return date;
     }
 
-    public long getRegistrationDeadline(){
+    public Timestamp getRegistrationStart() {
+        return registrationStart;
+    }
+
+    public Timestamp getRegistrationDeadline() {
         return registrationDeadline;
     }
 
@@ -82,9 +89,10 @@ public class Event {
         return location;
     }
 
-    public long getTotalSpots(){
+    public long getTotalSpots() {
         return totalSpots;
     }
+
     public String getDescription(){
         return description;
     }
@@ -93,7 +101,7 @@ public class Event {
         return entrantsLimit;
     }
 
-    public long getSampleSize() {
-        return sampleSize;
+    public String getQrCode() {
+        return qrCode;
     }
 }
