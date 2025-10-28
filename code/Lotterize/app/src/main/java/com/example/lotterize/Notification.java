@@ -19,4 +19,25 @@ public class Notification {
         this.time = time;
         this.receiversId = receiversId;
     }
+
+    public long getNotificationId() {
+        return notificationId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public ArrayList<Long> getReceiversId() {
+        return receiversId;
+    }
+
+    public long getSenderId() {
+        return senderId;
+    }
+
+    public Timestamp getTime() {
+        return time;
+    }
+
 }
