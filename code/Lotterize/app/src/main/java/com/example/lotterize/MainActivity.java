@@ -45,11 +45,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } );
 
-        // Display QR code
-        ImageView imageView = findViewById(R.id.qrImageView);
-        String code = "https://myapp.com/event/EVENT123";
-        Bitmap qr = QR.generateBitmap(code, 512);
-        imageView.setImageBitmap(qr);
+
     }
 
 }

@@ -2,6 +2,8 @@ package com.example.lotterize;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.widget.ImageView;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
@@ -13,10 +15,7 @@ import java.util.UUID;
 
 public class QR {
     public static void generatePNG(String code, String path) {
-//        // test qr code
-//        String path = getExternalFilesDir(null) + "/qr_code.png";
-//        QR.generatePNG("test", path);
-        //   /storage/emulated/0/Android/data/com.example.lotterize/files/
+
         try {
             // Generate bitmap
             Bitmap bitmap = generateBitmap(code, 512);
@@ -33,12 +32,17 @@ public class QR {
             e.printStackTrace();
         }
     }
+// testing
+
+    // In MainActivity.java
+
+    //        // test qr code
+//        String path = getExternalFilesDir(null) + "/qr_code.png";
+//        QR.generatePNG("test", path);
+    // path in android file system
+    // /storage/emulated/0/Android/data/com.example.lotterize/files/
 
     public static Bitmap generateBitmap(String code, int size){
-        // usage:
-//        // Display QR code
-//        Bitmap qr = QR.generateBitmap(code, 512);
-//        imageView.setImageBitmap(qr);
         try {
             QRCodeWriter writer = new QRCodeWriter();
             BitMatrix bitMatrix = writer.encode(code, BarcodeFormat.QR_CODE, size, size);
@@ -58,6 +62,27 @@ public class QR {
             return null;
         }
     }
+
+    // Testing
+
+    // In activity_main.xml
+
+//    <ImageView
+//    android:id="@+id/qrImageView"
+//    android:layout_width="300dp"
+//    android:layout_height="300dp"
+//    android:layout_gravity="center"
+//    android:contentDescription="QR Code"
+//    app:layout_constraintTop_toTopOf="@+id/LoginText"
+//    tools:layout_editor_absoluteX="32dp" />
+
+    // In MainActivity.java
+
+//    // Display QR code
+//    ImageView imageView = findViewById(R.id.qrImageView);
+//    String code = "https://myapp.com/event/EVENT123";
+//    Bitmap qr = QR.generateBitmap(code, 512);
+//        imageView.setImageBitmap(qr);
 
 
 }
