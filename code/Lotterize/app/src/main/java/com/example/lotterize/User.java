@@ -13,6 +13,7 @@ public class User {
     private ArrayList<Long> deviceId;
     private ArrayList<Long> eventIdRegistered;
     private ArrayList<Long> eventIdOwned;
+    private boolean wantNotification;
 
     public User(long id, Boolean receiveNotifications, String name, String phoneNumber, String locationCoordinates, String email,
                 ArrayList<Long> deviceId, ArrayList<Long> eventIdRegistered, ArrayList<Long> eventIdOwned) {
@@ -25,6 +26,7 @@ public class User {
         this.deviceId = deviceId;
         this.eventIdRegistered = eventIdRegistered;
         this.eventIdOwned = eventIdOwned;
+        wantNotification = true;
     }
 
     public long getId() {
@@ -61,4 +63,12 @@ public class User {
     public ArrayList<Long> getEventIdOwned() {
         return eventIdOwned;
     }
+    public void turnOnNotification(){
+        wantNotification = true;
+    }
+
+    public void turnOffNotification() {
+        wantNotification = false;
+    }
 }
+
