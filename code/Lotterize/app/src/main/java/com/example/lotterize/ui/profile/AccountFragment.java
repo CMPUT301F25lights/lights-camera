@@ -45,11 +45,6 @@ public class AccountFragment extends Fragment {
             navController.navigateUp();
         });
 
-        // Edit profile picture
-        binding.iconEditProfile.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Edit profile picture", Toast.LENGTH_SHORT).show();
-        });
-
         // Name field click
         binding.layoutName.setOnClickListener(v -> {
             showEditDialog("Edit Name", "Name", binding.textNameValue.getText().toString(),

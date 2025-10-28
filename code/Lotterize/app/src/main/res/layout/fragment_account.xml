@@ -56,16 +56,6 @@
             android:padding="30dp"
             android:src="@drawable/ic_person" />
 
-        <ImageView
-            android:id="@+id/icon_edit_profile"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_gravity="bottom|end"
-            android:background="@drawable/circle_background"
-            android:contentDescription="@string/edit_profile"
-            android:padding="8dp"
-            android:src="@drawable/ic_edit" />
-
     </FrameLayout>
 
     <!-- Name Field -->
