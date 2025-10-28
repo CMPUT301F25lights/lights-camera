@@ -51,7 +51,7 @@
             android:orientation="vertical">
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="2dp"
                 android:background="@android:color/darker_gray"/>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -74,7 +74,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/cardview_light_background"/>
+                android:background="@color/material_dynamic_neutral80"/>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -96,7 +96,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/cardview_light_background"/>
+                android:background="@color/material_dynamic_neutral80"/>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -118,7 +118,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/cardview_light_background"/>
+                android:background="@color/material_dynamic_neutral80"/>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -140,7 +140,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/cardview_light_background"/>
+                android:background="@color/material_dynamic_neutral80"/>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -162,7 +162,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/cardview_light_background"/>
+                android:background="@color/material_dynamic_neutral80"/>
             <ImageView
                 android:layout_width="200dp"
                 android:layout_height="200dp"

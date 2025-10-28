@@ -54,9 +54,10 @@ public class EventDetailsActivity extends AppCompatActivity {
                 String dateString = dateTime.getDate() +"/" + String.valueOf(dateTime.getMonth()+1)+ "/" + String.valueOf(dateTime.getYear()+1900);
                 date.setText(dateString);
                 location.setText(event.getString("location"));
-                List waitList = event.get("waitList", List.class);
+                List<Long> waitList = (List<Long>) event.get("waitList");
                 String entrantsString = String.format("%d (%d Total Spots)", waitList.size(),event.getLong("totalSpots"));
-                description.setText(entrantsString);
+                entrants.setText(entrantsString);
+                description.setText(event.getString("description"));
             } else {
                 Log.w("No event found:", getIntent().getStringExtra(("eventId")));
             }
