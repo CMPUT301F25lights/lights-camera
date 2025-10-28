@@ -35,4 +35,16 @@
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
 
+    <fragment
+        android:id="@+id/navigation_account"
+        android:name="com.example.lotterize.ui.profile.AccountFragment"
+        android:label="Account"
+        tools:layout="@layout/fragment_account" />
+
+    <fragment
+        android:id="@+id/navigation_event_history"
+        android:name="com.example.lotterize.ui.profile.EventHistoryFragment"
+        android:label="Event History"
+        tools:layout="@layout/fragment_event_history" />
+
 </navigation>
