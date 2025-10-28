@@ -26,4 +26,39 @@ public class User {
         this.eventIdRegistered = eventIdRegistered;
         this.eventIdOwned = eventIdOwned;
     }
+
+    public long getId() {
+        return id;
+    }
+
+    public Boolean getReceiveNotifications() {
+        return receiveNotifications;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getLocationCoordinates() {
+        return locationCoordinates;
+    }
+
+    public String getEmail(){
+        return email;
+    }
+
+    public ArrayList<Long> getDeviceId() {
+        return deviceId;
+    }
+
+    public ArrayList<Long> getEventIdRegistered() {
+        return eventIdRegistered;
+    }
+    public ArrayList<Long> getEventIdOwned() {
+        return eventIdOwned;
+    }
 }
