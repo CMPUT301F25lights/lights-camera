@@ -1,10 +1,12 @@
 package com.example.lotterize;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -42,6 +44,12 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         } );
+
+        // Display QR code
+        ImageView imageView = findViewById(R.id.qrImageView);
+        String code = "https://myapp.com/event/EVENT123";
+        Bitmap qr = QR.generateBitmap(code, 512);
+        imageView.setImageBitmap(qr);
     }
 
 }
