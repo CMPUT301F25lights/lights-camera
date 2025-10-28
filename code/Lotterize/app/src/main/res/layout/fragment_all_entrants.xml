@@ -11,8 +11,8 @@
     <!-- Back arrow at the top -->
     <ImageView
         android:id="@+id/backButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:src="@drawable/ic_back_arrow"
@@ -48,7 +48,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:divider="@color/DividerLine"
+                android:divider="@color/colorDividerLine"
                 android:showDividers="middle"
                 android:background="@android:color/white">
 
@@ -230,7 +230,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:backgroundTint="@color/buttonBackground"
+                    android:backgroundTint="@color/colorButtonBackground"
                     android:text="Export enrolled entrants list as csv"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
@@ -242,7 +242,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:text="Send notification to cancelled entrants"
-                    android:backgroundTint="@color/buttonBackground"
+                    android:backgroundTint="@color/colorButtonBackground"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="14sp" />
@@ -253,7 +253,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:text="Send notification to chosen entrants"
-                    android:backgroundTint="@color/buttonBackground"
+                    android:backgroundTint="@color/colorButtonBackground"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="14sp" />
@@ -264,7 +264,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:text="Send notification to entrants on waitlist"
-                    android:backgroundTint="@color/buttonBackground"
+                    android:backgroundTint="@color/colorButtonBackground"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="14sp" />
@@ -274,7 +274,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Draw replacement applicant"
-                    android:backgroundTint="@color/buttonBackground"
+                    android:backgroundTint="@color/colorButtonBackground"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="14sp" />
