@@ -27,17 +27,29 @@ public class Notification {
     public String getMessage() {
         return message;
     }
+    public void setMessage(String message){
+        this.message = message;
+    }
 
     public ArrayList<Long> getReceiversId() {
         return receiversId;
+    }
+    public void setReceiversId(ArrayList<Long> receiversId) {
+        this.receiversId = receiversId;
     }
 
     public long getSenderId() {
         return senderId;
     }
+    public void setSenderId(long senderId){
+        this.senderId = senderId;
+    }
 
     public Timestamp getTime() {
         return time;
+    }
+    public void setTime(Timestamp time){
+        this.time = time;
     }
 
 }
