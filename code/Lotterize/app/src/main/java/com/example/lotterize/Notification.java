@@ -1,34 +1,43 @@
 package com.example.lotterize;
 
+import com.google.firebase.Timestamp;
+
 import java.util.ArrayList;
 
 public class Notification {
 
     private long notificationId;
-    private User sender;
-    private ArrayList<User> receivers;
+    private long senderId;
     private String message;
+    private Timestamp time;
+    private ArrayList<Long> receiversId;
 
-    public Notification(long notificationId, User sender, ArrayList<User> receivers, String message){
+    public Notification(long notificationId, long senderId, String message, Timestamp time, ArrayList<Long> receiversId){
         this.notificationId = notificationId;
-        this.sender = sender;
-        this.receivers = receivers;
+        this.senderId = senderId;
         this.message = message;
+        this.time = time;
+        this.receiversId = receiversId;
     }
 
     public long getNotificationId() {
         return notificationId;
     }
 
-    public User getSender() {
-        return sender;
-    }
-
-    public ArrayList<User> getReceivers() {
-        return receivers;
-    }
-
     public String getMessage() {
         return message;
     }
+
+    public ArrayList<Long> getReceiversId() {
+        return receiversId;
+    }
+
+    public long getSenderId() {
+        return senderId;
+    }
+
+    public Timestamp getTime() {
+        return time;
+    }
+
 }
