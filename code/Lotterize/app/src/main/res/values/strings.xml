@@ -8,13 +8,4 @@
     <string name="title_AddEvents">Add Events</string>
     <string name="logout">Logout</string>
     <string name="search_events">Search Events</string>
-    <string name="profile_picture">Profile Picture</string>
-    <string name="account">Account</string>
-    <string name="event_history">Event History</string>
-    <string name="notifications">Notifications</string>
-    <string name="link_device">Link Device</string>
-    <string name="delete_account">Delete Account</string>
-    <string name="back">Back</string>
-    <string name="edit_profile">Edit Profile</string>
-    <string name="edit">Edit</string>
 </resources>
