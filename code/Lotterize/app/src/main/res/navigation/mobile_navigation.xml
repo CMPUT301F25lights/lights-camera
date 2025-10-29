@@ -35,4 +35,10 @@
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
 
+    <fragment
+        android:id="@+id/navigation_newEvent"
+        android:name="com.example.lotterize.ui.addEvents.NewEventFragment"
+        android:label="New event"
+        tools:layout="@layout/fragment_new_event" />
+
 </navigation>
