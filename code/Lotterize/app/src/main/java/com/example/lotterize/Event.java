@@ -1,34 +1,34 @@
 package com.example.lotterize;
 
 
-import com.google.firebase.Timestamp;
 import java.util.ArrayList;
 
 public class Event {
 
     private long eventId;
-    private long ownerId;
-    private ArrayList<Long> waitList;
-    private ArrayList<Long> selectedList;
-    private ArrayList<Long> cancelledList;
-    private ArrayList<Long> finalList;
-    private String eventName;
-    private Timestamp date;
-    private Timestamp registrationDeadline;
+    private User owner;
+    private ArrayList<User> waitList;
+    private ArrayList<User> selectedList;
+    private ArrayList<User> cancelledList;
+    private ArrayList<User> finalList;
+    private long eventName;
+    private long date;
+    private long registrationDeadline;
     private String location;
     private long totalSpots;
     private String description;
     private long entrantsLimit;
-    private String qrCode;
+    private long sampleSize;
 
     // poster image
 
+    // qr code
 
-    public Event(long eventId, long ownerId, ArrayList<Long> waitList, ArrayList<Long> selectedList, ArrayList<Long>cancelledList,
-                 ArrayList<Long> finalList, String eventName, Timestamp date, Timestamp registrationDeadline, String location,
-                 long totalSpots, String description, long entrantsLimit, String qrCode){
+    public Event(long eventId, User owner, ArrayList<User> waitList, ArrayList<User> selectedList,ArrayList<User> cancelledList, ArrayList<User> finalList,
+                 long eventName, long date, long registrationDeadline, String location, long totalSpots,
+                 String description, long entrantsLimit, long sampleSize){
         this.eventId = eventId;
-        this.ownerId = ownerId;
+        this.owner = owner;
         this.waitList = waitList;
         this.selectedList = selectedList;
         this.cancelledList = cancelledList;
@@ -40,42 +40,41 @@ public class Event {
         this.totalSpots = totalSpots;
         this.description = description;
         this.entrantsLimit = entrantsLimit;
-        this.qrCode = qrCode;
+        this.sampleSize = sampleSize;
     }
 
-    public long getEventId() {
+    public long getEventId(){
         return eventId;
     }
-
-    public long getOwnerId() {
-        return ownerId;
+    public User getOwner(){
+        return owner;
     }
 
-    public ArrayList<Long> getWaitList() {
+    public ArrayList<User> getWaitList(){
         return waitList;
     }
 
-    public ArrayList<Long> getSelectedList() {
+    public ArrayList<User> getSelectedList(){
         return selectedList;
     }
 
-    public ArrayList<Long> getCancelledList() {
+    public ArrayList<User> getCancelledList(){
         return cancelledList;
     }
 
-    public ArrayList<Long> getFinalList() {
+    public ArrayList<User> getFinalList(){
         return finalList;
     }
 
-    public String getEventName() {
+    public long getEventName(){
         return eventName;
     }
 
-    public Timestamp getDate(){
+    public long getDate(){
         return date;
     }
 
-    public Timestamp getRegistrationDeadline() {
+    public long getRegistrationDeadline(){
         return registrationDeadline;
     }
 
@@ -83,10 +82,9 @@ public class Event {
         return location;
     }
 
-    public long getTotalSpots() {
+    public long getTotalSpots(){
         return totalSpots;
     }
-
     public String getDescription(){
         return description;
     }
@@ -95,7 +93,7 @@ public class Event {
         return entrantsLimit;
     }
 
-    public String getQrCode() {
-        return qrCode;
+    public long getSampleSize() {
+        return sampleSize;
     }
 }

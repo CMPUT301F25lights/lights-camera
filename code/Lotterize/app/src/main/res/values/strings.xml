@@ -6,6 +6,13 @@
     <string name="title_Profile">Profile</string>
     <string name="title_addEvents">add events</string>
     <string name="title_AddEvents">Add Events</string>
+    <string name="title_newEvent">New Event</string>
     <string name="logout">Logout</string>
     <string name="search_events">Search Events</string>
+    <string name="new_event">New Event</string>
+    <string name="text_new_event">Create New Event</string>
+    <string name="create_event">Create Event</string>
+    <string name="cancel_create_event">&lt;</string>
+
+
 </resources>
