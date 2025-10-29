@@ -69,6 +69,10 @@ public class CreateAccountActivity extends AppCompatActivity {
 
                             users.add(user)
                                     .addOnSuccessListener(documentReference -> {
+
+                                        String generatedId = documentReference.getId();
+                                        documentReference.update("userId", generatedId);
+
                                         Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
                                         // Go back to login screen to sign in
                                         finish();

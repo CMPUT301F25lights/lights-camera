@@ -2,6 +2,7 @@ package com.example.lotterize;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         signInButton = findViewById(R.id.buttonSignin);
         createAccountButton = findViewById(R.id.buttonCreateAccount);
 
+
         signInButton.setOnClickListener(v -> {
             String enteredUsername = usernameEditText.getText().toString().trim();
             String enteredPassword = passwordEditText.getText().toString().trim();
@@ -69,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
                             if (passwordMatch) {
                                 // Load data into static instance CurrentUser
                                 User user = new User(
-                                        successDoc[0].getLong("userId") != null ? successDoc[0].getLong("userId") : 0L,
+                                        successDoc[0].getId(),
                                         successDoc[0].getString("name"),
                                         successDoc[0].getString("phoneNumber"),
                                         successDoc[0].getString("email"),
