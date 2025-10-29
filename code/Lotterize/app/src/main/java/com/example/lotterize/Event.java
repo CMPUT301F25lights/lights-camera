@@ -6,8 +6,8 @@ import java.util.ArrayList;
 
 public class Event {
 
-    private long eventId;
-    private long ownerId;
+    private Long eventId;
+    private Long ownerId;
     private ArrayList<Long> waitList;
     private ArrayList<Long> selectedList;
     private ArrayList<Long> cancelledList;
@@ -17,9 +17,9 @@ public class Event {
     private Timestamp registrationStart;
     private Timestamp registrationDeadline;
     private String location;
-    private long totalSpots;
+    private Long totalSpots;
     private String description;
-    private long entrantsLimit;
+    private Long entrantsLimit;
     private String qrCode;
 
     // poster image
