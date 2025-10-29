@@ -30,7 +30,7 @@ public class AddEventsFragment extends Fragment {
         addEventsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         binding.buttonNewEvent.setOnClickListener(v -> {
             NavHostFragment.findNavController(AddEventsFragment.this)
-                    .navigate(R.id.navigation_newEvent);
+                    .navigate(R.id.navigation_addEvents);
         });
         return root;
     }
