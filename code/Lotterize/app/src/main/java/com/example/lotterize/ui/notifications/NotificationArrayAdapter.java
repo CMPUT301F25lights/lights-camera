@@ -72,4 +72,7 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
         this.notifications.addAll(newList);
         notifyDataSetChanged();
     }
+
+
 }
+

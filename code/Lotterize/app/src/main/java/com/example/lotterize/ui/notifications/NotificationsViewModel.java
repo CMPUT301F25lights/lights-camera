@@ -1,12 +1,14 @@
 package com.example.lotterize.ui.notifications;
 
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.lotterize.MainActivity;
 import com.example.lotterize.Notification;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -43,6 +45,7 @@ public class NotificationsViewModel extends ViewModel {
     public NotificationsViewModel() {
         startListening();
     }
+
 
     private void startListening() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();

@@ -6,11 +6,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.lotterize.MainActivity;
 import com.example.lotterize.Notification;
 import com.example.lotterize.databinding.FragmentNotificationsBinding;
 import com.google.firebase.Timestamp;
@@ -49,8 +51,7 @@ public class NotificationsFragment extends Fragment {
                     notificationArrayAdapter.updateData(new ArrayList<>(notifications));
                 }
         );
-
-        addTestNotificationToFirestore();
+        Notification notification = new Notification(10L, 3L, "Nothing", Timestamp.now(), new ArrayList<>());
         return root;
     }
 
@@ -77,6 +78,7 @@ public class NotificationsFragment extends Fragment {
                     Log.e("FirestoreTest", "Failed to add test notification", e);
                 });
     }
+
 
 
     @Override
