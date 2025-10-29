@@ -1,23 +1,21 @@
 package com.example.lotterize.ui.home;
 
-import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.lotterize.R;
+import com.example.lotterize.ActivityShowWaitingList;
 import com.example.lotterize.databinding.ActivityEventDetailsBinding;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -43,6 +41,17 @@ public class EventDetailsActivity extends AppCompatActivity {
         TextView location = binding.locationText;
         TextView entrants = binding.entrantsText;
         TextView description = binding.descText;
+
+        Button waitListButton = binding.seeWaitList;
+        waitListButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(EventDetailsActivity.this, ActivityShowWaitingList.class);
+                intent.putExtra("type", "waitList");
+                intent.putExtra("eventId", getIntent().getLongExtra("eventId",0));
+                startActivity(intent);
+            }
+        });
 
         events.whereEqualTo("eventId", getIntent().getLongExtra("eventId", 0)).limit(1).get().addOnSuccessListener(snapshot -> {
             if (!snapshot.isEmpty()) {

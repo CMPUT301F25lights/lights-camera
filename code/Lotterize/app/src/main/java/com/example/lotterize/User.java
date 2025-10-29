@@ -1,38 +1,29 @@
 package com.example.lotterize;
 
-import java.util.ArrayList;
-
 public class User {
 
-    private long id;
-    private Boolean receiveNotifications;
     private String name;
+    private String userId;
     private String phoneNumber;
-    private String locationCoordinates;
     private String email;
-    private ArrayList<Long> deviceId;
-    private ArrayList<Long> eventIdRegistered;
-    private ArrayList<Long> eventIdOwned;
+    private String coordinates;
+    private String username;
+    private String password;
 
-    public User(long id, Boolean receiveNotifications, String name, String phoneNumber, String locationCoordinates, String email,
-                ArrayList<Long> deviceId, ArrayList<Long> eventIdRegistered, ArrayList<Long> eventIdOwned) {
-        this.id = id;
-        this.receiveNotifications = receiveNotifications;
+    public User(String userId, String name, String phoneNumber, String email,
+                String coordinates, String username, String password) {
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.locationCoordinates = locationCoordinates;
         this.email = email;
-        this.deviceId = deviceId;
-        this.eventIdRegistered = eventIdRegistered;
-        this.eventIdOwned = eventIdOwned;
+        this.coordinates = coordinates;
+        this.userId = userId;
+        this.username = username;
+        this.password = password;
     }
-
-    public long getId() {
-        return id;
-    }
-
-    public Boolean getReceiveNotifications() {
-        return receiveNotifications;
+    public User() {}
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
     public String getName() {
@@ -43,22 +34,26 @@ public class User {
         return phoneNumber;
     }
 
-    public String getLocationCoordinates() {
-        return locationCoordinates;
-    }
-
-    public String getEmail(){
+    public String getEmail() {
         return email;
     }
 
-    public ArrayList<Long> getDeviceId() {
-        return deviceId;
+    public String getCoordinates() {
+        return coordinates;
     }
 
-    public ArrayList<Long> getEventIdRegistered() {
-        return eventIdRegistered;
+    public String getUserId() {
+        return userId;
     }
-    public ArrayList<Long> getEventIdOwned() {
-        return eventIdOwned;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

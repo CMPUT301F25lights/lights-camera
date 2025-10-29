@@ -1,18 +1,16 @@
-package com.example.lotterize.ui.profile;
+package com.example.lotterize.ui.addEvents;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.example.lotterize.CurrentUser;
-
-public class ProfileViewModel extends ViewModel {
+public class NewEventViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public ProfileViewModel() {
+    public NewEventViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue(CurrentUser.get().getUserId());
+        mText.setValue("This is new event page");
     }
 
     public LiveData<String> getText() {

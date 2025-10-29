@@ -15,13 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.Navigation;
-
-import com.example.lotterize.Event;
-import com.example.lotterize.R;
-import com.example.lotterize.databinding.FragmentEventsRegisteredBinding;
 import com.example.lotterize.databinding.FragmentHomeBinding;
-import com.google.firebase.Timestamp;
+
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;

@@ -6,26 +6,27 @@ import java.util.ArrayList;
 
 public class Event {
 
-    private long eventId;
-    private long ownerId;
+    private Long eventId;
+    private Long ownerId;
     private ArrayList<Long> waitList;
     private ArrayList<Long> selectedList;
     private ArrayList<Long> cancelledList;
     private ArrayList<Long> finalList;
     private String eventName;
     private Timestamp date;
+    private Timestamp registrationStart;
     private Timestamp registrationDeadline;
     private String location;
-    private long totalSpots;
+    private Long totalSpots;
     private String description;
-    private long entrantsLimit;
+    private Long entrantsLimit;
     private String qrCode;
 
     // poster image
 
 
     public Event(long eventId, long ownerId, ArrayList<Long> waitList, ArrayList<Long> selectedList, ArrayList<Long>cancelledList,
-                 ArrayList<Long> finalList, String eventName, Timestamp date, Timestamp registrationDeadline, String location,
+                 ArrayList<Long> finalList, String eventName, Timestamp date, Timestamp registrationStart, Timestamp registrationDeadline, String location,
                  long totalSpots, String description, long entrantsLimit, String qrCode){
         this.eventId = eventId;
         this.ownerId = ownerId;
@@ -35,6 +36,7 @@ public class Event {
         this.finalList = finalList;
         this.eventName = eventName;
         this.date = date;
+        this.registrationStart = registrationStart;
         this.registrationDeadline = registrationDeadline;
         this.location = location;
         this.totalSpots = totalSpots;
@@ -73,6 +75,10 @@ public class Event {
 
     public Timestamp getDate(){
         return date;
+    }
+
+    public Timestamp getRegistrationStart() {
+        return registrationStart;
     }
 
     public Timestamp getRegistrationDeadline() {

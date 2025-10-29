@@ -9,7 +9,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.lotterize.R;
 import com.example.lotterize.databinding.FragmentAddEventsBinding;
 
 public class AddEventsFragment extends Fragment {
@@ -26,6 +28,10 @@ public class AddEventsFragment extends Fragment {
 
         final TextView textView = binding.textAddEvents;
         addEventsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        binding.buttonNewEvent.setOnClickListener(v -> {
+            NavHostFragment.findNavController(AddEventsFragment.this)
+                    .navigate(R.id.navigation_newEvent);
+        });
         return root;
     }
 
