@@ -1,5 +1,7 @@
 package com.example.lotterize.ui.profile;
 
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +14,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.example.lotterize.MainActivity;
+import com.example.lotterize.CurrentUser;
 import com.example.lotterize.R;
 import com.example.lotterize.databinding.FragmentProfileBinding;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -39,6 +43,27 @@ public class ProfileFragment extends Fragment {
                 binding.textGreeting.setText(greeting);
             }
         });
+
+        // Set up delete button
+        binding.buttonDelete.setOnClickListener(v -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Delete Account")
+                    .setMessage("Are you sure you want to permanently delete your account? This action cannot be undone.")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        profileViewModel.deleteAccount();
+                        Toast.makeText(requireContext(), "Account deleted successfully.", Toast.LENGTH_SHORT).show();
+
+                        // Clear the current user and navigate back to login
+                        CurrentUser.clear();
+
+                        Intent intent = new Intent(requireContext(), MainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+
 
         // Set up logout button
         binding.buttonLogout.setOnClickListener(v -> {

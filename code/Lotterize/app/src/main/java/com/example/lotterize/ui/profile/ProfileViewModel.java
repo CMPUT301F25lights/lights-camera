@@ -118,6 +118,21 @@ public class ProfileViewModel extends ViewModel {
                 });
     }
 
+    public void deleteAccount() {
+        String userId = CurrentUser.get().getUserId(); // or however you store logged-in user
+        db.collection("users").document(userId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("ProfileViewModel", "User deleted successfully.");
+                    // Optionally clear the LiveData
+                    userLiveData.setValue(null);
+                })
+                .addOnFailureListener(e ->
+                        Log.e("ProfileViewModel", "Error deleting user: " + e.getMessage())
+                );
+    }
+
+
     public LiveData<User> getUserData() {
         return userLiveData;
     }
