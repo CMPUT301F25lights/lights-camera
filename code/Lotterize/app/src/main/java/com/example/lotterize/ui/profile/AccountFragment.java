@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
@@ -25,12 +26,23 @@ import com.google.android.material.textfield.TextInputLayout;
 public class AccountFragment extends Fragment {
 
     private FragmentAccountBinding binding;
+    private ProfileViewModel profileViewModel;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentAccountBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+        profileViewModel = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
+
+        profileViewModel.getUserData().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                binding.textNameValue.setText(user.getName());
+                binding.textEmailValue.setText(user.getEmail());
+                binding.textPhoneValue.setText(user.getPhoneNumber());
+            }
+        });
+
 
         if (getActivity() != null) {
             BottomNavigationView navView = getActivity().findViewById(R.id.nav_view);
@@ -49,22 +61,32 @@ public class AccountFragment extends Fragment {
         binding.layoutName.setOnClickListener(v -> {
             showEditDialog("Edit Name", "Name", binding.textNameValue.getText().toString(),
                     InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS,
-                    newValue -> binding.textNameValue.setText(newValue));
+                    newValue -> {
+                        binding.textNameValue.setText(newValue);
+                        profileViewModel.updateName(newValue);
+                    });
         });
 
         // Email field click
         binding.layoutEmail.setOnClickListener(v -> {
             showEditDialog("Edit Email", "Email", binding.textEmailValue.getText().toString(),
                     InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-                    newValue -> binding.textEmailValue.setText(newValue));
+                    newValue -> {
+                        binding.textEmailValue.setText(newValue);
+                        profileViewModel.updateEmail(newValue);
+                    });
         });
 
         // Phone field click
         binding.layoutPhone.setOnClickListener(v -> {
             showEditDialog("Edit Phone Number", "Phone Number", binding.textPhoneValue.getText().toString(),
                     InputType.TYPE_CLASS_PHONE,
-                    newValue -> binding.textPhoneValue.setText(newValue));
+                    newValue -> {
+                        binding.textPhoneValue.setText(newValue);
+                        profileViewModel.updatePhoneNumber(newValue);
+                    });
         });
+
 
         return root;
     }

@@ -4,8 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,17 +19,26 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
+    private ProfileViewModel profileViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        ProfileViewModel profileViewModel =
-                new ViewModelProvider(this).get(ProfileViewModel.class);
+        profileViewModel = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
 
         binding = FragmentProfileBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         // Show bottom navigation when on profile fragment
         showBottomNavigation();
+
+        // Observe user data and update greeting
+        profileViewModel.getUserData().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                String username = user.getUsername() != null ? user.getUsername() : "User";
+                String greeting = "Hello, " + username + "!";
+                binding.textGreeting.setText(greeting);
+            }
+        });
 
         // Set up logout button
         binding.buttonLogout.setOnClickListener(v -> {
@@ -66,7 +73,6 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Ensure bottom navigation is visible when returning to profile
         showBottomNavigation();
     }
 
