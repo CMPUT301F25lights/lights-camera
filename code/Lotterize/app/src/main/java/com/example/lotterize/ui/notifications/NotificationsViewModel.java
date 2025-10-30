@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.lotterize.CurrentUser;
 import com.example.lotterize.MainActivity;
 import com.example.lotterize.Notification;
 import com.google.firebase.Timestamp;
@@ -26,7 +27,6 @@ import java.util.List;
  * ViewModel for the Notifications screen.
  * It owns Firestore listener and transform FireStore documents into Java Object
  * It also exposes LiveData to the Fragment.
- *
  */
 public class NotificationsViewModel extends ViewModel {
 
@@ -38,9 +38,7 @@ public class NotificationsViewModel extends ViewModel {
     // We keep this so we can stop listening when ViewModel is destroyed
     private ListenerRegistration registration;
 
-    //Might need a function to get this value
-    //Sth like using the email that user entered to sign in -> Check database -> Get the userID
-    private final long currentUserId = 1L;
+    private final String currentUserId = CurrentUser.get().getUserId();
 
     public NotificationsViewModel() {
         startListening();
@@ -60,43 +58,38 @@ public class NotificationsViewModel extends ViewModel {
                             return;
                         }
 
-                        ArrayList<Notification> notiList = new ArrayList<>();
+                        ArrayList<Notification> notifList = new ArrayList<>();
 
                         if (value != null && !value.isEmpty()) {
                             for (QueryDocumentSnapshot snapshot : value){
 
-                                //Check whether getLong return a null pointer object
-                                Long notificationIdObj = snapshot.getLong("notificationId");
-                                long notificationId = (notificationIdObj != null) ? notificationIdObj : 0L;
-
-                                Long senderIdObj = snapshot.getLong("senderId");
-                                long senderId = (senderIdObj != null) ? senderIdObj : 0L;
-
+                                String notificationId = snapshot.getString("notificationId");
+                                String senderId = snapshot.getString("senderId");
+                                String senderName = snapshot.getString("senderName");
                                 String message = snapshot.getString("message");
                                 Timestamp time = snapshot.getTimestamp("time");
 
                                 // receiversId is stored as an array in Firestore
                                 @SuppressWarnings("unchecked")
-                                ArrayList<Long> receiversId = (ArrayList<Long>) snapshot.get("receiversId");
+                                ArrayList<String> receiversId = (ArrayList<String>) snapshot.get("receiversId");
                                 if (receiversId == null) {
                                     receiversId = new ArrayList<>();
                                 }
 
-                                Notification noti = new Notification(notificationId, senderId, message, time, receiversId);
-                                notiList.add(noti);
+                                Notification notification = new Notification(notificationId, senderId, senderName, message, time, receiversId);
+                                notifList.add(notification);
                             }
-                            notificationsLiveData.setValue(notiList);
+                            notificationsLiveData.setValue(notifList);
                         }
 
                 });
     }
 
 
-
-
     public LiveData<ArrayList<Notification>> getNotifications() {
         return notificationsLiveData;
     }
+
 
     @Override
     protected void onCleared() {
