@@ -12,8 +12,10 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.lotterize.CurrentUser;
 import com.example.lotterize.MainActivity;
 import com.example.lotterize.Notification;
+import com.example.lotterize.NotificationSender;
 import com.example.lotterize.databinding.FragmentNotificationsBinding;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -51,35 +53,32 @@ public class NotificationsFragment extends Fragment {
                     notificationArrayAdapter.updateData(new ArrayList<>(notifications));
                 }
         );
-        Notification notification = new Notification(10L, 3L, "Nothing", Timestamp.now(), new ArrayList<>());
+
         return root;
+
     }
 
-    private void addTestNotificationToFirestore() {
+    public void testAddNotificationWithNewId(){
+        Notification notification = new Notification();
+        notification.setMessage("Testing!! Congratulations!!! You were selected to join the class CMPUT 301.");
+        notification.setSenderId(CurrentUser.get().getUserId());
+        notification.getReceiversId().add("mHKsPI0jmC34MYGubvHP");
+        notification.getReceiversId().add("G3J3T5nuOY7Ml61XZleM");
+
+        NotificationSender notificationSender = new NotificationSender();
+        notificationSender.sendNotification(notification);
+    }
+
+    public void deleteDB(){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("notifications").document("Gj8UwTLo8yLx5lP2T5wb").delete()
+                .addOnSuccessListener(aVoid -> {
 
-        long newNotificationId = 10L;
-        long senderId = 3L;
-        String message = "Congratulation!!! You have been selected for the coding class 201. Please confirm attendance.";
-        Timestamp time = Timestamp.now();
-
-        ArrayList<Long> receiversId = new ArrayList<>();
-        receiversId.add(1L);
-        receiversId.add(2L);
-
-        Notification testNotif = new Notification(newNotificationId, senderId, message, time, receiversId);
-
-        db.collection("notifications")
-                .add(testNotif)
-                .addOnSuccessListener(docRef -> {
-                    Log.d("FirestoreTest", "Added test notification with id: " + docRef.getId());
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("FirestoreTest", "Failed to add test notification", e);
+                .addOnFailureListener(err -> {
                 });
+
     }
-
-
 
     @Override
     public void onDestroyView() {
