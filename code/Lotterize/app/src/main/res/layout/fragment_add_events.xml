@@ -22,7 +22,6 @@
             app:titleCentered="true"/>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- List of events you created -->
     <ListView
         android:id="@+id/recycler_events"
         android:layout_width="0dp"
@@ -37,18 +36,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
-        app:layout_constraintVertical_bias="1.0"
         tools:listitem="@layout/item_event"/>
 
-    <!-- Bottom full-width "New Event" button -->
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/button_new_event"
         android:layout_width="0dp"
         android:layout_height="56dp"
         android:text="@string/new_event"
         android:textAllCaps="false"
         android:textSize="16sp"
-        android:layout_margin="12dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="12dp"
         android:insetTop="0dp"
         android:insetBottom="0dp"
         android:backgroundTint="@android:color/black"
@@ -56,5 +54,6 @@
         app:cornerRadius="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="85dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
