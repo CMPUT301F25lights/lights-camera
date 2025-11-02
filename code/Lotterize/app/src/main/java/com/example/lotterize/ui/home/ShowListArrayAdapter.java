@@ -17,15 +17,19 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 
-public class ShowWaitListArrayAdapter extends ArrayAdapter<String> {
+public class ShowListArrayAdapter extends ArrayAdapter<String> {
 
 
     private FirebaseFirestore db;
-    private CollectionReference users;
-    public ShowWaitListArrayAdapter(Context context, ArrayList<String> userIds){
-        super(context, 0, userIds);
+    private CollectionReference col;
+    String idField;
+    String nameField;
+    public ShowListArrayAdapter(Context context, ArrayList<String> ids, String collection, String idField, String nameField){
+        super(context, 0, ids);
         db = FirebaseFirestore.getInstance();
-        users = db.collection("users");
+        col = db.collection(collection);
+        this.idField = idField;
+        this.nameField = nameField;
     }
 
     @NonNull
@@ -40,12 +44,12 @@ public class ShowWaitListArrayAdapter extends ArrayAdapter<String> {
             view = convertView;
         }
 
-        String userId = getItem(position);
+        String id = getItem(position);
         TextView entry = view.findViewById(R.id.user_name_text);
 
-        users.whereEqualTo("userId", userId).limit(1).get().addOnSuccessListener(snapshot -> {
-            DocumentSnapshot user = snapshot.getDocuments().get(0);
-            entry.setText(String.format("%s (ID: %s)", user.getString("name"), user.getString("userId")));
+        col.whereEqualTo(idField, id).limit(1).get().addOnSuccessListener(snapshot -> {
+            DocumentSnapshot entity = snapshot.getDocuments().get(0);
+            entry.setText(String.format("%s (ID: %s)", entity.getString(nameField), entity.getString(idField)));
         });
 
         return view;

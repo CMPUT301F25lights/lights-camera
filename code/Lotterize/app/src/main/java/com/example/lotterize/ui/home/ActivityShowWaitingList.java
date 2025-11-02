@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.R;
-import com.example.lotterize.User;
 import com.example.lotterize.databinding.ActivityShowListBinding;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -31,7 +30,7 @@ public class ActivityShowWaitingList extends AppCompatActivity {
     CollectionReference users;
 
     ArrayList<String> usersId;
-    ShowWaitListArrayAdapter adapter;
+    ShowListArrayAdapter adapter;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,7 +42,7 @@ public class ActivityShowWaitingList extends AppCompatActivity {
         events = db.collection("events");
         users = db.collection(("users"));
         usersId = new ArrayList<>();
-        adapter = new ShowWaitListArrayAdapter(this, usersId);
+        adapter = new ShowListArrayAdapter(this, usersId, "users", "userId", "name");
 
         ListView list = binding.listViewShowList;
         TextView header = binding.eventListNameText;

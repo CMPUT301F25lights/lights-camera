@@ -1,5 +1,6 @@
 package com.example.lotterize.ui.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -34,6 +35,8 @@ public class HomeFragment extends Fragment {
     private CollectionReference events;
     private FragmentHomeBinding binding;
     private ArrayList<DocumentSnapshot> eventList;
+
+    private ArrayList<DocumentSnapshot> shownList;
     private ImageButton info;
     private ListView eventsListView;
     private ArrayAdapter<DocumentSnapshot> eventsArray;
@@ -50,13 +53,15 @@ public class HomeFragment extends Fragment {
     public void onViewCreated (@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         eventList = new ArrayList<>();
-        eventsArray = new EventListArrayAdapter(requireContext(), eventList);
+        shownList = new ArrayList<>();
+        eventsArray = new EventListArrayAdapter(requireContext(), shownList);
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
 
         events.orderBy("registrationDeadline").whereGreaterThan("registrationDeadline", Timestamp.now())
                 .get().addOnSuccessListener(snapshot -> {
             eventList.addAll(snapshot.getDocuments());
+            shownList.addAll(eventList);
             eventsArray.notifyDataSetChanged();
         });
 
@@ -65,6 +70,15 @@ public class HomeFragment extends Fragment {
         TextInputEditText searchBar = binding.searchBar;
 
         eventsListView.setAdapter(eventsArray);
+
+        MaterialButton waitListedEvents = binding.waitlistedEventsButton;
+        waitListedEvents.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(),UserWaitListedEvents.class);
+                getContext().startActivity(intent);
+            }
+        });
 
         searchBar.addTextChangedListener(new TextWatcher() {
             @Override
@@ -79,7 +93,19 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
+                shownList.clear();
+                eventsArray.notifyDataSetChanged();
+                String search = s.toString().toLowerCase();
+                if (search.isEmpty()){
+                    shownList.addAll(eventList);
+                } else {
+                    for (DocumentSnapshot d : eventList){
+                        if (d.getString("eventName") != null && d.getString("eventName").toLowerCase().contains(search)){
+                            shownList.add(d);
+                            eventsArray.notifyDataSetChanged();
+                        }
+                    }
+                }
             }
         });
 
