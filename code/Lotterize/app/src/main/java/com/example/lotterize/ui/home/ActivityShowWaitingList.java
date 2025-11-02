@@ -68,19 +68,19 @@ public class ActivityShowWaitingList extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (interact.getText().equals(leaveList)) {
-                    usersId.remove(userId); // TODO: replace 0 with userId
+                    usersId.remove(userId);
                     adapter.notifyDataSetChanged();
                     events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot-> {
                         DocumentReference event = snapshot.getDocuments().get(0).getReference();
-                        event.update("waitList", FieldValue.arrayRemove(userId)); // TODO: replace 0 with userId
+                        event.update("waitList", FieldValue.arrayRemove(userId));
                         interact.setText(joinList);
                     });
                 } else {
-                    usersId.add(userId); // TODO: replace 0 with userId
+                    usersId.add(userId);
                     adapter.notifyDataSetChanged();
                     events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot -> {
                         DocumentReference event = snapshot.getDocuments().get(0).getReference();
-                        event.update("waitList", FieldValue.arrayUnion(userId)); // TODO: replace 0 with userId
+                        event.update("waitList", FieldValue.arrayUnion(userId));
                         interact.setText(leaveList);
                     });
                 }
@@ -92,7 +92,7 @@ public class ActivityShowWaitingList extends AppCompatActivity {
         events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot-> {
             List<String> obtainedUserIds = (List<String>) snapshot.getDocuments().get(0).get("waitList");
             if (obtainedUserIds != null && !obtainedUserIds.isEmpty()){
-                if(obtainedUserIds.contains(userId)){ // TODO: replace 0 with userId
+                if(obtainedUserIds.contains(userId)){
                     interact.setText(leaveList);
                 } else {
                     interact.setText(joinList);

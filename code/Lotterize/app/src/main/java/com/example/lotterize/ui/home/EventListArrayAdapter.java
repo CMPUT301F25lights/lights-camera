@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,6 +23,8 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.ArrayList;
+
+import kotlinx.serialization.descriptors.PrimitiveKind;
 
 public class EventListArrayAdapter extends ArrayAdapter<DocumentSnapshot> {
 
@@ -45,13 +48,24 @@ public class EventListArrayAdapter extends ArrayAdapter<DocumentSnapshot> {
         TextView eventName = view.findViewById(R.id.event_name);
         TextView eventDescription = view.findViewById(R.id.event_short_description);
         eventName.setText(event.getString("eventName"));
-        eventDescription.setText(event.getString("description"));
+
+        String desc = event.getString("description");
+        if (desc.length() > 50){
+            desc = desc.substring(0,49);
+            desc += "...";
+        }
+        eventDescription.setText(desc);
+
         Button eventDetails = view.findViewById(R.id.event_details_button);
         eventDetails.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getContext(),EventDetailsActivity.class);
-                intent.putExtra("eventId", getItem(position).getString("eventId"));
+                Intent intent = new Intent(getContext(),EventDetailsActivity.class);;
+                if (getItem(position).getString("eventId") != null){
+                    intent.putExtra("eventId", getItem(position).getString("eventId"));
+                } else {
+                    intent.putExtra("eventId", (String) null);
+                }
                 getContext().startActivity(intent);
             }
         });

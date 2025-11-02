@@ -45,7 +45,7 @@ public class ShowWaitListArrayAdapter extends ArrayAdapter<String> {
 
         users.whereEqualTo("userId", userId).limit(1).get().addOnSuccessListener(snapshot -> {
             DocumentSnapshot user = snapshot.getDocuments().get(0);
-            entry.setText(String.format("%s (ID: %d)", user.getString("name"), user.getLong("userId")));
+            entry.setText(String.format("%s (ID: %s)", user.getString("name"), user.getString("userId")));
         });
 
         return view;

@@ -87,9 +87,9 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:text="Time"/>
+                    android:text="Registration Deadline"/>
                 <TextView
-                    android:id="@+id/time_text"
+                    android:id="@+id/deadline_text"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
@@ -169,7 +169,8 @@
                 android:layout_width="200dp"
                 android:layout_height="200dp"
                 android:layout_gravity="center"/>
-            <TextView
+            <ImageView
+                android:id="@+id/qr_code_image"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_gravity="center"/>

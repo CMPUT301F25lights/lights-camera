@@ -1,6 +1,8 @@
 package com.example.lotterize.ui.home;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +19,9 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.lotterize.databinding.FragmentHomeBinding;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -49,15 +54,34 @@ public class HomeFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
 
-        events.orderBy("date", Query.Direction.DESCENDING).limit(10).get().addOnSuccessListener(snapshot -> {
+        events.orderBy("registrationDeadline").whereGreaterThan("registrationDeadline", Timestamp.now())
+                .get().addOnSuccessListener(snapshot -> {
             eventList.addAll(snapshot.getDocuments());
             eventsArray.notifyDataSetChanged();
         });
 
         info = binding.infoButton;
         eventsListView = binding.eventsList;
+        TextInputEditText searchBar = binding.searchBar;
 
         eventsListView.setAdapter(eventsArray);
+
+        searchBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+        });
 
         info.setOnClickListener(new View.OnClickListener() {
             @Override
