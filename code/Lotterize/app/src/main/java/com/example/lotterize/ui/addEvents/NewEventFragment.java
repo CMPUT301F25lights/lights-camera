@@ -25,10 +25,21 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import android.net.Uri;
+import android.os.Bundle;
+import android.util.Log;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+
 public class NewEventFragment extends Fragment {
     private FirebaseFirestore db;
     private CollectionReference events;
     private FragmentNewEventBinding binding;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
+    private Uri ImageUri;
+    private TextView imageSelectedTextView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -41,7 +52,28 @@ public class NewEventFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
 
-        //newEventViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        imageSelectedTextView = binding.imageSelectedTextView;
+        imageSelectedTextView.setVisibility(View.GONE);
+
+        pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+            if (uri != null) {// image selected
+                Log.d("PhotoPicker", "Selected URI: " + uri);
+                // store selected image uri
+                ImageUri = uri;
+                // update textview to show image selected
+                imageSelectedTextView.setText(uri.toString());
+                imageSelectedTextView.setVisibility(View.VISIBLE);
+            } else {
+                // no image selected
+                Log.d("PhotoPicker", "No media selected");
+            }
+        });
+        binding.buttonSelectImage.setOnClickListener(v -> {
+            // launch photo picker
+            pickMedia.launch(new PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                    .build());
+        });
 
         binding.buttonCreateEvent.setOnClickListener(v -> {
 
