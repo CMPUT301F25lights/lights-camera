@@ -77,21 +77,21 @@ public class NewEventFragment extends Fragment {
 
         binding.buttonCreateEvent.setOnClickListener(v -> {
 
-            Long eventId = 101L; //-------------------------------
-            Long ownerId = 6L; //-------------------------------
-            ArrayList<Long> waitList = new ArrayList<>(); //-------------------------------
-            ArrayList<Long> selectedList = new ArrayList<>(); //-------------------------------
-            ArrayList<Long> cancelledList = new ArrayList<>(); //-------------------------------
-            ArrayList<Long> finalList = new ArrayList<>(); //-------------------------------
+            String eventId = "101"; //-------------------------------
+            String ownerId = "6"; //-------------------------------
+            ArrayList<String> waitList = new ArrayList<>(); //-------------------------------
+            ArrayList<String> selectedList = new ArrayList<>(); //-------------------------------
+            ArrayList<String> cancelledList = new ArrayList<>(); //-------------------------------
+            ArrayList<String> finalList = new ArrayList<>(); //-------------------------------
 
-            waitList.add(111L);
-            waitList.add(222L);
-            selectedList.add(333L);
-            selectedList.add(444L);
-            selectedList.add(555L);
-            cancelledList.add(555L);
-            finalList.add(333L);
-            finalList.add(444L);
+            waitList.add("111L");
+            waitList.add("222L");
+            selectedList.add("333L");
+            selectedList.add("444L");
+            selectedList.add("555L");
+            cancelledList.add("555L");
+            finalList.add("333L");
+            finalList.add("444L");
 
             String eventName = binding.eventNameInput.getText().toString().trim(); //-------------------------------
             String dateString = binding.dateInput.getText().toString().trim();

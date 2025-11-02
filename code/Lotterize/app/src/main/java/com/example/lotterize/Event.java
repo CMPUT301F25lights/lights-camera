@@ -6,12 +6,12 @@ import java.util.ArrayList;
 
 public class Event {
 
-    private Long eventId;
-    private Long ownerId;
-    private ArrayList<Long> waitList;
-    private ArrayList<Long> selectedList;
-    private ArrayList<Long> cancelledList;
-    private ArrayList<Long> finalList;
+    private String eventId;
+    private String ownerId;
+    private ArrayList<String> waitList;
+    private ArrayList<String> selectedList;
+    private ArrayList<String> cancelledList;
+    private ArrayList<String> finalList;
     private String eventName;
     private Timestamp date;
     private Timestamp registrationStart;
@@ -25,8 +25,8 @@ public class Event {
     // poster image
 
 
-    public Event(long eventId, long ownerId, ArrayList<Long> waitList, ArrayList<Long> selectedList, ArrayList<Long>cancelledList,
-                 ArrayList<Long> finalList, String eventName, Timestamp date, Timestamp registrationStart, Timestamp registrationDeadline, String location,
+    public Event(String eventId, String ownerId, ArrayList<String> waitList, ArrayList<String> selectedList, ArrayList<String>cancelledList,
+                 ArrayList<String> finalList, String eventName, Timestamp date, Timestamp registrationStart, Timestamp registrationDeadline, String location,
                  long totalSpots, String description, long entrantsLimit, String qrCode){
         this.eventId = eventId;
         this.ownerId = ownerId;
@@ -45,27 +45,27 @@ public class Event {
         this.qrCode = qrCode;
     }
 
-    public long getEventId() {
+    public String getEventId() {
         return eventId;
     }
 
-    public long getOwnerId() {
+    public String getOwnerId() {
         return ownerId;
     }
 
-    public ArrayList<Long> getWaitList() {
+    public ArrayList<String> getWaitList() {
         return waitList;
     }
 
-    public ArrayList<Long> getSelectedList() {
+    public ArrayList<String> getSelectedList() {
         return selectedList;
     }
 
-    public ArrayList<Long> getCancelledList() {
+    public ArrayList<String> getCancelledList() {
         return cancelledList;
     }
 
-    public ArrayList<Long> getFinalList() {
+    public ArrayList<String> getFinalList() {
         return finalList;
     }
 
