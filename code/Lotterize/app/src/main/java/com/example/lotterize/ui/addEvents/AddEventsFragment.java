@@ -26,12 +26,12 @@ public class AddEventsFragment extends Fragment {
         binding = FragmentAddEventsBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        final TextView textView = binding.textAddEvents;
-        addEventsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
-        binding.buttonNewEvent.setOnClickListener(v -> {
-            NavHostFragment.findNavController(AddEventsFragment.this)
-                    .navigate(R.id.navigation_newEvent);
-        });
+//        final TextView textView = binding.textAddEvents;
+//        addEventsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+//        binding.buttonNewEvent.setOnClickListener(v -> {
+//            NavHostFragment.findNavController(AddEventsFragment.this)
+//                    .navigate(R.id.navigation_newEvent);
+//        });
         return root;
     }
 

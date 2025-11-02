@@ -29,7 +29,7 @@
         </activity>
         <activity android:name=".ui.home.EventDetailsActivity">
         </activity>
-        <activity android:name=".ActivityShowWaitingList">
+        <activity android:name=".ui.home.ActivityShowWaitingList">
         </activity>
     </application>
 

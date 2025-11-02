@@ -51,7 +51,7 @@ public class EventListArrayAdapter extends ArrayAdapter<DocumentSnapshot> {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getContext(),EventDetailsActivity.class);
-                intent.putExtra("eventId", getItem(position).getLong("eventId"));
+                intent.putExtra("eventId", getItem(position).getString("eventId"));
                 getContext().startActivity(intent);
             }
         });

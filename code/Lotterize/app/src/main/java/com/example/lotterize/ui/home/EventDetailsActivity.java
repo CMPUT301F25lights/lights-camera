@@ -10,7 +10,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.lotterize.ActivityShowWaitingList;
 import com.example.lotterize.databinding.ActivityEventDetailsBinding;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -48,12 +47,12 @@ public class EventDetailsActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(EventDetailsActivity.this, ActivityShowWaitingList.class);
                 intent.putExtra("type", "waitList");
-                intent.putExtra("eventId", getIntent().getLongExtra("eventId",0));
+                intent.putExtra("eventId", getIntent().getStringExtra("eventId"));
                 startActivity(intent);
             }
         });
 
-        events.whereEqualTo("eventId", getIntent().getLongExtra("eventId", 0)).limit(1).get().addOnSuccessListener(snapshot -> {
+        events.whereEqualTo("eventId", getIntent().getStringExtra("eventId")).limit(1).get().addOnSuccessListener(snapshot -> {
             if (!snapshot.isEmpty()) {
                 DocumentSnapshot event = snapshot.getDocuments().get(0);
                 header.setText(event.getString("eventName"));

@@ -1,30 +1,28 @@
-package com.example.lotterize;
+package com.example.lotterize.ui.home;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.lotterize.ui.home.EventDetailsActivity;
+import com.example.lotterize.R;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 
-public class ShowListArrayAdapter extends ArrayAdapter<Long> {
+public class ShowWaitListArrayAdapter extends ArrayAdapter<String> {
 
 
     private FirebaseFirestore db;
     private CollectionReference users;
-    public ShowListArrayAdapter(Context context, ArrayList<Long> userIds){
+    public ShowWaitListArrayAdapter(Context context, ArrayList<String> userIds){
         super(context, 0, userIds);
         db = FirebaseFirestore.getInstance();
         users = db.collection("users");
@@ -42,7 +40,7 @@ public class ShowListArrayAdapter extends ArrayAdapter<Long> {
             view = convertView;
         }
 
-        long userId = getItem(position);
+        String userId = getItem(position);
         TextView entry = view.findViewById(R.id.user_name_text);
 
         users.whereEqualTo("userId", userId).limit(1).get().addOnSuccessListener(snapshot -> {

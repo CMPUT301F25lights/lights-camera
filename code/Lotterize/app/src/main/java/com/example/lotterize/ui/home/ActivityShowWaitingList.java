@@ -1,4 +1,4 @@
-package com.example.lotterize;
+package com.example.lotterize.ui.home;
 
 import android.os.Bundle;
 import android.view.View;
@@ -9,10 +9,12 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.lotterize.CurrentUser;
+import com.example.lotterize.R;
+import com.example.lotterize.User;
 import com.example.lotterize.databinding.ActivityShowListBinding;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -28,8 +30,8 @@ public class ActivityShowWaitingList extends AppCompatActivity {
     CollectionReference events;
     CollectionReference users;
 
-    ArrayList<Long> usersId;
-    ShowListArrayAdapter adapter;
+    ArrayList<String> usersId;
+    ShowWaitListArrayAdapter adapter;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +43,7 @@ public class ActivityShowWaitingList extends AppCompatActivity {
         events = db.collection("events");
         users = db.collection(("users"));
         usersId = new ArrayList<>();
-        adapter = new ShowListArrayAdapter(this, usersId);
+        adapter = new ShowWaitListArrayAdapter(this, usersId);
 
         ListView list = binding.listViewShowList;
         TextView header = binding.eventListNameText;
@@ -50,8 +52,8 @@ public class ActivityShowWaitingList extends AppCompatActivity {
 
         String leaveList = "Leave Waiting List";
         String joinList = "Join Waiting List";
-        String field = getIntent().getStringExtra("type");
-        long eventId = getIntent().getLongExtra("eventId",0);
+        String eventId = getIntent().getStringExtra("eventId");
+        String userId = CurrentUser.get().getUserId();
 
         header.setText(R.string.waiting_list);
 
@@ -66,19 +68,19 @@ public class ActivityShowWaitingList extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (interact.getText().equals(leaveList)) {
-                    usersId.remove(0L); // TODO: replace 0 with userId
+                    usersId.remove(userId); // TODO: replace 0 with userId
                     adapter.notifyDataSetChanged();
                     events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot-> {
                         DocumentReference event = snapshot.getDocuments().get(0).getReference();
-                        event.update("waitList", FieldValue.arrayRemove(0)); // TODO: replace 0 with userId
+                        event.update("waitList", FieldValue.arrayRemove(userId)); // TODO: replace 0 with userId
                         interact.setText(joinList);
                     });
                 } else {
-                    usersId.add(0L); // TODO: replace 0 with userId
+                    usersId.add(userId); // TODO: replace 0 with userId
                     adapter.notifyDataSetChanged();
                     events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot -> {
                         DocumentReference event = snapshot.getDocuments().get(0).getReference();
-                        event.update("waitList", FieldValue.arrayUnion(0)); // TODO: replace 0 with userId
+                        event.update("waitList", FieldValue.arrayUnion(userId)); // TODO: replace 0 with userId
                         interact.setText(leaveList);
                     });
                 }
@@ -88,9 +90,9 @@ public class ActivityShowWaitingList extends AppCompatActivity {
         list.setAdapter(adapter);
 
         events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot-> {
-            List<Long> obtainedUserIds = (List<Long>) snapshot.getDocuments().get(0).get("waitList");
+            List<String> obtainedUserIds = (List<String>) snapshot.getDocuments().get(0).get("waitList");
             if (obtainedUserIds != null && !obtainedUserIds.isEmpty()){
-                if(obtainedUserIds.contains(0L)){ // TODO: replace 0 with userId
+                if(obtainedUserIds.contains(userId)){ // TODO: replace 0 with userId
                     interact.setText(leaveList);
                 } else {
                     interact.setText(joinList);
