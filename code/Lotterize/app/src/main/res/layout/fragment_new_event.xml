@@ -240,12 +240,13 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginEnd="8dp"/>
 
-                <EditText
-                    android:id="@+id/posterInput"
-                    android:layout_width="0dp"
+                <Button
+                    android:id="@+id/button_select_image"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="Add poster"/>
+                    android:text="Select Image" />
+
             </LinearLayout>
 
             <LinearLayout
