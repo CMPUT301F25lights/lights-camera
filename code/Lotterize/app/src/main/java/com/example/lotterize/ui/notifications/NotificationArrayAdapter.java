@@ -13,7 +13,11 @@ import androidx.annotation.Nullable;
 
 import com.example.lotterize.Notification;
 import com.example.lotterize.R;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -50,7 +54,7 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
         TextView messageTextView = view.findViewById(R.id.text_message);
         TextView timeTextView = view.findViewById(R.id.text_timestamp);
 
-        senderTextView.setText("User " + notification.getSenderId());
+        senderTextView.setText(notification.getSenderName());
         messageTextView.setText(notification.getMessage());
         Timestamp time = notification.getTime();
         if (time != null) {
@@ -62,6 +66,7 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
 
         return view;
     }
+
 
     /**
      * Replace the list when LiveData updates.

@@ -6,21 +6,40 @@ import java.util.ArrayList;
 
 public class Notification {
 
-    private long notificationId;
-    private long senderId;
+    private String notificationId;
+
+    private String senderName;
+
+    private String senderId;
     private String message;
     private Timestamp time;
-    private ArrayList<Long> receiversId;
-
-    public Notification(long notificationId, long senderId, String message, Timestamp time, ArrayList<Long> receiversId){
+    private ArrayList<String> receiversId;
+    public Notification(){
+        notificationId = null;
+        senderName = null;
+        senderId = null;
+        message = null;
+        time = Timestamp.now();
+        receiversId = new ArrayList<String>();
+    }
+    public Notification(String notificationId, String senderId, String senderName, String message, Timestamp time, ArrayList<String> receiversId){
         this.notificationId = notificationId;
+        this.senderName = senderName;
         this.senderId = senderId;
         this.message = message;
         this.time = time;
         this.receiversId = receiversId;
     }
 
-    public long getNotificationId() {
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    public String getNotificationId() {
         return notificationId;
     }
 
@@ -31,25 +50,32 @@ public class Notification {
         this.message = message;
     }
 
-    public ArrayList<Long> getReceiversId() {
+    public ArrayList<String> getReceiversId() {
         return receiversId;
     }
-    public void setReceiversId(ArrayList<Long> receiversId) {
+    public void setReceiversId(ArrayList<String> receiversId) {
         this.receiversId = receiversId;
     }
 
-    public long getSenderId() {
-        return senderId;
-    }
-    public void setSenderId(long senderId){
-        this.senderId = senderId;
+
+    public void setNotificationId(String notificationId){
+        this.notificationId = notificationId;
     }
 
     public Timestamp getTime() {
         return time;
     }
+
     public void setTime(Timestamp time){
         this.time = time;
+    }
+
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
     }
 
 }
