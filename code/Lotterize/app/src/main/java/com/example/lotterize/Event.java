@@ -2,16 +2,18 @@ package com.example.lotterize;
 
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
+
 import java.util.ArrayList;
 
 public class Event {
 
-    private Long eventId;
-    private Long ownerId;
-    private ArrayList<Long> waitList;
-    private ArrayList<Long> selectedList;
-    private ArrayList<Long> cancelledList;
-    private ArrayList<Long> finalList;
+    private String eventId;
+    private String ownerId;
+    private ArrayList<String> waitList;
+    private ArrayList<String> selectedList;
+    private ArrayList<String> cancelledList;
+    private ArrayList<String> finalList;
     private String eventName;
     private Timestamp date;
     private Timestamp registrationStart;
@@ -25,8 +27,8 @@ public class Event {
     // poster image
 
 
-    public Event(long eventId, long ownerId, ArrayList<Long> waitList, ArrayList<Long> selectedList, ArrayList<Long>cancelledList,
-                 ArrayList<Long> finalList, String eventName, Timestamp date, Timestamp registrationStart, Timestamp registrationDeadline, String location,
+    public Event(String eventId, String ownerId, ArrayList<String> waitList, ArrayList<String> selectedList, ArrayList<String>cancelledList,
+                 ArrayList<String> finalList, String eventName, Timestamp date, Timestamp registrationStart, Timestamp registrationDeadline, String location,
                  long totalSpots, String description, long entrantsLimit, String qrCode){
         this.eventId = eventId;
         this.ownerId = ownerId;
@@ -44,28 +46,55 @@ public class Event {
         this.entrantsLimit = entrantsLimit;
         this.qrCode = qrCode;
     }
+    public static Event addEventDetailsFromSnapShot(DocumentSnapshot doc){
+        String eventId = doc.getString("eventId");
+        String ownerId = doc.getString("ownerId");
 
-    public long getEventId() {
+        @SuppressWarnings("unchecked")
+        ArrayList<String> waitList = (ArrayList<String>) (doc.get("waitList") != null ? doc.get("waitList") : new ArrayList<String>());
+        @SuppressWarnings("unchecked")
+        ArrayList<String> selectedList = (ArrayList<String>) (doc.get("selectedList") != null ? doc.get("selectedList") : new ArrayList<String>());
+        @SuppressWarnings("unchecked")
+        ArrayList<String> cancelledList = (ArrayList<String>) (doc.get("cancelledList") != null ? doc.get("cancelledList") : new ArrayList<String>());
+        @SuppressWarnings("unchecked")
+        ArrayList<String> finalList = (ArrayList<String>) (doc.get("finalList") != null ? doc.get("finalList") : new ArrayList<String>());
+
+        String eventName = doc.getString("eventName");
+        Timestamp date = doc.getTimestamp("date");
+        Timestamp registrationStart = doc.getTimestamp("registrationStart");
+        Timestamp registrationDeadline = doc.getTimestamp("registrationDeadline");
+        String location = doc.getString("location");
+        Long totalSpots = doc.getLong("totalSpots");
+        String description = doc.getString("description");
+        Long entrantsLimit = doc.getLong("entrantsLimit");
+        String qrCode = doc.getString("qrCode");
+
+        return new Event(eventId, ownerId, waitList,  selectedList, cancelledList,
+                finalList, eventName, date, registrationStart, registrationDeadline, location,
+                totalSpots,  description,  entrantsLimit,  qrCode);
+
+    }
+    public String getEventId() {
         return eventId;
     }
 
-    public long getOwnerId() {
+    public String getOwnerId() {
         return ownerId;
     }
 
-    public ArrayList<Long> getWaitList() {
+    public ArrayList<String> getWaitList() {
         return waitList;
     }
 
-    public ArrayList<Long> getSelectedList() {
+    public ArrayList<String> getSelectedList() {
         return selectedList;
     }
 
-    public ArrayList<Long> getCancelledList() {
+    public ArrayList<String> getCancelledList() {
         return cancelledList;
     }
 
-    public ArrayList<Long> getFinalList() {
+    public ArrayList<String> getFinalList() {
         return finalList;
     }
 
@@ -105,3 +134,4 @@ public class Event {
         return qrCode;
     }
 }
+

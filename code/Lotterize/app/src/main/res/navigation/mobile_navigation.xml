@@ -21,7 +21,8 @@
         android:id="@+id/navigation_addEvents"
         android:name="com.example.lotterize.ui.addEvents.AddEventsFragment"
         android:label="@string/title_AddEvents"
-        tools:layout="@layout/fragment_add_events" />
+        tools:layout="@layout/fragment_add_events">
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_eventsregistered"
@@ -40,5 +41,30 @@
         android:name="com.example.lotterize.ui.addEvents.NewEventFragment"
         android:label="New event"
         tools:layout="@layout/fragment_new_event" />
+
+    <fragment
+        android:id="@+id/navigation_editEvents"
+        android:name="com.example.lotterize.ui.addEvents.EditEventFragment"
+        tools:layout="@layout/fragment_edit_event">
+        <action
+            android:id="@+id/action_edit_to_entrants"
+            app:destination="@id/navigation_entrantsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_entrantsFragment"
+        android:name="com.example.lotterize.ui.addEvents.AllEntrantsFragment"
+        tools:layout="@layout/fragment_all_entrants">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_entrantList"
+        android:name="com.example.lotterize.ui.addEvents.EntrantListFragment">
+        <argument android:name="eventId" app:argType="string" />
+        <argument android:name="status"  app:argType="string" />
+    </fragment>
 
 </navigation>
