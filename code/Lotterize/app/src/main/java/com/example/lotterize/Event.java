@@ -1,11 +1,15 @@
 package com.example.lotterize;
 
-
 import com.google.firebase.Timestamp;
 import java.util.ArrayList;
 
 /**
- * Model of Events. Stores all of the information related to events.
+ * Represents an event.
+ * Contains all metadata about an event including owner, timing,
+ * registration status lists, participant limits, and QR reference.
+ *
+ * Firestore requires a public no-argument constructor and public
+ * getters/setters to properly deserialize objects.
  */
 public class Event {
 
@@ -20,17 +24,44 @@ public class Event {
     private Timestamp registrationStart;
     private Timestamp registrationDeadline;
     private String location;
-    private Long totalSpots;
+    private long totalSpots;
     private String description;
-    private Long entrantsLimit;
+    private long entrantsLimit;
     private String qrCode;
 
-    // poster image
+    /**
+     * Required empty constructor for Firestore.
+     * DO NOT remove — Firestore uses reflection to populate fields.
+     */
+    public Event() {}
 
+    /**
+     * Full constructor for manually creating an Event.
+     *
+     * @param eventId Unique Firestore ID of the event (nullable until saved)
+     * @param ownerId ID of organizer who created the event
+     * @param waitList List of user IDs currently waiting
+     * @param selectedList List of selected entrant IDs
+     * @param cancelledList List of users who cancelled
+     * @param finalList List of final confirmed users
+     * @param eventName Display name of the event
+     * @param date Timestamp when the event occurs
+     * @param registrationStart Timestamp when sign-up opens
+     * @param registrationDeadline Timestamp when sign-up closes
+     * @param location Physical address or venue
+     * @param totalSpots Maximum number of possible entrants
+     * @param description Text description shown to users
+     * @param entrantsLimit Limit on entries before selection/lottery
+     * @param qrCode Reference string to QR image/data
+     */
+    public Event(String eventId, String ownerId,
+                 ArrayList<String> waitList, ArrayList<String> selectedList,
+                 ArrayList<String> cancelledList, ArrayList<String> finalList,
+                 String eventName, Timestamp date, Timestamp registrationStart,
+                 Timestamp registrationDeadline, String location,
+                 long totalSpots, String description,
+                 long entrantsLimit, String qrCode) {
 
-    public Event(String eventId, String ownerId, ArrayList<String> waitList, ArrayList<String> selectedList, ArrayList<String>cancelledList,
-                 ArrayList<String> finalList, String eventName, Timestamp date, Timestamp registrationStart, Timestamp registrationDeadline, String location,
-                 long totalSpots, String description, long entrantsLimit, String qrCode){
         this.eventId = eventId;
         this.ownerId = ownerId;
         this.waitList = waitList;
@@ -48,108 +79,78 @@ public class Event {
         this.qrCode = qrCode;
     }
 
-    /**
-     * @return String - id of event
-     */
-    public String getEventId() {
-        return eventId;
-    }
+    /** @return Firestore ID of the event */
+    public String getEventId() { return eventId; }
+    /** @param eventId Firestore event document ID */
+    public void setEventId(String eventId) { this.eventId = eventId; }
 
-    /**
-     * @return String - id of event owner
-     */
-    public String getOwnerId() {
-        return ownerId;
-    }
+    /** @return ID of creator (organizer) */
+    public String getOwnerId() { return ownerId; }
+    /** @param ownerId Organizer's user ID */
+    public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
 
-    /**
-     * @return ArrayList<String>- list containing ids of all users in waiting list
-     */
-    public ArrayList<String> getWaitList() {
-        return waitList;
-    }
+    /** @return List of users waiting */
+    public ArrayList<String> getWaitList() { return waitList; }
+    /** @param waitList Pending user IDs */
+    public void setWaitList(ArrayList<String> waitList) { this.waitList = waitList; }
 
-    /**
-     * @return ArrayList<String>- list containing ids of all users in selected list
-     */
-    public ArrayList<String> getSelectedList() {
-        return selectedList;
-    }
+    /** @return List of selected users */
+    public ArrayList<String> getSelectedList() { return selectedList; }
+    /** @param selectedList Final selected user IDs */
+    public void setSelectedList(ArrayList<String> selectedList) { this.selectedList = selectedList; }
 
-    /**
-     * @return ArrayList<String>- list containing ids of all users in cancelled list
-     */
-    public ArrayList<String> getCancelledList() {
-        return cancelledList;
-    }
+    /** @return List of cancelled users */
+    public ArrayList<String> getCancelledList() { return cancelledList; }
+    /** @param cancelledList IDs of users who cancelled */
+    public void setCancelledList(ArrayList<String> cancelledList) { this.cancelledList = cancelledList; }
 
-    /**
-     * @return ArrayList<String>- list containing ids of all users in final list
-     */
-    public ArrayList<String> getFinalList() {
-        return finalList;
-    }
+    /** @return Fully accepted (final) user list */
+    public ArrayList<String> getFinalList() { return finalList; }
+    /** @param finalList Final approved participant IDs */
+    public void setFinalList(ArrayList<String> finalList) { this.finalList = finalList; }
 
-    /**
-     * @return String- name of event
-     */
-    public String getEventName() {
-        return eventName;
-    }
+    /** @return The event’s displayed name */
+    public String getEventName() { return eventName; }
+    /** @param eventName Event display name */
+    public void setEventName(String eventName) { this.eventName = eventName; }
 
-    /**
-     * @return Timestamp- date of the event
-     */
-    public Timestamp getDate(){
-        return date;
-    }
+    /** @return Timestamp when the event happens */
+    public Timestamp getDate() { return date; }
+    /** @param date New timestamp for event date */
+    public void setDate(Timestamp date) { this.date = date; }
 
-    /**
-     * @return Timestamp- registration start time
-     */
-    public Timestamp getRegistrationStart() {
-        return registrationStart;
-    }
+    /** @return Sign-up opening time */
+    public Timestamp getRegistrationStart() { return registrationStart; }
+    /** @param registrationStart New open time */
+    public void setRegistrationStart(Timestamp registrationStart) { this.registrationStart = registrationStart; }
 
-    /**
-     * @return Timestamp- registration dead line
-     */
-    public Timestamp getRegistrationDeadline() {
-        return registrationDeadline;
-    }
+    /** @return Deadline to sign up */
+    public Timestamp getRegistrationDeadline() { return registrationDeadline; }
+    /** @param registrationDeadline New cutoff time */
+    public void setRegistrationDeadline(Timestamp registrationDeadline) { this.registrationDeadline = registrationDeadline; }
 
-    /**
-     * @return String- location of event
-     */
-    public String getLocation(){
-        return location;
-    }
+    /** @return Event location (venue) */
+    public String getLocation() { return location; }
+    /** @param location New venue information */
+    public void setLocation(String location) { this.location = location; }
 
-    /**
-     * @return long- total available spots
-     */
-    public long getTotalSpots() {
-        return totalSpots;
-    }
+    /** @return Maximum number of entrants */
+    public long getTotalSpots() { return totalSpots; }
+    /** @param totalSpots Updated capacity */
+    public void setTotalSpots(long totalSpots) { this.totalSpots = totalSpots; }
 
-    /**
-     * @return String- event description
-     */
-    public String getDescription(){
-        return description;
-    }
+    /** @return Event description text */
+    public String getDescription() { return description; }
+    /** @param description Updated event description */
+    public void setDescription(String description) { this.description = description; }
 
-    /**
-     * @return long- maximum number of entrants
-     */
-    public long getEntrantsLimit(){
-        return entrantsLimit;
-    }
+    /** @return Maximum entrants allowed before selection */
+    public long getEntrantsLimit() { return entrantsLimit; }
+    /** @param entrantsLimit New entrant limit */
+    public void setEntrantsLimit(long entrantsLimit) { this.entrantsLimit = entrantsLimit; }
 
-    /**
-     * @return String- qrCode in string form
-     */
-    public String getQrCode() {
-        return qrCode;
-    }
+    /** @return QR code identifier associated with event */
+    public String getQrCode() { return qrCode; }
+    /** @param qrCode Reference to event QR code */
+    public void setQrCode(String qrCode) { this.qrCode = qrCode; }
 }
