@@ -24,21 +24,39 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.List;
 
+/**
+ * The EventHistoryFragment class displays a list of events that the current user
+ * has participated in, joined the waitlist for, or cancelled.
+ * It retrieves event data from Firebase Firestore and dynamically populates
+ * the screen with event names and participation statuses.
+ */
 public class EventHistoryFragment extends Fragment {
 
+    // Log tag for debugging purposes
     private static final String TAG = "EventHistoryFragment";
+
     private FragmentEventHistoryBinding binding;
+
+    // Firestore database instance for retrieving event data
     private FirebaseFirestore db;
+
+    // Current user’s unique document ID
     private String currentUserId;
 
+    /**
+     * Called when the fragment should create its view hierarchy.
+     */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         binding = FragmentEventHistoryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        // Initialize Firestore
         db = FirebaseFirestore.getInstance();
 
-        // Hide bottom navigation
+        // Hide bottom navigation when viewing event history
         if (getActivity() != null) {
             BottomNavigationView navView = getActivity().findViewById(R.id.nav_view);
             if (navView != null) {
@@ -46,7 +64,7 @@ public class EventHistoryFragment extends Fragment {
             }
         }
 
-        // Get current user ID (the string document ID)
+        // Retrieve the current user’s ID
         User currentUser = CurrentUser.get();
         if (currentUser != null && currentUser.getUserId() != null) {
             currentUserId = currentUser.getUserId();
@@ -57,18 +75,22 @@ public class EventHistoryFragment extends Fragment {
             return root;
         }
 
-        // Back button
+        // Back button navigates to the previous screen
         binding.buttonBack.setOnClickListener(v -> {
             NavController navController = Navigation.findNavController(v);
             navController.navigateUp();
         });
 
-        // Load event history
+        // Load all events for the current user
         loadEventHistory();
 
         return root;
     }
 
+    /**
+     * Retrieves all events from Firestore and filters them based on the user’s participation.
+     * The method determines whether the user was selected, waitlisted, or cancelled.
+     */
     private void loadEventHistory() {
         if (currentUserId == null || currentUserId.isEmpty()) {
             Log.e(TAG, "Cannot load event history - userId is null or empty");
@@ -79,9 +101,9 @@ public class EventHistoryFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     binding.eventHistoryContainer.removeAllViews();
-
                     int eventCount = 0;
 
+                    // Loop through all event documents
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         List<String> waitList = (List<String>) doc.get("waitList");
                         List<String> selectedList = (List<String>) doc.get("selectedList");
@@ -89,15 +111,11 @@ public class EventHistoryFragment extends Fragment {
                         List<String> cancelledList = (List<String>) doc.get("cancelledList");
 
                         String eventName = doc.getString("eventName");
-
                         Log.d(TAG, "Checking event: " + eventName);
-                        Log.d(TAG, "waitList: " + waitList);
-                        Log.d(TAG, "selectedList: " + selectedList);
-                        Log.d(TAG, "finalList: " + finalList);
 
                         String status = null;
 
-                        // Priority: selectedList or finalList = "Was Selected"
+                        // Priority: if selected or finalized, mark as "Was Selected"
                         if ((selectedList != null && selectedList.contains(currentUserId)) ||
                                 (finalList != null && finalList.contains(currentUserId))) {
                             status = "Was Selected";
@@ -105,14 +123,14 @@ public class EventHistoryFragment extends Fragment {
                             addEventToView(eventName, status);
                             Log.d(TAG, "User WAS SELECTED for: " + eventName);
                         }
-                        // Check if user is in waitList (and NOT selected)
+                        // If in waitlist but not selected
                         else if (waitList != null && waitList.contains(currentUserId)) {
                             status = "Was Not Selected";
                             eventCount++;
                             addEventToView(eventName, status);
                             Log.d(TAG, "User WAS NOT SELECTED (on waitlist) for: " + eventName);
                         }
-                        // Check if user cancelled
+                        // If user cancelled
                         else if (cancelledList != null && cancelledList.contains(currentUserId)) {
                             status = "Cancelled";
                             eventCount++;
@@ -121,7 +139,7 @@ public class EventHistoryFragment extends Fragment {
                         }
                     }
 
-                    // Show empty state if no events found
+                    // Show placeholder if no events match
                     if (eventCount == 0) {
                         binding.textEmptyState.setVisibility(View.VISIBLE);
                         Log.d(TAG, "No events found for user");
@@ -135,8 +153,14 @@ public class EventHistoryFragment extends Fragment {
                 });
     }
 
+    /**
+     * Dynamically adds a single event item (name + status) to the scrollable event history view.
+     *
+     * @param eventName The name of the event.
+     * @param status    The user’s participation status in the event.
+     */
     private void addEventToView(String eventName, String status) {
-        // Create horizontal layout for event item
+        // Create a horizontal layout for each event row
         LinearLayout eventItem = new LinearLayout(getContext());
         eventItem.setOrientation(LinearLayout.HORIZONTAL);
         eventItem.setPadding(0, 16, 0, 16);
@@ -148,13 +172,11 @@ public class EventHistoryFragment extends Fragment {
         eventNameView.setTextSize(18);
         eventNameView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
         LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
-                0,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                1f
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
         );
         eventNameView.setLayoutParams(nameParams);
 
-        // Status (right)
+        // Event status (right)
         TextView statusView = new TextView(getContext());
         statusView.setText(status);
         statusView.setTextColor(0xFF666666);
@@ -164,13 +186,11 @@ public class EventHistoryFragment extends Fragment {
         eventItem.addView(eventNameView);
         eventItem.addView(statusView);
 
-        // Add divider
+        // Divider line between items
         View divider = new View(getContext());
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                1
+                ViewGroup.LayoutParams.MATCH_PARENT, 1
         );
-        dividerParams.setMargins(0, 0, 0, 0);
         divider.setLayoutParams(dividerParams);
         divider.setBackgroundColor(0xFFE0E0E0);
 
@@ -178,11 +198,15 @@ public class EventHistoryFragment extends Fragment {
         binding.eventHistoryContainer.addView(divider);
     }
 
+    /**
+     * Called when the fragment’s view is destroyed.
+     * Ensures the bottom navigation bar reappears when returning to other screens.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
 
-        // Show bottom navigation when leaving
+        // Re-show bottom navigation
         if (getActivity() != null) {
             BottomNavigationView navView = getActivity().findViewById(R.id.nav_view);
             if (navView != null) {
