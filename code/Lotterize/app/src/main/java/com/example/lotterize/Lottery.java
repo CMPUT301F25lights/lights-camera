@@ -16,13 +16,12 @@ public class Lottery {
     }
 
     /**
-     * Draw winners from the event's waiting list and notify them.
+     * Draw winners automatically based on the event's totalSpots value.
      *
      * @param event The event to run the lottery on
-     * @param numberOfWinners Number of entrants to select
      * @return List of selected winner IDs
      */
-    public List<String> drawWinners(Event event, int numberOfWinners) {
+    public List<String> drawWinners(Event event) {
         ArrayList<String> waitList = event.getWaitList();
         ArrayList<String> selectedList = event.getSelectedList();
 
@@ -30,22 +29,22 @@ public class Lottery {
             return Collections.emptyList();
         }
 
-        // Ensure we do not try to pick more winners than available entrants
-        int winnersToPick = Math.min(numberOfWinners, waitList.size());
+        // Use totalSpots as the number of winners to draw (or entrantsLimit if preferred)
+        int numberOfWinners = (int) event.getTotalSpots();
 
+        // Ensure we do not exceed the number of available entrants
+        int winnersToPick = Math.min(numberOfWinners, waitList.size());
 
         ArrayList<String> shuffledList = new ArrayList<>(waitList);
         Collections.shuffle(shuffledList, random);
 
-        // Pick the first 'winnersToPick' entrants
         List<String> winners = shuffledList.subList(0, winnersToPick);
-
 
         selectedList.addAll(winners);
         event.getFinalList().addAll(winners);
         waitList.removeAll(winners);
 
-        // Send notifications to winners
+        // Notify winners
         sendWinnerNotifications(event, winners);
 
         return new ArrayList<>(winners);
