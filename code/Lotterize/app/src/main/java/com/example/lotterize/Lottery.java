@@ -14,6 +14,11 @@ public class Lottery {
         this.random = new Random();
         this.notificationSender = new NotificationSender();
     }
+    // Test constructor
+    public Lottery(NotificationSender notificationSender) {
+        this.random = new Random();
+        this.notificationSender = notificationSender;
+    }
 
     /**
      * Draw winners automatically based on the event's totalSpots value.
@@ -32,8 +37,15 @@ public class Lottery {
         // Use totalSpots as the number of winners to draw (or entrantsLimit if preferred)
         int numberOfWinners = (int) event.getTotalSpots();
 
+        //Added in because the lottery was giving double the total spots
+        int spotsRemaining = (int) (event.getTotalSpots() - selectedList.size());
+        if (spotsRemaining <= 0) {
+            return Collections.emptyList();
+        }
+
+
         // Ensure we do not exceed the number of available entrants
-        int winnersToPick = Math.min(numberOfWinners, waitList.size());
+        int winnersToPick = Math.min(spotsRemaining, waitList.size());
 
         ArrayList<String> shuffledList = new ArrayList<>(waitList);
         Collections.shuffle(shuffledList, random);

@@ -51,6 +51,9 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
+    //these will have to be removed
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("org.mockito:mockito-core:5.5.0")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
