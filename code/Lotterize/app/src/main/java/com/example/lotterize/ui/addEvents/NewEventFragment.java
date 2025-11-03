@@ -13,8 +13,10 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
 import com.example.lotterize.R;
+import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentNewEventBinding;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
@@ -77,23 +79,8 @@ public class NewEventFragment extends Fragment {
 
         binding.buttonCreateEvent.setOnClickListener(v -> {
 
-            String eventId = "101"; //-------------------------------
-            String ownerId = "6"; //-------------------------------
-            ArrayList<String> waitList = new ArrayList<>(); //-------------------------------
-            ArrayList<String> selectedList = new ArrayList<>(); //-------------------------------
-            ArrayList<String> cancelledList = new ArrayList<>(); //-------------------------------
-            ArrayList<String> finalList = new ArrayList<>(); //-------------------------------
-
-            waitList.add("111L");
-            waitList.add("222L");
-            selectedList.add("333L");
-            selectedList.add("444L");
-            selectedList.add("555L");
-            cancelledList.add("555L");
-            finalList.add("333L");
-            finalList.add("444L");
-
-            String eventName = binding.eventNameInput.getText().toString().trim(); //-------------------------------
+            // Collect user inputs
+            String eventName = binding.eventNameInput.getText().toString().trim();
             String dateString = binding.dateInput.getText().toString().trim();
             String timeString = binding.timeInput.getText().toString().trim();
             String registrationStartString = binding.registrationStartInput.getText().toString().trim();
@@ -109,40 +96,114 @@ public class NewEventFragment extends Fragment {
             Long entrantsLimit = Long.parseLong(entrantsLimitString); //-------------------------------
             String qrCode = binding.qrCodeInput.getText().toString().trim();
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-            try {
-                Date date_date = sdf.parse(dateString + " " + timeString);
-                Date date_regStartDate = sdf.parse(registrationStartString);
-                Date date_regEndDate = sdf.parse(registrationEndString);
-                date = new Timestamp(date_date);
-                registrationStartDate = new Timestamp(date_regStartDate);
-                registrationEndDate = new Timestamp(date_regEndDate);
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
+            // Required field check
+            if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||
+                    registrationStartString.isEmpty() || registrationEndString.isEmpty() ||
+                    location.isEmpty() || totalSpotsString.isEmpty() || entrantsLimitString.isEmpty()) {
+                Toast.makeText(getContext(), "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
+                return;
             }
 
-            Event event = new Event(eventId, ownerId, waitList, selectedList, cancelledList, finalList,
-                    eventName, date, registrationStartDate, registrationEndDate, location,
+            // Validate number inputs
+            try {
+                if (totalSpots <= 0 || entrantsLimit <= 0) {
+                    Toast.makeText(getContext(), "Spots and limit must be greater than 0!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (entrantsLimit > totalSpots) {
+                    Toast.makeText(getContext(), "Entrants limit cannot exceed total spots!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(getContext(), "Invalid number format!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Validate and parse dates
+            Timestamp eventDate, regStartDate, regEndDate;
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                Date eventDateParsed = sdf.parse(dateString + " " + timeString);
+                Date regStartParsed = sdf.parse(registrationStartString + " 00:00");
+                Date regEndParsed = sdf.parse(registrationEndString + " 23:59");
+
+                if (eventDateParsed == null || regStartParsed == null || regEndParsed == null) {
+                    Toast.makeText(getContext(), "Invalid date format!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Validate logical order
+                if (!regStartParsed.before(regEndParsed)) {
+                    Toast.makeText(getContext(), "Registration start must be before end!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (!regEndParsed.before(eventDateParsed)) {
+                    Toast.makeText(getContext(), "Registration must close before event date!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                eventDate = new Timestamp(eventDateParsed);
+                regStartDate = new Timestamp(regStartParsed);
+                regEndDate = new Timestamp(regEndParsed);
+
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Incorrect date format, use YYYY-MM-DD", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Get ID of logged-in user
+            User currentUser = CurrentUser.get();
+            String ownerId = currentUser.getUserId();
+
+            if (ownerId == null) {
+                Toast.makeText(getContext(), "User not logged in!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Initialize participant lists
+            ArrayList<String> waitList = new ArrayList<>();
+            ArrayList<String> selectedList = new ArrayList<>();
+            ArrayList<String> cancelledList = new ArrayList<>();
+            ArrayList<String> finalList = new ArrayList<>();
+
+            // Create Event object without ID
+            Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
+                    eventName, eventDate, regStartDate, regEndDate, location,
                     totalSpots, description, entrantsLimit, qrCode);
 
+            // Save to Firestore
+            events.add(event).addOnSuccessListener(documentReference -> {
+                String eventId = documentReference.getId();
 
-            db.collection("events")
-                    .add(event)
-                    .addOnSuccessListener(documentReference -> {
-                        Toast.makeText(getContext(), "Event created!", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
+                currentUser.addOwnedEvent(eventId);
+                db.collection("users")
+                        .document(ownerId)
+                        .update("ownedEventIds", currentUser.getOwnedEventIds())
+                        .addOnSuccessListener(unused ->
+                                Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
+                        )
+                        .addOnFailureListener(e ->
+                                Toast.makeText(getContext(), "Failed to update user events!", Toast.LENGTH_SHORT).show()
+                        );
 
-            NavHostFragment.findNavController(NewEventFragment.this)
-                    .navigate(R.id.navigation_addEvents);
+                // Get event id
+                documentReference.update("eventId", eventId)
+                        .addOnSuccessListener(unused ->
+                                Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
+                        );
+
+                NavHostFragment.findNavController(NewEventFragment.this)
+                        .navigate(R.id.navigation_addEvents);
+
+            }).addOnFailureListener(e ->
+                    Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+            );
         });
 
-        binding.buttonCancelCreateEvent.setOnClickListener(v -> {
-            NavHostFragment.findNavController(NewEventFragment.this)
-                    .navigate(R.id.navigation_addEvents);
-        });
+        binding.buttonCancelCreateEvent.setOnClickListener(v ->
+                NavHostFragment.findNavController(NewEventFragment.this)
+                        .navigate(R.id.navigation_addEvents)
+        );
 
         return root;
     }

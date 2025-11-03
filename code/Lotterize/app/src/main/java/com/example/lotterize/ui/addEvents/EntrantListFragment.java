@@ -30,7 +30,7 @@ import java.util.Map;
 
 /**
  * Reusable list screen that shows entrants for one Event list (WAITLIST/CHOSEN/CANCELLED/ENROLLED).
- * Shows the user's "name" only. Assumes the stored ids are the /users document IDs.
+ * Shows the user's "name" only.
  */
 public class EntrantListFragment extends Fragment {
 
@@ -43,7 +43,7 @@ public class EntrantListFragment extends Fragment {
     private ArrayAdapter<String> adapter;
     private final ArrayList<String> rows = new ArrayList<>();
 
-    private final Map<String, String> userNameCache = new HashMap<>();
+    private final Map<String, String> idToNameMap = new HashMap<>();
     private boolean isUserCacheLoaded = false;
 
     @Nullable
@@ -180,11 +180,7 @@ public class EntrantListFragment extends Fragment {
 
 
     /** Resolve display names by loading all /users once (id -> name), then map locally. */
-    private void resolveNamesByDocId(@NonNull List<String> docIds) {
-        if (isUserCacheLoaded) {
-            applyNamesFromCache(docIds);
-            return;
-        }
+    private void resolveNamesByDocId(@NonNull ArrayList<String> docIds) {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -194,10 +190,10 @@ public class EntrantListFragment extends Fragment {
                     for (DocumentSnapshot d : qs.getDocuments()) {
                         String id   = d.getId();
                         String name = d.getString("name");
-                        userNameCache.put(id, (name != null && !name.isEmpty()) ? name : id);
+                        idToNameMap.put(id, (name != null && !name.isEmpty()) ? name : id);
                     }
                     isUserCacheLoaded = true;
-                    applyNamesFromCache(docIds);
+                    applyNames(docIds);
                 })
                 .addOnFailureListener(e -> {
                     // If we fail to build the cache, at least show raw ids
@@ -209,10 +205,10 @@ public class EntrantListFragment extends Fragment {
     }
 
     /** Use the in-memory cache to fill rows in the same order as docIds. */
-    private void applyNamesFromCache(@NonNull List<String> docIds) {
+    private void applyNames(@NonNull ArrayList<String> docIds) {
         rows.clear();
         for (String id : docIds) {
-            String name = userNameCache.get(id);
+            String name = idToNameMap.get(id);
             rows.add((name != null && !name.isEmpty()) ? name : id);
         }
         adapter.notifyDataSetChanged();

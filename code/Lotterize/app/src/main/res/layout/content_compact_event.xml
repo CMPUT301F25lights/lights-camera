@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="10dp"
+    android:layout_marginVertical="20dp"
+    android:background="@drawable/background_rounded_rectangle">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingVertical="20dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+        <TextView
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:id="@+id/event_name"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text="@string/sample_text"
+            android:layout_weight="3"
+            android:paddingRight="10dp"/>
+        <TextView
+            android:id="@+id/event_short_description"
+            app:layout_constraintLeft_toRightOf="@id/event_name"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:textSize="15sp"
+            android:text="@string/sample_text"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="20dp">
+        <ImageView
+            android:id="@+id/event_img"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:src="@drawable/ic_info_black_24dp" />
+
+        <Button
+            android:id="@+id/event_details_button"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginLeft="140dp"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
+            android:backgroundTint="@color/black"
+            android:text="@string/view_details"
+            android:textSize="11sp"/>
+    </LinearLayout>
+
+</LinearLayout>
