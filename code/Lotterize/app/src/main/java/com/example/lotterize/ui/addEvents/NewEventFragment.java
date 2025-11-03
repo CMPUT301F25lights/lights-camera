@@ -16,6 +16,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
 import com.example.lotterize.R;
+import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentNewEventBinding;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
@@ -26,20 +27,55 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class NewEventFragment extends Fragment {
+import android.net.Uri;
+import android.os.Bundle;
+import android.util.Log;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
 
+public class NewEventFragment extends Fragment {
     private FirebaseFirestore db;
     private CollectionReference events;
     private FragmentNewEventBinding binding;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
+    private Uri ImageUri;
+    private TextView imageSelectedTextView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+        NewEventViewModel newEventViewModel =
+                new ViewModelProvider(this).get(NewEventViewModel.class);
 
         binding = FragmentNewEventBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
+
+        imageSelectedTextView = binding.imageSelectedTextView;
+        imageSelectedTextView.setVisibility(View.GONE);
+
+        pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+            if (uri != null) {// image selected
+                Log.d("PhotoPicker", "Selected URI: " + uri);
+                // store selected image uri
+                ImageUri = uri;
+                // update textview to show image selected
+                imageSelectedTextView.setText(uri.toString());
+                imageSelectedTextView.setVisibility(View.VISIBLE);
+            } else {
+                // no image selected
+                Log.d("PhotoPicker", "No media selected");
+            }
+        });
+        binding.buttonSelectImage.setOnClickListener(v -> {
+            // launch photo picker
+            pickMedia.launch(new PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                    .build());
+        });
 
         binding.buttonCreateEvent.setOnClickListener(v -> {
 
@@ -49,10 +85,15 @@ public class NewEventFragment extends Fragment {
             String timeString = binding.timeInput.getText().toString().trim();
             String registrationStartString = binding.registrationStartInput.getText().toString().trim();
             String registrationEndString = binding.registrationEndInput.getText().toString().trim();
-            String location = binding.locationInput.getText().toString().trim();
+            Timestamp date; //-------------------------------
+            Timestamp registrationStartDate; //-------------------------------
+            Timestamp registrationEndDate; //-------------------------------
+            String location = binding.locationInput.getText().toString().trim(); //-------------------------------
             String totalSpotsString = binding.totalSpotsInput.getText().toString().trim();
-            String description = binding.descriptionInput.getText().toString().trim();
+            Long totalSpots = Long.parseLong(totalSpotsString); //-------------------------------
+            String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
+            Long entrantsLimit = Long.parseLong(entrantsLimitString); //-------------------------------
             String qrCode = binding.qrCodeInput.getText().toString().trim();
 
             // Required field check
@@ -64,11 +105,7 @@ public class NewEventFragment extends Fragment {
             }
 
             // Validate number inputs
-            long totalSpots, entrantsLimit;
             try {
-                totalSpots = Long.parseLong(totalSpotsString);
-                entrantsLimit = Long.parseLong(entrantsLimitString);
-
                 if (totalSpots <= 0 || entrantsLimit <= 0) {
                     Toast.makeText(getContext(), "Spots and limit must be greater than 0!", Toast.LENGTH_SHORT).show();
                     return;
@@ -115,7 +152,9 @@ public class NewEventFragment extends Fragment {
             }
 
             // Get ID of logged-in user
-            String ownerId = CurrentUser.get().getUserId();
+            User currentUser = CurrentUser.get();
+            String ownerId = currentUser.getUserId();
+
             if (ownerId == null) {
                 Toast.makeText(getContext(), "User not logged in!", Toast.LENGTH_SHORT).show();
                 return;
@@ -135,6 +174,17 @@ public class NewEventFragment extends Fragment {
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
                 String eventId = documentReference.getId();
+
+                currentUser.addOwnedEvent(eventId);
+                db.collection("users")
+                        .document(ownerId)
+                        .update("ownedEventIds", currentUser.getOwnedEventIds())
+                        .addOnSuccessListener(unused ->
+                                Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
+                        )
+                        .addOnFailureListener(e ->
+                                Toast.makeText(getContext(), "Failed to update user events!", Toast.LENGTH_SHORT).show()
+                        );
 
                 // Get event id
                 documentReference.update("eventId", eventId)
@@ -157,6 +207,8 @@ public class NewEventFragment extends Fragment {
 
         return root;
     }
+
+
 
     @Override
     public void onDestroyView() {

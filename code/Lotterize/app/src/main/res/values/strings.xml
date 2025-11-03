@@ -9,6 +9,8 @@
     <string name="title_newEvent">New Event</string>
     <string name="logout">Logout</string>
     <string name="search_events">Search Events</string>
+    <string name="sample_text">sample_text</string>
+    <string name="view_details">View Details</string>
     <string name="new_event">New Event</string>
     <string name="text_new_event">Create New Event</string>
     <string name="create_event">Create Event</string>
@@ -55,6 +57,10 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="join_waiting_list">Join Waiting List</string>
+    <string name="leave_waiting_list_string">Leave Waiting List</string>
+    <string name="waiting_list">Waiting List</string>
+    <string name="sample_text_50">12345678901234567890123456789012345678901234567890</string>
 
 
 </resources>
