@@ -29,8 +29,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Reusable list screen that shows entrants for one Event list (WAITLIST/CHOSEN/CANCELLED/ENROLLED).
- * Shows the user's "name" only.
+ * This is a reusable fragment that displays entrants for a single list of an {@code Event}
+ * (e.g., WAITLIST, CHOSEN, CANCELLED, ENROLLED). It shows each entrant's display name if
+ * found in the {@code users} collection, otherwise falls back to their id.
  */
 public class EntrantListFragment extends Fragment {
 
@@ -43,9 +44,21 @@ public class EntrantListFragment extends Fragment {
     private ArrayAdapter<String> adapter;
     private final ArrayList<String> rows = new ArrayList<>();
 
+    /** Cache mapping user document id -> display name (fallback to id). */
     private final Map<String, String> idToNameMap = new HashMap<>();
-    private boolean isUserCacheLoaded = false;
 
+    /**
+     * This inflates the fragment layout.
+     *
+     * @param inflater
+     *      The LayoutInflater used to inflate views
+     * @param container
+     *      The parent view to attach to (if non-null)
+     * @param savedInstanceState
+     *      Previous state if the fragment is being re-created
+     * @return
+     *      Returns the root view of the fragment layout
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -54,6 +67,18 @@ public class EntrantListFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_entrant_list, container, false);
     }
 
+    /**
+     * This configures the UI and triggers data loading:
+     *   - Reads {@code eventId} and {@code status} from arguments
+     *   - Sets the toolbar back button
+     *   - Initializes the ListView and its adapter
+     *   - Loads entrants for the requested list
+     *
+     * @param v
+     *      The root view returned by {@link #onCreateView}
+     * @param savedInstanceState
+     *      Previous state if the fragment is being re-created
+     */
     @Override
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(v, savedInstanceState);
@@ -84,8 +109,13 @@ public class EntrantListFragment extends Fragment {
     }
 
     /**
-     * Returns the label of the fragment page
-     * **/
+     * This returns a title for the list based on status.
+     *
+     * @param s
+     *      The entrant list status (WAITLIST/CHOSEN/CANCELLED/ENROLLED)
+     * @return
+     *      Returns the page title to display
+     */
     private String ListLabel(String s) {
         switch (s) {
             case "WAITLIST":  return "Waitlist Entrants";
@@ -96,8 +126,14 @@ public class EntrantListFragment extends Fragment {
         }
     }
 
-    /** Firestore field name containing the list. */
-    @Nullable
+    /**
+     * This maps a status to its Firestore field name in the event document.
+     *
+     * @param s
+     *      The entrant list status (WAITLIST/CHOSEN/CANCELLED/ENROLLED)
+     * @return
+     *      Returns the field name on the event document, or {@code null} if unknown
+     */    @Nullable
     private String listField(String s) {
         switch (s) {
             case "WAITLIST":  return "waitList";
@@ -108,7 +144,9 @@ public class EntrantListFragment extends Fragment {
         }
     }
 
-    // ---------- Data loading ----------
+    /**
+     * This loads the entrant ids for the requested list from the event document.
+     */
     private void loadEntrants() {
         final String field = listField(status);
         if (field == null) {
@@ -123,64 +161,57 @@ public class EntrantListFragment extends Fragment {
                     if (doc.exists()) {
                         bindFromDoc(doc, field);
                     } else {
-                        db.collection("events")
-                                .whereEqualTo("eventId", eventId)
-                                .limit(1)
-                                .get()
-                                .addOnSuccessListener(snap -> {
-                                    if (!snap.isEmpty()) {
-                                        bindFromDoc(snap.getDocuments().get(0), field);
-                                    } else {
-                                        toast("Event not found");
-                                        NavHostFragment.findNavController(this).popBackStack();
-                                    }
-                                })
-                                .addOnFailureListener(e -> toast("Lookup failed: " + e.getMessage()));
+                        toast("Failed to look up the list");
+                        return;
                     }
                 })
                 .addOnFailureListener(e -> toast("Lookup failed: " + e.getMessage()));
     }
 
+    /**
+     * This extracts entrant ids from the event document and triggers name resolution.
+     *
+     * @param doc
+     *      The event document snapshot
+     * @param field
+     *      The field name that holds the entrant id list
+     */
     @SuppressWarnings("unchecked")
     private void bindFromDoc(@NonNull DocumentSnapshot doc, @NonNull String field) {
         rows.clear();
 
+        // Read the raw value from the event document for the given list field
         Object rawList = doc.get(field);
 
+        // If the field is missing or not an array/list, there are no entrants to show
         if (!(rawList instanceof List)) {
             adapter.notifyDataSetChanged();
             toast("No entrants in this list");
             return;
         }
 
-        ArrayList<?> listOfEntrantsId = (ArrayList<?>) rawList;
+
+        ArrayList<String> listOfEntrantsId = (ArrayList<String>) rawList;
+
+        // If the list exists but is empty, inform the user and exit early
         if (listOfEntrantsId.isEmpty()) {
             adapter.notifyDataSetChanged();
             toast("No entrants in this list");
             return;
         }
 
-        Object first = listOfEntrantsId.get(0);
-
-        // Otherwise, assume list of primitive ids (strings)
-        ArrayList<String> ids = new ArrayList<>();
-        for (Object entrantId : listOfEntrantsId){
-            if (entrantId != null) {
-                ids.add(String.valueOf(entrantId));
-            }
-        }
-
-        if (ids.isEmpty()) {
-            adapter.notifyDataSetChanged();
-            toast("No entrants in this list");
-            return;
-        }
-        resolveNamesByDocId(ids);
+        // We have a non-empty set of user document ids → resolve each to a display name
+        resolveNamesByDocId(listOfEntrantsId);
     }
 
 
-    /** Resolve display names by loading all /users once (id -> name), then map locally. */
-    private void resolveNamesByDocId(@NonNull ArrayList<String> docIds) {
+    /**
+     * This preloads all user documents to build an in-memory cache (id -> name),
+     * then maps the provided entrant ids to names locally.
+     *
+     * @param docIds
+     *      The entrant user ids to display in order
+     */    private void resolveNamesByDocId(@NonNull ArrayList<String> docIds) {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -192,11 +223,11 @@ public class EntrantListFragment extends Fragment {
                         String name = d.getString("name");
                         idToNameMap.put(id, (name != null && !name.isEmpty()) ? name : id);
                     }
-                    isUserCacheLoaded = true;
                     applyNames(docIds);
                 })
                 .addOnFailureListener(e -> {
-                    // If we fail to build the cache, at least show raw ids
+
+                    // If we fail to build the cache, show raw ids
                     rows.clear();
                     rows.addAll(docIds);
                     adapter.notifyDataSetChanged();
@@ -204,7 +235,13 @@ public class EntrantListFragment extends Fragment {
                 });
     }
 
-    /** Use the in-memory cache to fill rows in the same order as docIds. */
+    /**
+     * This fills {@link #rows} using {@link #idToNameMap} in the same order as the given ids,
+     * preferring display names and falling back to the raw id if a name is not found.
+     *
+     * @param docIds
+     *      The entrant ids in display order
+     */
     private void applyNames(@NonNull ArrayList<String> docIds) {
         rows.clear();
         for (String id : docIds) {
@@ -214,6 +251,11 @@ public class EntrantListFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
-    private String asString(Object o) { return (o == null) ? "" : String.valueOf(o); }
+    /**
+     * This shows a short toast message.
+     *
+     * @param msg
+     *      The message to display
+     */
     private void toast(String msg) { Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show(); }
 }

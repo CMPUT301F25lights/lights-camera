@@ -23,28 +23,40 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
+import kotlin.contracts.Returns;
+
 /**
- * ViewModel for the Notifications screen.
- * It owns Firestore listener and transform FireStore documents into Java Object
- * It also exposes LiveData to the Fragment.
+ * This is a ViewModel that provides notification data to the notifications screen.
+ * It owns the Firestore snapshot listener, transforms Firestore documents into
+ * {@link Notification} objects, and exposes them via {@link LiveData}.
  */
 public class NotificationsViewModel extends ViewModel {
 
-    //initialize live data list of notification
-    //This list stores the data got from the database
+    /** LiveData holding the current list of notifications for the signed-in user. */
     private final MutableLiveData<ArrayList<Notification>> notificationsLiveData =
             new MutableLiveData<>(new ArrayList<>());
 
-    // We keep this so we can stop listening when ViewModel is destroyed
+
+    /** Firestore listener registration used to remove the listener when cleared. */
     private ListenerRegistration registration;
 
     private final String currentUserId = CurrentUser.get().getUserId();
 
+    /**
+     * This is the constructor for the ViewModel.
+     * It initializes the Firestore listener to begin receiving updates.
+     */
     public NotificationsViewModel() {
         startListening();
     }
 
 
+    /**
+     * This starts a Firestore snapshot listener that loads notifications where
+     * the current user id appears in the {@code receiversId} array.
+     * It converts each document into a {@link Notification} and updates LiveData.
+     * Note: The query can be ordered by time.
+     */
     private void startListening() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -85,12 +97,21 @@ public class NotificationsViewModel extends ViewModel {
                 });
     }
 
-
+    /**
+     * This returns the LiveData that provides the list of notifications
+     * for the current user.
+     * @return
+     *      Returns a {@link LiveData} of {@code ArrayList<Notification>} that the UI can observe
+     */
     public LiveData<ArrayList<Notification>> getNotifications() {
         return notificationsLiveData;
     }
 
 
+    /**
+     * This removes the Firestore snapshot listener when the ViewModel is about to be destroyed
+     * to prevent memory leaks.
+     */
     @Override
     protected void onCleared() {
         super.onCleared();

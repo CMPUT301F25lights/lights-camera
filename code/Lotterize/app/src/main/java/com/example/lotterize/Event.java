@@ -160,6 +160,16 @@ public class Event {
     /** @param qrCode Reference to event QR code */
     public void setQrCode(String qrCode) { this.qrCode = qrCode; }
 
+    /**
+     * This builds an Event object from a Firestore DocumentSnapshot.
+     * It reads all expected fields from the snapshot and initializes list fields
+     * to empty lists when they are missing.
+     *
+     * @param doc
+     *      The snapshot that contains the Event document data
+     * @return
+     *      Returns a new Event populated with values from the snapshot
+     */
     public static Event addEventDetailsFromSnapShot(DocumentSnapshot doc){
         String eventId = doc.getString("eventId");
         String ownerId = doc.getString("ownerId");

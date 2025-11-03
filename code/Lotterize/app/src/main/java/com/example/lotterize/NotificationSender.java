@@ -8,10 +8,26 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 
+/**
+ * This is a helper class that sends {@link Notification} objects to Firestore.
+ * It creates a document under the {@code notifications} collection.
+ */
 public class NotificationSender {
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+
+    /**
+     * This creates and sends a notification using the provided fields.
+     * It generates a new document id in Firestore and uses it as the notification id.
+     *
+     * @param senderId
+     *      The user id of the sender
+     * @param message
+     *      The contents/message body of the notification
+     * @param receiversIds
+     *      The list of user ids who will receive the notification
+     */
     public void sendNotification(String senderId, String message, ArrayList<String> receiversIds) {
         DocumentReference docRef = db.collection("notifications").document();
 
@@ -22,6 +38,15 @@ public class NotificationSender {
                 .addOnSuccessListener(v -> Log.d("NotificationSender", "Notification sent"))
                 .addOnFailureListener(e -> Log.e("NotificationSender", "Failed to send notification", e));
     }
+
+    /**
+     * This sends a pre-built {@link Notification} object.
+     * If the sender name is not set, it will be populated from {@code CurrentUser}.
+     * If the notification does not yet have an id, a new document is created and its id is assigned.
+     *
+     * @param notification
+     *      The notification object to send
+     */
     public void sendNotification(Notification notification) {
         DocumentReference docRef = db.collection("notifications").document();
         notification.setSenderName(CurrentUser.get().getUsername());

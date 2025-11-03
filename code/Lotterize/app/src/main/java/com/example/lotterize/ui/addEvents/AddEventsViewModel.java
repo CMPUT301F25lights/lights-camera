@@ -15,24 +15,37 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
+/**
+ * This is a ViewModel that provides the current user's events to the Add Events screen.
+ * It owns a Firestore snapshot listener, transforms documents into {@link Event} objects,
+ * and exposes them via {@link LiveData}.
+ */
 public class AddEventsViewModel extends ViewModel {
 
 
-    //initialize live data list of notification
-    //This list stores the data got from the database
+    /** LiveData holding the current user's list of events. */
     private final MutableLiveData<ArrayList<Event>> myEventsLiveData =
             new MutableLiveData<>(new ArrayList<>());
 
-    // We keep this so we can stop listening when ViewModel is destroyed
+    /** Firestore listener registration used to remove the listener when cleared. */
     private ListenerRegistration registration;
 
     private final String currentUserId = CurrentUser.get().getUserId();
 
+    /**
+     * This is the constructor for the ViewModel.
+     * It initializes the Firestore listener to begin receiving updates.
+     */
     public AddEventsViewModel() {
         startListening();
     }
 
 
+    /**
+     * This starts a Firestore snapshot listener that loads events where
+     * the {@code ownerId} equals the current user's id.
+     * It converts each document into an {@link Event} and updates the LiveData.
+     */
     private void startListening() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -61,11 +74,22 @@ public class AddEventsViewModel extends ViewModel {
                 });
     }
 
+    /**
+     * This returns the LiveData that provides the list of events
+     * for the current user.
+     *
+     * @return
+     *      Returns a {@link LiveData} of {@code ArrayList<Event>} that the UI can observe
+     */
     public LiveData<ArrayList<Event>> getMyEvent() {
         return myEventsLiveData;
     }
 
 
+    /**
+     * This removes the Firestore snapshot listener when the ViewModel is about to be destroyed
+     * to prevent memory leaks.
+     */
     @Override
     protected void onCleared() {
         super.onCleared();
