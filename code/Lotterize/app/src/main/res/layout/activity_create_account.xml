@@ -3,28 +3,21 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:gravity="center_vertical">
+    android:padding="32dp"
+    android:gravity="center_vertical"
+    android:background="@android:color/white">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Lotterize: The lottery event app"
-        android:textSize="24sp"
+        android:text="Create Account"
+        android:textSize="28sp"
         android:textStyle="bold"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sign in or Create account"
-        android:textSize="16sp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="32dp"/>
 
     <EditText
-        android:id="@+id/editTextUsername"
+        android:id="@+id/editTextNewUsername"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter username"
@@ -32,24 +25,26 @@
         android:layout_marginBottom="16dp"/>
 
     <EditText
-        android:id="@+id/editTextPassword"
+        android:id="@+id/editTextNewPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter password"
         android:inputType="textPassword"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="32dp"/>
 
     <Button
-        android:id="@+id/buttonSignin"
+        android:id="@+id/buttonCreateNewAccount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sign in"
+        android:text="Create Account"
+        android:textSize="18sp"
         android:layout_marginBottom="16dp"/>
 
     <Button
-        android:id="@+id/buttonCreateAccount"
+        android:id="@+id/buttonBackFromCreateAccount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create account"/>
+        android:text="Back"
+        android:textSize="18sp"/>
 
 </LinearLayout>

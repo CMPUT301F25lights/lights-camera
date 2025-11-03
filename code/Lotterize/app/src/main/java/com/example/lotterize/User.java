@@ -3,17 +3,27 @@ package com.example.lotterize;
 public class User {
 
     private String name;
-    private long id;
+    private String userId;
     private String phoneNumber;
     private String email;
     private String coordinates;
+    private String username;
+    private String password;
 
-    public User(String name, String phoneNumber, String email, String coordinates) {
+    public User(String userId, String name, String phoneNumber, String email,
+                String coordinates, String username, String password) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.email = email;
         this.coordinates = coordinates;
-        this.id = 0; // implement later
+        this.userId = userId;
+        this.username = username;
+        this.password = password;
+    }
+    public User() {}
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
     public String getName() {
@@ -32,7 +42,18 @@ public class User {
         return coordinates;
     }
 
-    public long getId() {
-        return id;
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }
