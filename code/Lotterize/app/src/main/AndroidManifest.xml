@@ -31,8 +31,6 @@
         </activity>
         <activity android:name=".ui.home.ActivityShowWaitingList">
         </activity>
-        <activity android:name=".ui.home.UserWaitListedEvents">
-        </activity>
     </application>
 
 </manifest>

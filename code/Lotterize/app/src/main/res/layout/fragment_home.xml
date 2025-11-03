@@ -88,6 +88,7 @@
             android:backgroundTint="@color/white"/>
 
         <com.google.android.material.button.MaterialButton
+            android:checkable="true"
             android:id="@+id/waitlisted_events_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -108,9 +109,11 @@
         app:layout_constraintRight_toRightOf="parent"
         android:paddingBottom="80dp">
         <ListView
+            android:paddingHorizontal="10dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/events_list"
-            android:divider="@android:color/transparent"/>
+            android:divider="@android:color/transparent"
+            android:dividerHeight="10dp"/>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
