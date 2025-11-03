@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                                 CurrentUser.set(user); // set the logged-in user
                                 startActivity(new Intent(MainActivity.this, UserActivity.class));
 
+
                             } else {
                                 Toast.makeText(MainActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
                             }

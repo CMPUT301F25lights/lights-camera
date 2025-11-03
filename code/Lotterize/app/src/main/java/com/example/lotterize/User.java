@@ -1,5 +1,7 @@
 package com.example.lotterize;
 
+import java.util.ArrayList;
+
 public class User {
 
     private String name;
@@ -9,6 +11,8 @@ public class User {
     private String coordinates;
     private String username;
     private String password;
+    private ArrayList<String> registeredEventIds;
+    private ArrayList<String> ownedEventIds;
 
     public User(String userId, String name, String phoneNumber, String email,
                 String coordinates, String username, String password) {
@@ -19,11 +23,15 @@ public class User {
         this.userId = userId;
         this.username = username;
         this.password = password;
+        this.registeredEventIds = new ArrayList<>();
+        this.ownedEventIds = new ArrayList<>();
     }
     public User() {}
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+        this.registeredEventIds = new ArrayList<>();
+        this.ownedEventIds = new ArrayList<>();
     }
 
     public String getName() {
@@ -55,5 +63,11 @@ public class User {
     }
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+    public void addRegisteredEvent(String eventId) {
+        this.registeredEventIds.add(eventId);
+    }
+    public void addOwnedEvent(String eventId) {
+        this.ownedEventIds.add(eventId);
     }
 }
