@@ -104,4 +104,64 @@ public class Event {
     public String getQrCode() {
         return qrCode;
     }
+
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public void setWaitList(ArrayList<String> waitList) {
+        this.waitList = waitList;
+    }
+
+    public void setSelectedList(ArrayList<String> selectedList) {
+        this.selectedList = selectedList;
+    }
+
+    public void setCancelledList(ArrayList<String> cancelledList) {
+        this.cancelledList = cancelledList;
+    }
+
+    public void setFinalList(ArrayList<String> finalList) {
+        this.finalList = finalList;
+    }
+
+    public void setEventName(String eventName) {
+        this.eventName = eventName;
+    }
+
+    public void setDate(Timestamp date) {
+        this.date = date;
+    }
+
+    public void setRegistrationStart(Timestamp registrationStart) {
+        this.registrationStart = registrationStart;
+    }
+
+    public void setRegistrationDeadline(Timestamp registrationDeadline) {
+        this.registrationDeadline = registrationDeadline;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setTotalSpots(Long totalSpots) {
+        this.totalSpots = totalSpots;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setEntrantsLimit(Long entrantsLimit) {
+        this.entrantsLimit = entrantsLimit;
+    }
+
+    public void setQrCode(String qrCode) {
+        this.qrCode = qrCode;
+    }
 }
