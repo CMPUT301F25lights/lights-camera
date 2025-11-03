@@ -22,24 +22,33 @@ public class User {
     private ArrayList<String> registeredEventIds;
     private ArrayList<String> ownedEventIds;
 
+    /**
+     * Full constructor for creating a complete User in memory.
+     */
     public User(String userId, String name, String phoneNumber, String email,
                 String coordinates, String username, String password) {
+        this.userId = userId;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.email = email;
         this.coordinates = coordinates;
-        this.userId = userId;
         this.username = username;
         this.password = password;
         this.registeredEventIds = new ArrayList<>();
         this.ownedEventIds = new ArrayList<>();
     }
 
+    /**
+     * Required no-argument constructor for Firestore deserialization.
+     */
     public User() {
         this.registeredEventIds = new ArrayList<>();
         this.ownedEventIds = new ArrayList<>();
     }
 
+    /**
+     * Alternative minimal constructor for login tests.
+     */
     public User(String username, String password) {
         this.username = username;
         this.password = password;

@@ -15,6 +15,8 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
@@ -79,9 +81,20 @@ public class MainActivity extends AppCompatActivity {
                                         successDoc[0].getString("username"),
                                         successDoc[0].getString("password")
                                 );
+                                // Get Owned Event list from Firestore
+                                ArrayList<String> ownedEvents =
+                                        (ArrayList<String>) successDoc[0].get("ownedEventIds");
+                                if (ownedEvents == null) ownedEvents = new ArrayList<>();
+                                user.setOwnedEventIds(ownedEvents);
 
+                                // Get Registered Event list from Firestore
+                                ArrayList<String> registeredEvents =
+                                        (ArrayList<String>) successDoc[0].get("registeredEventIds");
+                                if (registeredEvents == null) registeredEvents = new ArrayList<>();
+                                user.setRegisteredEventIds(registeredEvents);
                                 CurrentUser.set(user); // set the logged-in user
                                 startActivity(new Intent(MainActivity.this, UserActivity.class));
+
 
                             } else {
                                 Toast.makeText(MainActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
