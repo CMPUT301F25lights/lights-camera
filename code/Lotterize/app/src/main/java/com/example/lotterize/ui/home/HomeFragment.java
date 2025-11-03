@@ -65,13 +65,6 @@ public class HomeFragment extends Fragment {
         events = db.collection("events");
 
         events.orderBy("registrationDeadline").whereGreaterThan("registrationDeadline", Timestamp.now())
-                .get().addOnSuccessListener(snapshot -> {
-            eventList.addAll(snapshot.getDocuments());
-            shownList.addAll(eventList);
-            eventsArray.notifyDataSetChanged();
-        });
-
-        events.orderBy("registrationDeadline").whereGreaterThan("registrationDeadline", Timestamp.now())
                 .addSnapshotListener((snapshot,e) -> {
                     if (e != null){
                         Toast.makeText(getContext(), "couldn't update data - HomeFragment", Toast.LENGTH_SHORT).show();
@@ -82,8 +75,6 @@ public class HomeFragment extends Fragment {
                         shownList.addAll(eventList);
                         eventsArray.notifyDataSetChanged();
                     }
-
-                    shownList.addAll(eventList);
                 });
 
         info = binding.infoButton;
