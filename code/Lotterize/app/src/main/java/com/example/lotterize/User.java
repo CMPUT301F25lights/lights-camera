@@ -1,5 +1,8 @@
 package com.example.lotterize;
 
+/**
+ * Models a User. Contains all attributes of a user.
+ */
 public class User {
 
     private String name;
@@ -28,6 +31,9 @@ public class User {
         this.password = password;
     }
 
+    /**
+     * @return String - name of user
+     */
     public String getName() {
         return name;
     }
@@ -40,47 +46,66 @@ public class User {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
+    /**
+     * @return String - email of user
+     */
     public String getEmail() {
         return email;
+    }
+
+    /**
+     * @return String - coordinates of user
+     */
+    public String getCoordinates() {
+        return coordinates;
+    }
+
+    /**
+     * @return String - id of user
+     */
+    public String getUserId() {
+        return userId;
+    }
+
+    /**
+     * @return String - username of user
+     */
+    public String getUsername() {
+        return username;
+    }
+
+    /**
+     * @return String - password of user
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * @param userId - new id for the user
+     */
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public void setEmail(String email) {
         this.email = email;
     }
 
-    public String getCoordinates() {
-        return coordinates;
-    }
-
     public void setCoordinates(String coordinates) {
         this.coordinates = coordinates;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public void setUsername(String username) {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
+
 }

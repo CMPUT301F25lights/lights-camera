@@ -35,6 +35,7 @@ import com.google.firebase.firestore.Query;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class HomeFragment extends Fragment {
     private FirebaseFirestore db;
     private CollectionReference events;
