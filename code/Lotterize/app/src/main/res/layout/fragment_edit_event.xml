@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- Top bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+
+        <ImageButton
+            android:id="@+id/button_cancel_create_event"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentStart="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cancel_create_event"
+            android:padding="8dp"
+            android:src="@drawable/ic_back_arrow" />
+
+        <TextView
+            android:id="@+id/button_create_event"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit Event"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
+
+    <!-- Everything below scrolls -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Event Name -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Event Name:"
+                    android:textSize="12sp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="12dp" />
+
+                <TextView
+                    android:id="@+id/tvEventNameValue"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:text="Event1"
+                    android:background="@drawable/background_rounded"/>
+            </LinearLayout>
+
+            <!-- Date -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Date: "
+                    android:textSize="12sp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="50dp" />
+
+                <TextView
+                    android:id="@+id/tvDateValue"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:text="October 26, 2025"
+                    android:background="@drawable/background_rounded"/>
+            </LinearLayout>
+
+            <!-- Time -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Time: "
+                    android:textSize="12sp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="50dp" />
+
+                <TextView
+                    android:id="@+id/tvTimeValue"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:text="12:00 PM"
+                    android:background="@drawable/background_rounded" />
+            </LinearLayout>
+
+            <!-- Location -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Location: "
+                    android:textSize="12sp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="30dp" />
+
+                <TextView
+                    android:id="@+id/tvLocationValue"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:text="ETLC, Edmonton AB"
+                    android:background="@drawable/background_rounded" />
+            </LinearLayout>
+
+            <!-- Total Spots -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Spots: "
+                    android:textSize="12sp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="15dp" />
+
+                <TextView
+                    android:id="@+id/tvTotalSpotsValue"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:text="50"
+                    android:background="@drawable/background_rounded" />
+            </LinearLayout>
+
+            <!-- Description -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Description: "
+                    android:textSize="12sp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="10dp" />
+
+                <TextView
+                    android:id="@+id/tvDescriptionValue"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:focusable="true"
+                    android:padding="12dp"
+                    android:text="This is the description for the CMPUT 301 class!!! We're gonna teach you how to write code using Java and make a real android app"
+                    android:gravity="top|start"
+                    android:scrollbars="vertical"
+                    android:overScrollMode="always"
+                    android:background="@drawable/background_rounded"
+                    android:fillViewport="true"
+                    android:clipToPadding="false"
+                    android:clickable="true"
+                    android:focusedByDefault="true"/>
+            </LinearLayout>
+
+            <!-- Waitlist limit -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Limit entrants on waitlist:"
+                    android:textSize="12sp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="10dp" />
+
+                <TextView
+                    android:id="@+id/tvWaitlistValue"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:text="50"
+                    android:background="@drawable/background_rounded" />
+            </LinearLayout>
+
+            <!-- Sample attendees -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sample attendees: "
+                    android:textSize="12sp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="40dp" />
+
+                <TextView
+                    android:id="@+id/tvSampleAttendeesValue"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:text="10"
+                    android:background="@drawable/background_rounded" />
+            </LinearLayout>
+
+            <!-- Poster row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Poster:"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="40dp" />
+
+                <Button
+                    android:id="@+id/button_poster"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:text="+ Upload/Delete Poster"
+                    android:textColor="@color/white"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/colorButtonBackground"/>
+            </LinearLayout>
+
+            <!-- QR Code row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="QR Code:"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="30dp" />
+
+                <Button
+                    android:id="@+id/button_QR_code"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:text="+ Upload/Delete QR code"
+                    android:textColor="@color/white"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/colorButtonBackground"/>
+            </LinearLayout>
+
+            <!-- Entrants (single horizontal row) -->
+            <LinearLayout
+                android:id="@+id/row_entrants"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingRight="12dp"
+                android:clickable="true"
+                android:background="?attr/selectableItemBackground"
+                android:focusable="false">
+
+                <TextView
+                    android:id="@+id/text_entrants_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Entrants"
+                    android:textSize="14sp"/>
+
+                <ImageView
+                    android:id="@+id/next_page"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_back_arrow"
+                    android:rotation="180"
+                    android:alpha="0.75"/>
+            </LinearLayout>
+
+
+            <!-- Geolocation row -->
+            <LinearLayout
+                android:id="@+id/row_geolocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp"
+                android:paddingBottom="80dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_location" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enable Geolocation"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Toggle to change"
+                        android:textSize="11sp"
+                        android:textColor="#9A9A9A" />
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/switch_geolocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    tools:ignore="UseSwitchCompatOrMaterialXml" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

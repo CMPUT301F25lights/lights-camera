@@ -24,7 +24,8 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 /**
- * Adapter to display notifications in the ListView in FragmentNotifications.
+ * This is an adapter class that displays {@link Notification} items
+ * in a ListView for the notifications screen.
  */
 public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
 
@@ -32,12 +33,32 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
     private Context context;
     private final SimpleDateFormat tsFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
 
+    /**
+     * This is the constructor when creating a new adapter for notifications.
+     *
+     * @param context
+     *      The context used to inflate views
+     * @param notifications
+     *      The initial list of notifications to display
+     */
     public NotificationArrayAdapter(Context context, ArrayList<Notification> notifications) {
         super(context, 0, notifications);
         this.notifications = notifications;
         this.context = context;
     }
 
+    /**
+     * This creates or reuses a row view and binds a {@link Notification} to it.
+     *
+     * @param position
+     *      The position of the item within the adapter's data set
+     * @param convertView
+     *      The old view to reuse, if possible
+     * @param parent
+     *      The parent view that this view will eventually be attached to
+     * @return
+     *      Returns the populated row view for the given position
+     */
     @SuppressLint("SetTextI18n")
     @NonNull
     @Override
@@ -69,8 +90,11 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
 
 
     /**
-     * Replace the list when LiveData updates.
-     * Call this from Fragment when ViewModel gives new data.
+     * This replaces the current data set with a new list of notifications
+     * and refreshes the ListView.
+     *
+     * @param newList
+     *      The new list of notifications to display
      */
     public void updateData(ArrayList<Notification> newList) {
         this.notifications.clear();
