@@ -4,11 +4,8 @@ import com.google.firebase.Timestamp;
 
 import java.util.ArrayList;
 
-import kotlin.contracts.Returns;
-
 /**
- * This is a class that defines a Notification.
- * It contains all information related to a notification.
+ * Model class for Notifications. Contains all data related to notifications.
  */
 public class Notification {
 
