@@ -7,6 +7,7 @@ import java.util.ArrayList;
 /**
  * Model class for Notifications. Contains all data related to notifications.
  */
+
 public class Notification {
 
     private String notificationId;
