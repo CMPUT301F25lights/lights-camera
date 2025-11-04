@@ -50,14 +50,17 @@ public class Lottery {
         ArrayList<String> shuffledList = new ArrayList<>(waitList);
         Collections.shuffle(shuffledList, random);
 
+        //Added in a losers list too for notifications to be sent out
         List<String> winners = shuffledList.subList(0, winnersToPick);
+        List<String> losers = shuffledList.subList(winnersToPick, shuffledList.size());
 
         selectedList.addAll(winners);
         event.getFinalList().addAll(winners);
         waitList.removeAll(winners);
 
-        // Notify winners
+        // Notify winners and losers of their fate
         sendWinnerNotifications(event, winners);
+        sendLoserNotifications(event, losers);
 
         return new ArrayList<>(winners);
     }
@@ -102,6 +105,25 @@ public class Lottery {
         ArrayList<String> receiversIds = new ArrayList<>(winners);
 
         // Send notification using NotificationSender
+        notificationSender.sendNotification(CurrentUser.get().getUserId(), message, receiversIds);
+    }
+
+    /**
+     * Notify participants who were not selected.
+     *
+     * @param event   The event for context
+     * @param losers  List of loser IDs
+     */
+    private void sendLoserNotifications(Event event, List<String> losers) {
+        if (losers == null || losers.isEmpty()) {
+            return;
+        }
+
+        String message = "Unfortunately, you were not selected for the event: " + event.getEventName()
+                + ". Thank you for your interest.";
+
+        ArrayList<String> receiversIds = new ArrayList<>(losers);
+
         notificationSender.sendNotification(CurrentUser.get().getUserId(), message, receiversIds);
     }
 }

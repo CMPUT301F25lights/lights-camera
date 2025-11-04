@@ -16,7 +16,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the Lottery class.
- * Static mocking is used for CurrentUser.get(), since it is Android-dependent.
+ * Static mocking is used for CurrentUser.get(), since it is Android-dependent,
+ * and did not want to touch DB yet.
  */
 public class LotteryTest {
 
