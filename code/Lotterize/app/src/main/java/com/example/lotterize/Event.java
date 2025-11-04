@@ -1,6 +1,8 @@
 package com.example.lotterize;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
+
 import java.util.ArrayList;
 
 /**
@@ -121,6 +123,7 @@ public class Event {
 
     /** @return Sign-up opening time */
     public Timestamp getRegistrationStart() { return registrationStart; }
+
     /** @param registrationStart New open time */
     public void setRegistrationStart(Timestamp registrationStart) { this.registrationStart = registrationStart; }
 
@@ -131,6 +134,7 @@ public class Event {
 
     /** @return Event location (venue) */
     public String getLocation() { return location; }
+
     /** @param location New venue information */
     public void setLocation(String location) { this.location = location; }
 
@@ -146,11 +150,52 @@ public class Event {
 
     /** @return Maximum entrants allowed before selection */
     public long getEntrantsLimit() { return entrantsLimit; }
+
     /** @param entrantsLimit New entrant limit */
     public void setEntrantsLimit(long entrantsLimit) { this.entrantsLimit = entrantsLimit; }
 
     /** @return QR code identifier associated with event */
     public String getQrCode() { return qrCode; }
+
     /** @param qrCode Reference to event QR code */
     public void setQrCode(String qrCode) { this.qrCode = qrCode; }
+
+    /**
+     * This builds an Event object from a Firestore DocumentSnapshot.
+     * It reads all expected fields from the snapshot and initializes list fields
+     * to empty lists when they are missing.
+     *
+     * @param doc
+     *      The snapshot that contains the Event document data
+     * @return
+     *      Returns a new Event populated with values from the snapshot
+     */
+    public static Event addEventDetailsFromSnapShot(DocumentSnapshot doc){
+        String eventId = doc.getString("eventId");
+        String ownerId = doc.getString("ownerId");
+
+        @SuppressWarnings("unchecked")
+        ArrayList<String> waitList = (ArrayList<String>) (doc.get("waitList") != null ? doc.get("waitList") : new ArrayList<String>());
+        @SuppressWarnings("unchecked")
+        ArrayList<String> selectedList = (ArrayList<String>) (doc.get("selectedList") != null ? doc.get("selectedList") : new ArrayList<String>());
+        @SuppressWarnings("unchecked")
+        ArrayList<String> cancelledList = (ArrayList<String>) (doc.get("cancelledList") != null ? doc.get("cancelledList") : new ArrayList<String>());
+        @SuppressWarnings("unchecked")
+        ArrayList<String> finalList = (ArrayList<String>) (doc.get("finalList") != null ? doc.get("finalList") : new ArrayList<String>());
+
+        String eventName = doc.getString("eventName");
+        Timestamp date = doc.getTimestamp("date");
+        Timestamp registrationStart = doc.getTimestamp("registrationStart");
+        Timestamp registrationDeadline = doc.getTimestamp("registrationDeadline");
+        String location = doc.getString("location");
+        Long totalSpots = doc.getLong("totalSpots");
+        String description = doc.getString("description");
+        Long entrantsLimit = doc.getLong("entrantsLimit");
+        String qrCode = doc.getString("qrCode");
+
+        return new Event(eventId, ownerId, waitList,  selectedList, cancelledList,
+                finalList, eventName, date, registrationStart, registrationDeadline, location,
+                totalSpots,  description,  entrantsLimit,  qrCode);
+
+    }
 }
