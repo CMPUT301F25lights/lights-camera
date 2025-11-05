@@ -19,6 +19,9 @@ public class Notification {
     private Timestamp time;
     private ArrayList<String> receiversId;
 
+    //Russell added on to link eventId to a notification so user can accept or decline
+    private String relatedEventId;
+
     /**
      * This is the no-argument constructor when creating a new Notification instance
      * with default values. The {@code time} is initialized to the current time and
@@ -164,6 +167,26 @@ public class Notification {
      */
     public void setSenderId(String senderId) {
         this.senderId = senderId;
+    }
+
+
+    //These methods added by Russell too for handling the accept decline logic.
+
+    /**
+     * Getter of event id related to notification
+     * Method used to connect Event Id to method
+     * @return String id
+     */
+    public String getRelatedEventId() {
+        return relatedEventId;
+    }
+
+    /**
+     * Setter of related event id
+     * @param relatedEventId
+     */
+    public void setRelatedEventId(String relatedEventId) {
+        this.relatedEventId = relatedEventId;
     }
 
 }

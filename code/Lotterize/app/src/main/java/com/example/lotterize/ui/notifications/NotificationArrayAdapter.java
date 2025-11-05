@@ -6,11 +6,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.lotterize.CurrentUser;
+import com.example.lotterize.Event;
+import com.example.lotterize.LotteryController;
 import com.example.lotterize.Notification;
 import com.example.lotterize.R;
 import com.google.android.gms.tasks.Task;
@@ -75,6 +80,11 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
         TextView messageTextView = view.findViewById(R.id.text_message);
         TextView timeTextView = view.findViewById(R.id.text_timestamp);
 
+        //Buttons to accept and decline
+        Button acceptButton = view.findViewById(R.id.button_accept);
+        Button declineButton = view.findViewById(R.id.button_decline);
+
+
         senderTextView.setText(notification.getSenderName());
         messageTextView.setText(notification.getMessage());
         Timestamp time = notification.getTime();
@@ -84,6 +94,52 @@ public class NotificationArrayAdapter extends ArrayAdapter<Notification> {
         } else {
             timeTextView.setText("");
         }
+
+
+        // Now handle accept/decline clicks ( Note will probably have to refactor this into EventsReg.)
+        LotteryController controller = new LotteryController();
+
+        acceptButton.setOnClickListener(v -> {
+            String eventId = notification.getRelatedEventId(); // the ID from the Notification object
+            String userId = CurrentUser.get().getUserId();     // current user ID
+
+            if (eventId == null) {
+                Toast.makeText(context, "No event linked to this notification.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("events").document(eventId).get()
+                    .addOnSuccessListener(snapshot -> {
+                        if (snapshot.exists()) {
+                            Event event = snapshot.toObject(Event.class); // convert Firestore doc to Event object
+
+                            controller.acceptInvitation(event, userId);
+                            Toast.makeText(context, "You accepted the invitation!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(context, "Event not found.", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(context, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        });
+
+        declineButton.setOnClickListener(v -> {
+            String eventId = notification.getRelatedEventId();
+            String userId = CurrentUser.get().getUserId();
+
+
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("events").document(eventId).get()
+                    .addOnSuccessListener(snapshot -> {
+                        if (snapshot.exists()) {
+                            Event event = snapshot.toObject(Event.class);
+                            assert event != null;
+                            controller.declineInvitation(event, userId);
+                            Toast.makeText(context, "You declined the invitation.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
 
         return view;
     }
