@@ -1,9 +1,14 @@
 package com.example.lotterize;
 
+import static androidx.core.content.ContentProviderCompat.requireContext;
+
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -75,6 +80,43 @@ public class QR {
         } catch (Exception e) {
             Log.e("QRCodeGenerator", "Failed to save bitmap", e);
             return false;
+        }
+    }
+
+    /**
+     * Saves the QR code for the current event to the URI selected by the user.
+     *
+     * @param context The application context
+     * @param code The code to be saved
+     * @param uri The URI where the QR code should be saved
+     * @return String status of the operation
+     */
+    public static String saveQrCodeToUri(Context context, Uri uri, String code) {
+
+        try {
+            // Generate QR code bitmap from the stored qrCode string
+            Bitmap qrBitmap = QR.generateBitmap(code, 1024);
+
+            if (qrBitmap == null) {
+                return "Failed to generate QR code";
+            }
+
+            // Open output stream and save
+            OutputStream outputStream = context.getContentResolver().openOutputStream(uri);
+            if (outputStream == null) {
+                return "Failed to open file";
+            }
+
+            boolean success = QR.saveBitmapToStream(qrBitmap, outputStream);
+
+            if (success) {
+                return "QR code saved successfully";
+            } else {
+                return "Failed to save QR code";
+            }
+
+        } catch (Exception e) {
+            return "Error saving QR code";
         }
     }
 

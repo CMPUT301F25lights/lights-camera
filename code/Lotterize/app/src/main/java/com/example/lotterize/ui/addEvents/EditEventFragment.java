@@ -63,7 +63,13 @@ public class EditEventFragment extends Fragment {
                 new ActivityResultContracts.CreateDocument("image/png"),
                 uri -> {
                     if (uri != null) {
-                        saveQrCodeToUri(uri);
+                        if (currentQrCode == null || currentQrCode.isEmpty()) {
+                            Toast.makeText(requireContext(), "No QR code available", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        String status = QR.saveQrCodeToUri(getContext(), uri, currentQrCode);
+                        Toast.makeText(requireContext(), status, Toast.LENGTH_SHORT).show();
+
                     }
                 }
         );
@@ -210,47 +216,6 @@ public class EditEventFragment extends Fragment {
         if (args == null) return null;
         String v = args.getString("eventId");
         return (v == null || v.isEmpty()) ? null : v;
-    }
-
-    /**
-     * Saves the QR code for the current event to the URI selected by the user.
-     *
-     * @param uri The URI where the QR code should be saved
-     */
-    private void saveQrCodeToUri(Uri uri) {
-        if (currentQrCode == null || currentQrCode.isEmpty()) {
-            Toast.makeText(requireContext(), "No QR code available", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        try {
-            // Generate QR code bitmap from the stored qrCode string
-            Bitmap qrBitmap = QR.generateBitmap(currentQrCode, 1024);
-
-            if (qrBitmap == null) {
-                Toast.makeText(requireContext(), "Failed to generate QR code", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Open output stream and save
-            OutputStream outputStream = requireContext().getContentResolver().openOutputStream(uri);
-            if (outputStream == null) {
-                Toast.makeText(requireContext(), "Failed to open file", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            boolean success = QR.saveBitmapToStream(qrBitmap, outputStream);
-
-            if (success) {
-                Toast.makeText(requireContext(), "QR code saved successfully", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(requireContext(), "Failed to save QR code", Toast.LENGTH_SHORT).show();
-            }
-
-        } catch (Exception e) {
-            Toast.makeText(requireContext(), "Error saving QR code: " + e.getMessage(),
-                    Toast.LENGTH_SHORT).show();
-        }
     }
 
     /**
