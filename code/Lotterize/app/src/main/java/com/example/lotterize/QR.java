@@ -2,6 +2,7 @@ package com.example.lotterize;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.google.zxing.BarcodeFormat;
@@ -14,6 +15,49 @@ import java.io.IOException;
 import java.util.UUID;
 
 public class QR {
+    /**
+     * Generates a random UUID string to be encoded to a QR code.
+     * @return The generated code string.
+     */
+    public static String generateCode(){
+        return UUID.randomUUID().toString();
+    }
+
+    /**
+     * Generates a QR code bitmap from a given string.
+     * The generated bitmap an be displayed with an ImageView using imageView.setImageBitmap(bitmap);
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * Bitmap bitmap = QR.generateBitmap("test", 512);
+     * imageView.setImageBitmap(bitmap);
+     * }</pre>
+     * @param code String to be encoded in the QR code
+     * @param size Size of the QR code
+     * @return Bitmap of the QR code
+     */
+    public static Bitmap generateBitmap(String code, int size){
+        try {
+            QRCodeWriter writer = new QRCodeWriter();
+            BitMatrix bitMatrix = writer.encode(code, BarcodeFormat.QR_CODE, size, size);
+
+            Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565);
+
+            for (int x = 0; x < size; x++) {
+                for (int y = 0; y < size; y++) {
+                    bitmap.setPixel(x, y, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                }
+            }
+
+            return bitmap;
+
+        } catch (WriterException e) {
+            Log.e("QRCodeGenerator", "Failed to generate QR bitmap", e);
+            return null;
+        }
+    }
+
+//---------------- Testing, not used yet --------------------------------
     public static void generatePNG(String code, String path) {
 
         try {
@@ -41,48 +85,6 @@ public class QR {
 //        QR.generatePNG("test", path);
     // path in android file system
     // /storage/emulated/0/Android/data/com.example.lotterize/files/
-
-    public static Bitmap generateBitmap(String code, int size){
-        try {
-            QRCodeWriter writer = new QRCodeWriter();
-            BitMatrix bitMatrix = writer.encode(code, BarcodeFormat.QR_CODE, size, size);
-
-            Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565);
-
-            for (int x = 0; x < size; x++) {
-                for (int y = 0; y < size; y++) {
-                    bitmap.setPixel(x, y, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
-                }
-            }
-
-            return bitmap;
-
-        } catch (WriterException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    // Testing
-
-    // In activity_main.xml
-
-//    <ImageView
-//    android:id="@+id/qrImageView"
-//    android:layout_width="300dp"
-//    android:layout_height="300dp"
-//    android:layout_gravity="center"
-//    android:contentDescription="QR Code"
-//    app:layout_constraintTop_toTopOf="@+id/LoginText"
-//    tools:layout_editor_absoluteX="32dp" />
-
-    // In MainActivity.java
-
-//    // Display QR code
-//    ImageView imageView = findViewById(R.id.qrImageView);
-//    String code = "https://myapp.com/event/EVENT123";
-//    Bitmap qr = QR.generateBitmap(code, 512);
-//        imageView.setImageBitmap(qr);
 
 
 }

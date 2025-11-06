@@ -306,7 +306,7 @@
                     android:id="@+id/button_QR_code"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
-                    android:text="+ Upload/Delete QR code"
+                    android:text="Save QR code"
                     android:textColor="@color/white"
                     android:textAllCaps="false"
                     android:backgroundTint="@color/colorButtonBackground"/>

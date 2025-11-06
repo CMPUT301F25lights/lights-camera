@@ -1,11 +1,13 @@
 package com.example.lotterize.ui.addEvents;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -43,6 +45,8 @@ public class EditEventFragment extends Fragment {
 
     /** Time formatter for the event time label. */
     private final DateFormat timeFmt = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+
+    private ActivityResultLauncher<Intent> saveQrLauncher;
 
     /**
      * This inflates the fragment layout and initializes the view binding.
