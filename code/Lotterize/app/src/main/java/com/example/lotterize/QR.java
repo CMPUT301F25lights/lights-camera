@@ -12,6 +12,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.UUID;
 
 public class QR {
@@ -54,6 +55,26 @@ public class QR {
         } catch (WriterException e) {
             Log.e("QRCodeGenerator", "Failed to generate QR bitmap", e);
             return null;
+        }
+    }
+
+    /**
+     * Saves a bitmap as PNG to the provided OutputStream.
+     * Used with Storage Access Framework to save to user-selected location.
+     *
+     * @param bitmap The bitmap to save
+     * @param outputStream The output stream to write to
+     * @return true if successful, false otherwise
+     */
+    public static boolean saveBitmapToStream(Bitmap bitmap, OutputStream outputStream) {
+        try {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+            outputStream.flush();
+            outputStream.close();
+            return true;
+        } catch (Exception e) {
+            Log.e("QRCodeGenerator", "Failed to save bitmap", e);
+            return false;
         }
     }
 
