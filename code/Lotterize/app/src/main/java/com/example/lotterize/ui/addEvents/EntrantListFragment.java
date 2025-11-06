@@ -118,11 +118,16 @@ public class EntrantListFragment extends Fragment {
      */
     private String ListLabel(String s) {
         switch (s) {
-            case "WAITLIST":  return "Waitlist Entrants";
-            case "CHOSEN":    return "Chosen Entrants";
-            case "CANCELLED": return "Cancelled Entrants";
-            case "ENROLLED":  return "Enrolled Entrants";
-            default:          return "Entrants";
+            case "WAITLIST":
+                return "Waitlist Entrants";
+            case "CHOSEN":
+                return "Chosen Entrants";
+            case "CANCELLED":
+                return "Cancelled Entrants";
+            case "ENROLLED":
+                return "Enrolled Entrants";
+            default:
+                return "Entrants";
         }
     }
 
@@ -136,11 +141,16 @@ public class EntrantListFragment extends Fragment {
      */    @Nullable
     private String listField(String s) {
         switch (s) {
-            case "WAITLIST":  return "waitList";
-            case "CHOSEN":    return "selectedList";
-            case "CANCELLED": return "cancelledList";
-            case "ENROLLED":  return "finalList";
-            default:          return null;
+            case "WAITLIST":
+                return "waitList";
+            case "CHOSEN":
+                return "selectedList";
+            case "CANCELLED":
+                return "cancelledList";
+            case "ENROLLED":
+                return "finalList";
+            default:
+                return null;
         }
     }
 
@@ -223,7 +233,9 @@ public class EntrantListFragment extends Fragment {
                         String name = d.getString("name");
                         idToNameMap.put(id, (name != null && !name.isEmpty()) ? name : id);
                     }
-                    applyNames(docIds);
+                    rows.clear();
+                    rows.addAll(applyNames(docIds, idToNameMap));
+                    adapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> {
 
@@ -242,13 +254,13 @@ public class EntrantListFragment extends Fragment {
      * @param docIds
      *      The entrant ids in display order
      */
-    private void applyNames(@NonNull ArrayList<String> docIds) {
-        rows.clear();
+    public static ArrayList<String> applyNames(@NonNull ArrayList<String> docIds, Map<String, String> idToNameMap) {
+        ArrayList<String> userNames = new ArrayList<String>();
         for (String id : docIds) {
             String name = idToNameMap.get(id);
-            rows.add((name != null && !name.isEmpty()) ? name : id);
+            userNames.add((name != null && !name.isEmpty()) ? name : id);
         }
-        adapter.notifyDataSetChanged();
+        return userNames;
     }
 
     /**

@@ -93,7 +93,6 @@ public class NotificationsViewModel extends ViewModel {
                             }
                             notificationsLiveData.setValue(notifList);
                         }
-
                 });
     }
 
