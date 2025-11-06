@@ -1,11 +1,16 @@
 package com.example.lotterize.ui.addEvents;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -13,6 +18,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.Event;
+import com.example.lotterize.QR;
 import com.example.lotterize.R;
 import com.example.lotterize.databinding.FragmentEditEventBinding;
 import com.google.firebase.Timestamp;
@@ -20,6 +26,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -37,12 +44,30 @@ public class EditEventFragment extends Fragment {
 
     /** Reference to the current event document for in-place updates (e.g., toggles). */
     private DocumentReference eventDocRef;
+    private String currentQrCode;
 
     /** Date formatter for the event date label. */
     private final DateFormat dateFmt = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
 
     /** Time formatter for the event time label. */
     private final DateFormat timeFmt = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+
+    private ActivityResultLauncher<String> saveQrLauncher;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Initialize the SAF launcher for saving QR codes
+        saveQrLauncher = registerForActivityResult(
+                new ActivityResultContracts.CreateDocument("image/png"),
+                uri -> {
+                    if (uri != null) {
+                        saveQrCodeToUri(uri);
+                    }
+                }
+        );
+    }
 
     /**
      * This inflates the fragment layout and initializes the view binding.
@@ -109,6 +134,17 @@ public class EditEventFragment extends Fragment {
             if (eventDocRef != null) eventDocRef.update("geolocationEnabled", isChecked);
         });
 
+        // save qr code png button
+        binding.buttonQRCode.setOnClickListener(v -> {
+            if (currentQrCode != null && !currentQrCode.isEmpty()) {
+                // Launch file picker with suggested filename
+                String filename = "event_qr_code.png";
+                saveQrLauncher.launch(filename);
+            } else {
+                Toast.makeText(requireContext(), "QR code not available", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         db.collection("events")
                 .whereEqualTo("eventId", eventIdArg)
                 .limit(1)
@@ -125,6 +161,7 @@ public class EditEventFragment extends Fragment {
                     eventDocRef = doc.getReference();
 
                     Event e = Event.addEventDetailsFromSnapShot(doc);
+                    currentQrCode = e.getQrCode();
                     bindEventToUi(e, doc);
                 });
     }
@@ -173,6 +210,47 @@ public class EditEventFragment extends Fragment {
         if (args == null) return null;
         String v = args.getString("eventId");
         return (v == null || v.isEmpty()) ? null : v;
+    }
+
+    /**
+     * Saves the QR code for the current event to the URI selected by the user.
+     *
+     * @param uri The URI where the QR code should be saved
+     */
+    private void saveQrCodeToUri(Uri uri) {
+        if (currentQrCode == null || currentQrCode.isEmpty()) {
+            Toast.makeText(requireContext(), "No QR code available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            // Generate QR code bitmap from the stored qrCode string
+            Bitmap qrBitmap = QR.generateBitmap(currentQrCode, 1024);
+
+            if (qrBitmap == null) {
+                Toast.makeText(requireContext(), "Failed to generate QR code", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Open output stream and save
+            OutputStream outputStream = requireContext().getContentResolver().openOutputStream(uri);
+            if (outputStream == null) {
+                Toast.makeText(requireContext(), "Failed to open file", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            boolean success = QR.saveBitmapToStream(qrBitmap, outputStream);
+
+            if (success) {
+                Toast.makeText(requireContext(), "QR code saved successfully", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(requireContext(), "Failed to save QR code", Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Error saving QR code: " + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
