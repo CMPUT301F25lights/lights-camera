@@ -11,9 +11,18 @@ import androidx.navigation.ui.NavigationUI;
 import com.example.lotterize.databinding.ActivityUserBinding;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+/**
+ * Activity hosting all the user side functionality.
+ */
 public class UserActivity extends AppCompatActivity {
     private ActivityUserBinding binding;
 
+
+    /**
+     * Creates the bottom navigation taskbar, as well as
+     * the navController. Initial fragment shown is home.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

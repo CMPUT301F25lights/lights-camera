@@ -20,7 +20,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActivityShowWaitingList extends AppCompatActivity {
+/**
+ * Activity that shows the waiting list for an event
+ * (eventID given in intent). Also has a button which allows current
+ * user to join or leave the waiting list.
+ */
+public class ShowWaitingListActivity extends AppCompatActivity {
 
     ActivityShowListBinding binding;
 
@@ -32,6 +37,12 @@ public class ActivityShowWaitingList extends AppCompatActivity {
     ArrayList<String> usersId;
     ShowListArrayAdapter adapter;
 
+    /**
+     * Displays the waiting list, along with an option to
+     * leave or join the list.
+     * @param savedInstanceState intent contains a String in the
+     *                           "eventId" field
+     */
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
