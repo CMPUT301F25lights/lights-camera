@@ -15,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
+import com.example.lotterize.QR;
 import com.example.lotterize.R;
 import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentNewEventBinding;
@@ -43,20 +44,11 @@ public class NewEventFragment extends Fragment {
     private Uri ImageUri;
     private TextView imageSelectedTextView;
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        NewEventViewModel newEventViewModel =
-                new ViewModelProvider(this).get(NewEventViewModel.class);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        binding = FragmentNewEventBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
-
-        db = FirebaseFirestore.getInstance();
-        events = db.collection("events");
-
-        imageSelectedTextView = binding.imageSelectedTextView;
-        imageSelectedTextView.setVisibility(View.GONE);
-
+        // Initialize photo picker
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
             if (uri != null) {// image selected
                 Log.d("PhotoPicker", "Selected URI: " + uri);
@@ -70,6 +62,24 @@ public class NewEventFragment extends Fragment {
                 Log.d("PhotoPicker", "No media selected");
             }
         });
+    }
+
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+        NewEventViewModel newEventViewModel =
+                new ViewModelProvider(this).get(NewEventViewModel.class);
+
+        binding = FragmentNewEventBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
+
+        db = FirebaseFirestore.getInstance();
+        events = db.collection("events");
+
+        // selected image textview
+        imageSelectedTextView = binding.imageSelectedTextView;
+        imageSelectedTextView.setVisibility(View.GONE);
+
+        // select image button
         binding.buttonSelectImage.setOnClickListener(v -> {
             // launch photo picker
             pickMedia.launch(new PickVisualMediaRequest.Builder()
@@ -94,7 +104,7 @@ public class NewEventFragment extends Fragment {
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
             Long entrantsLimit = Long.parseLong(entrantsLimitString); //-------------------------------
-            String qrCode = binding.qrCodeInput.getText().toString().trim();
+            String qrCode = QR.generateCode();
 
             // Required field check
             if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||
