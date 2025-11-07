@@ -15,6 +15,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.example.lotterize.CurrentUser;
+import com.example.lotterize.Event;
 import com.example.lotterize.R;
 import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentEventHistoryBinding;
@@ -87,7 +88,7 @@ public class EventHistoryFragment extends Fragment {
     }
 
     /**
-     * Retrieves all events from Firestore and filters them based on the user’s participation.
+     * Retrieves all events and filters them based on the user’s participation.
      * The method determines whether the user was selected, waitlisted, or cancelled.
      */
     private void loadEventHistory() {
@@ -104,33 +105,31 @@ public class EventHistoryFragment extends Fragment {
 
                     // Loop through all event documents
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        List<String> waitList = (List<String>) doc.get("waitList");
-                        List<String> selectedList = (List<String>) doc.get("selectedList");
-                        List<String> finalList = (List<String>) doc.get("finalList");
-                        List<String> cancelledList = (List<String>) doc.get("cancelledList");
+                        // Build Event object using the new helper
+                        Event event = Event.addEventDetailsFromSnapShot(doc);
 
-                        String eventName = doc.getString("eventName");
+                        String eventName = event.getEventName();
                         Log.d(TAG, "Checking event: " + eventName);
 
                         String status = null;
 
                         // Priority: if selected or finalized, mark as "Was Selected"
-                        if ((selectedList != null && selectedList.contains(currentUserId)) ||
-                                (finalList != null && finalList.contains(currentUserId))) {
+                        if ((event.getSelectedList() != null && event.getSelectedList().contains(currentUserId)) ||
+                                (event.getFinalList() != null && event.getFinalList().contains(currentUserId))) {
                             status = "Was Selected";
                             eventCount++;
                             addEventToView(eventName, status);
                             Log.d(TAG, "User WAS SELECTED for: " + eventName);
                         }
                         // If in waitlist but not selected
-                        else if (waitList != null && waitList.contains(currentUserId)) {
+                        else if (event.getWaitList() != null && event.getWaitList().contains(currentUserId)) {
                             status = "Was Not Selected";
                             eventCount++;
                             addEventToView(eventName, status);
                             Log.d(TAG, "User WAS NOT SELECTED (on waitlist) for: " + eventName);
                         }
                         // If user cancelled
-                        else if (cancelledList != null && cancelledList.contains(currentUserId)) {
+                        else if (event.getCancelledList() != null && event.getCancelledList().contains(currentUserId)) {
                             status = "Cancelled";
                             eventCount++;
                             addEventToView(eventName, status);
@@ -142,6 +141,8 @@ public class EventHistoryFragment extends Fragment {
                     if (eventCount == 0) {
                         binding.textEmptyState.setVisibility(View.VISIBLE);
                         Log.d(TAG, "No events found for user");
+                    } else {
+                        binding.textEmptyState.setVisibility(View.GONE);
                     }
 
                     Log.d(TAG, "Total events loaded: " + eventCount);
@@ -151,6 +152,7 @@ public class EventHistoryFragment extends Fragment {
                     Toast.makeText(getContext(), "Error loading events", Toast.LENGTH_SHORT).show();
                 });
     }
+
 
     /**
      * Dynamically adds a single event item (name + status) to the scrollable event history view.
