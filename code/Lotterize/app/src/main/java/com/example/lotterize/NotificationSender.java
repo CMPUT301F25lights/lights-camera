@@ -31,9 +31,17 @@ public class NotificationSender {
     public void sendNotification(String senderId, String message, ArrayList<String> receiversIds) {
         DocumentReference docRef = db.collection("notifications").document();
 
+        String senderName = "";
+
+        if (CurrentUser.get().getName() == null){
+            senderName = "Username: " + CurrentUser.get().getUsername();
+        }
+        else{
+            senderName = CurrentUser.get().getName();
+        }
 
         //Initialize a notification object with notificationId obtained from the db
-        Notification notif = new Notification(docRef.getId(), senderId, CurrentUser.get().getName(), message, Timestamp.now(), receiversIds);
+        Notification notif = new Notification(docRef.getId(), senderId, senderName, message, Timestamp.now(), receiversIds);
 
         docRef.set(notif)
                 .addOnSuccessListener(v -> Log.d("NotificationSender", "Notification sent"))
@@ -55,7 +63,7 @@ public class NotificationSender {
             notification.setSenderId(CurrentUser.get().getUserId());
         }
         if (notification.getSenderName() == null || notification.getSenderName().isEmpty()) {
-            notification.setSenderName(CurrentUser.get().getName() != null ? CurrentUser.get().getName():"Unknown");
+            notification.setSenderName(CurrentUser.get().getName() != null ? CurrentUser.get().getName():"Username: " + CurrentUser.get().getUsername());
         }
         if (notification.getTime() == null) {
             notification.setTime(Timestamp.now());

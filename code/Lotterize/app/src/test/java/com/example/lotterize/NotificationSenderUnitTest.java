@@ -56,7 +56,7 @@ public class NotificationSenderUnitTest {
     private User mockCurrentUser() {
         User currentUser = new User();
         currentUser.setUserId("Sender_Id_123");
-        currentUser.setName("Nathan Bui");
+        currentUser.setUsername("Bui");
         return  currentUser;
     }
 
@@ -64,6 +64,7 @@ public class NotificationSenderUnitTest {
     public void TestSendNotification_BuildsAndWritesToDb() {
         // Arrange
         CurrentUser.set(mockCurrentUser());
+        CurrentUser.get().setName("Nathan Bui");
         NotificationSender sender = new NotificationSender();
 
         ArrayList<String> receiversId = new ArrayList<>();
@@ -108,7 +109,7 @@ public class NotificationSenderUnitTest {
 
             assertEquals("Test_Id_123", n.getNotificationId()); // from mocked docRef.getId()
             assertEquals("Sender_Id_123", n.getSenderId());
-            assertEquals("Nathan Bui", n.getSenderName());
+            assertEquals("Username: Bui", n.getSenderName());
             assertEquals("Hi!!! I'm Testing the Notification system", n.getMessage());
             assertNotNull(n.getTime());
             assertEquals(receiversId, n.getReceiversId());
