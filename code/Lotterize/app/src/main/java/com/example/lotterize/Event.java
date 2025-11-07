@@ -205,7 +205,7 @@ public class Event {
 
         return new Event(eventId, ownerId, waitList,  selectedList, cancelledList,
                 finalList, eventName, date, registrationStart, registrationDeadline, location,
-                totalSpots,  description,  entrantsLimit,  qrCode, imageUrl);
+                totalSpots,  description,  entrantsLimit,  qrCode);
 
     }
 }

@@ -38,9 +38,21 @@
         tools:layout="@layout/fragment_profile" />
 
     <fragment
+        android:id="@+id/navigation_account"
+        android:name="com.example.lotterize.ui.profile.AccountFragment"
+        android:label="Account"
+        tools:layout="@layout/fragment_account" />
+
+    <fragment
+        android:id="@+id/navigation_event_history"
+        android:name="com.example.lotterize.ui.profile.EventHistoryFragment"
+        android:label="Event History"
+        tools:layout="@layout/fragment_event_history" />
+
+    <fragment
         android:id="@+id/navigation_newEvent"
         android:name="com.example.lotterize.ui.addEvents.NewEventFragment"
-        android:label="New event"
+        android:label="@string/new_event"
         tools:layout="@layout/fragment_new_event" />
 
     <fragment
@@ -67,5 +79,6 @@
         <argument android:name="eventId" app:argType="string" />
         <argument android:name="status"  app:argType="string" />
     </fragment>
+
 
 </navigation>

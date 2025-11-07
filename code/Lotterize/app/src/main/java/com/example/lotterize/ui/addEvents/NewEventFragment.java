@@ -148,20 +148,22 @@ public class NewEventFragment extends Fragment {
             Long totalSpots = Long.parseLong(totalSpotsString); //-------------------------------
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
-            Long entrantsLimit = Long.parseLong(entrantsLimitString); //-------------------------------
+
+            Long entrantsLimit = !entrantsLimitString.equals("") ? Long.parseLong(entrantsLimitString) : 0; //-------------------------------
             String qrCode = QR.generateCode();
 
             // Required field check
             if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||
                     registrationStartString.isEmpty() || registrationEndString.isEmpty() ||
-                    location.isEmpty() || totalSpotsString.isEmpty() || entrantsLimitString.isEmpty()) {
+                    location.isEmpty() || totalSpotsString.isEmpty()) {
                 Toast.makeText(getContext(), "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+
             // Validate number inputs
             try {
-                if (totalSpots <= 0 || entrantsLimit <= 0) {
+                if (totalSpots <= 0 || entrantsLimit < 0) {
                     Toast.makeText(getContext(), "Spots and limit must be greater than 0!", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -220,6 +222,8 @@ public class NewEventFragment extends Fragment {
             ArrayList<String> selectedList = new ArrayList<>();
             ArrayList<String> cancelledList = new ArrayList<>();
             ArrayList<String> finalList = new ArrayList<>();
+
+
 
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,

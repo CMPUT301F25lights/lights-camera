@@ -15,4 +15,5 @@ public class CurrentUser {
     public static User get() {
         return instance;
     }
+    public static void clear() {instance = null;}
 }
