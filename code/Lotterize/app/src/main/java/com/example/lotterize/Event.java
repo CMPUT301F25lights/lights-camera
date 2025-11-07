@@ -30,6 +30,7 @@ public class Event {
     private String description;
     private long entrantsLimit;
     private String qrCode;
+    private String imageUrl;
 
     /**
      * Required empty constructor for Firestore.
@@ -55,6 +56,7 @@ public class Event {
      * @param description Text description shown to users
      * @param entrantsLimit Limit on entries before selection/lottery
      * @param qrCode Reference string to QR image/data
+     * @param imageUrl URL of event image
      */
     public Event(String eventId, String ownerId,
                  ArrayList<String> waitList, ArrayList<String> selectedList,
@@ -62,7 +64,7 @@ public class Event {
                  String eventName, Timestamp date, Timestamp registrationStart,
                  Timestamp registrationDeadline, String location,
                  long totalSpots, String description,
-                 long entrantsLimit, String qrCode) {
+                 long entrantsLimit, String qrCode, String imageUrl) {
 
         this.eventId = eventId;
         this.ownerId = ownerId;
@@ -79,6 +81,7 @@ public class Event {
         this.description = description;
         this.entrantsLimit = entrantsLimit;
         this.qrCode = qrCode;
+        this.imageUrl = imageUrl;
     }
 
     /** @return Firestore ID of the event */
@@ -160,6 +163,12 @@ public class Event {
     /** @param qrCode Reference to event QR code */
     public void setQrCode(String qrCode) { this.qrCode = qrCode; }
 
+    /** @return URL of event image */
+    public String getImageUrl() { return imageUrl; }
+    /** @param imageUrl URL of event image */
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+
     /**
      * This builds an Event object from a Firestore DocumentSnapshot.
      * It reads all expected fields from the snapshot and initializes list fields
@@ -192,10 +201,11 @@ public class Event {
         String description = doc.getString("description");
         Long entrantsLimit = doc.getLong("entrantsLimit");
         String qrCode = doc.getString("qrCode");
+        String imageUrl = doc.getString("imageUrl");
 
         return new Event(eventId, ownerId, waitList,  selectedList, cancelledList,
                 finalList, eventName, date, registrationStart, registrationDeadline, location,
-                totalSpots,  description,  entrantsLimit,  qrCode);
+                totalSpots,  description,  entrantsLimit,  qrCode, imageUrl);
 
     }
 }

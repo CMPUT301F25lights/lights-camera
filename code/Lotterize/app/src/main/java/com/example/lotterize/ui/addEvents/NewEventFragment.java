@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,30 +22,39 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
 import android.net.Uri;
-import android.os.Bundle;
 import android.util.Log;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
 
 public class NewEventFragment extends Fragment {
     private FirebaseFirestore db;
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
+
     private CollectionReference events;
     private FragmentNewEventBinding binding;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
     private Uri ImageUri;
+    private String imageUrl = null;
     private TextView imageSelectedTextView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference().child("event_posters");
 
         // Initialize photo picker
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
@@ -57,6 +65,29 @@ public class NewEventFragment extends Fragment {
                 // update textview to show image selected
                 imageSelectedTextView.setText(uri.toString());
                 imageSelectedTextView.setVisibility(View.VISIBLE);
+                Log.d("Upload", "=== STARTING UPLOAD ===");
+                Log.d("Upload", "URI: " + ImageUri);
+
+                StorageReference imageRef = storageRef.child( "TestImage_" + System.currentTimeMillis() + ".jpg");
+                Log.d("Upload", "Storage path: " + imageRef.getPath());
+
+                UploadTask uploadTask = imageRef.putFile(ImageUri);
+
+                uploadTask.addOnSuccessListener(taskSnapshot -> {
+                    Log.d("Upload", "=== UPLOAD SUCCESS ===");
+                    imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                        this.imageUrl = downloadUri.toString();
+                        Log.d("Upload", "Got download URL: " + this.imageUrl);
+                        Toast.makeText(getContext(), "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
+                    }).addOnFailureListener(e -> {
+                        Log.e("Upload", "Failed to get download URL", e);
+                        this.imageUrl = null;
+                    });
+                }).addOnFailureListener(e -> {
+                    Log.e("Upload", "=== UPLOAD FAILED ===", e);
+                    Toast.makeText(getContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+
             } else {
                 // no image selected
                 Log.d("PhotoPicker", "No media selected");
@@ -179,7 +210,7 @@ public class NewEventFragment extends Fragment {
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, qrCode);
+                    totalSpots, description, entrantsLimit, qrCode, imageUrl);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
