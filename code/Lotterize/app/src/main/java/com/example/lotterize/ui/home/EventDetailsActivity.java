@@ -21,6 +21,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.Calendar;
 import java.util.List;
 
+import com.bumptech.glide.Glide;
+
 /**
  * Displays event details relevant to the user.
  */
@@ -120,6 +122,16 @@ public class EventDetailsActivity extends AppCompatActivity {
                         qrCode.setImageBitmap(QR.generateBitmap(event.getString("qrCode"), 100));
                     } else {
                         Toast.makeText(this, "qrCode couldn't be found - EventDetailsActivity", Toast.LENGTH_SHORT).show();
+                    }
+
+                    ImageView posterImage = binding.eventPosterImage;
+                    String imageUrl = event.getString("imageUrl");
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        Glide.with(this)
+                                .load(imageUrl)
+                                .into(posterImage);
+                    } else {
+                        posterImage.setVisibility(View.GONE);
                     }
 
                 } else {
