@@ -15,6 +15,9 @@ public class HomeViewModel extends ViewModel {
 
     private final MutableLiveData<Spanned> mText;
 
+    /**
+     * Constructor for HomeViewModel
+     */
     public HomeViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue(Html.fromHtml(

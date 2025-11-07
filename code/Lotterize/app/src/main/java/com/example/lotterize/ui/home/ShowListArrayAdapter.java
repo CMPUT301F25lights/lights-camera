@@ -27,6 +27,15 @@ public class ShowListArrayAdapter extends ArrayAdapter<String> {
     private CollectionReference col;
     String idField;
     String nameField;
+
+    /**
+     * Constructor for ShowListArrayAdapter
+     * @param context context it is being called in
+     * @param ids ArrayList<String> containing all ids to be shown
+     * @param collection collection to reference for object information (i.e events)
+     * @param idField name of the id field (i.e eventId)
+     * @param nameField name of the name field (i.e eventName)
+     */
     public ShowListArrayAdapter(Context context, ArrayList<String> ids, String collection, String idField, String nameField){
         super(context, 0, ids);
         db = FirebaseFirestore.getInstance();

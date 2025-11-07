@@ -32,6 +32,11 @@ import kotlinx.serialization.descriptors.PrimitiveKind;
  */
 public class EventListArrayAdapter extends ArrayAdapter<DocumentSnapshot> {
 
+    /**
+     * This is the constructor for EventListArrayAdapter
+     * @param context Context that it is being called in
+     * @param events ArrayList<DocumentSnapshot> containing all events to be shown
+     */
     public EventListArrayAdapter(Context context, ArrayList<DocumentSnapshot> events){
         super(context, 0, events);
     }
