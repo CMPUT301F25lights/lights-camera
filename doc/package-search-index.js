@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.example.lotterize"},{"l":"com.example.lotterize.ui.addEvents"},{"l":"com.example.lotterize.ui.eventsRegistered"},{"l":"com.example.lotterize.ui.home"},{"l":"com.example.lotterize.ui.notifications"},{"l":"com.example.lotterize.ui.profile"}];updateSearchResults();
