@@ -42,6 +42,8 @@ dependencies {
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.zxing:javase:3.5.1")
     implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("com.google.firebase:firebase-auth:23.1.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
@@ -50,6 +52,7 @@ dependencies {
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
     testImplementation(libs.junit)
     //these will have to be removed
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
