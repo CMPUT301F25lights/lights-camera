@@ -106,7 +106,8 @@ public class HomeFragment extends Fragment {
                             shownList.clear();
                             for (DocumentSnapshot d : snapshot) {
                                 Timestamp t = d.getTimestamp("registrationStart");
-                                if (t != null && t.compareTo(Timestamp.now()) < 0){
+                                String ownerId = d.getString("ownerId");
+                                if (t != null && ownerId != null && t.compareTo(Timestamp.now()) < 0 && !ownerId.equals(CurrentUser.get().getUserId())){
                                     eventList.add(d);
                                     shownList.add(d);
                                 }

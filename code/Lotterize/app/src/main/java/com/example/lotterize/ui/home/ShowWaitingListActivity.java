@@ -1,11 +1,13 @@
 package com.example.lotterize.ui.home;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Activity that shows the waiting list for an event
@@ -90,11 +93,22 @@ public class ShowWaitingListActivity extends AppCompatActivity {
                     adapter.notifyDataSetChanged();
                     events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot -> {
                         DocumentReference event = snapshot.getDocuments().get(0).getReference();
-                        event.update("waitList", FieldValue.arrayUnion(userId));
-                        interact.setText(leaveList);
+
+                        Long entrantsLimit = snapshot.getDocuments().get(0).getLong("entrantsLimit");
+                        if (entrantsLimit != null && (entrantsLimit >= usersId.size() || entrantsLimit == 0)){
+                            event.update("waitList", FieldValue.arrayUnion(userId));
+                            interact.setText(leaveList);
+                        }
+                        else{
+                            Toast.makeText(ShowWaitingListActivity.this, "Waiting List is Full!!!", Toast.LENGTH_SHORT).show();
+                            usersId.remove(userId);
+                            adapter.notifyDataSetChanged();
+                        }
+
                     });
+                    }
+
                 }
-            }
         });
 
         list.setAdapter(adapter);
