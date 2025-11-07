@@ -17,6 +17,14 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 
+/**
+ * {@code MainActivity} serves as the login screen for the Lotterize application.
+ *
+ * It allows users to sign in with an existing username and password or navigate
+ * to the {@link CreateAccountActivity} to register a new account.
+ * The activity uses Firebase Firestore to verify credentials and loads the
+ * user's data into the {@link CurrentUser} singleton upon successful authentication.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
@@ -27,7 +35,14 @@ public class MainActivity extends AppCompatActivity {
     private Button signInButton;
     private Button createAccountButton;
 
-
+    /**
+     * Called when the activity is first created.
+     *
+     * This method initializes Firestore, sets up view binding, connects UI elements,
+     * and defines click listeners for both login and account creation actions.
+     *
+     * @param savedInstanceState If non-null, this activity is being re-created from a previous state.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

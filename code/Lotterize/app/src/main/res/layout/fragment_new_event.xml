@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,16 +10,17 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp">
 
-        <Button
+        <ImageButton
             android:id="@+id/button_cancel_create_event"
-            android:layout_width="46dp"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_alignParentStart="true"
-            android:layout_marginStart="17dp"
-            android:text="@string/cancel_create_event"
-            android:textSize="20sp" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cancel_create_event"
+            android:padding="8dp"
+            android:src="@drawable/ic_back_arrow" />
 
-        <Button
+        <TextView
             android:id="@+id/button_create_event"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -56,6 +58,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="Enter event name"/>
             </LinearLayout>
 
@@ -77,6 +80,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="yyyy-MM-dd"/>
             </LinearLayout>
 
@@ -98,6 +102,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="HH:mm"/>
             </LinearLayout>
 
@@ -119,6 +124,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="Enter location"/>
             </LinearLayout>
 
@@ -140,6 +146,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="Enter total spots: 50"/>
             </LinearLayout>
 
@@ -161,6 +168,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="Enter entrants: 100"/>
             </LinearLayout>
 
@@ -182,7 +190,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="Enter description"/>
+
             </LinearLayout>
 
             <LinearLayout
@@ -203,6 +213,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="yyyy-MM-dd HH:mm"/>
             </LinearLayout>
 
@@ -224,6 +235,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/background_rounded"
                     android:hint="yyyy-MM-dd HH:mm"/>
             </LinearLayout>
 
@@ -250,7 +262,11 @@
                         android:layout_width="280dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Select Image" />
+                        android:backgroundTint="#000000"
+                        android:text="Select Image"
+                        android:textColorHint="#000000"
+                        android:textColorLink="#000000"
+                        app:rippleColor="#000000" />
 
                     <TextView
                         android:id="@+id/imageSelectedTextView"

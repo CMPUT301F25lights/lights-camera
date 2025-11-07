@@ -24,6 +24,17 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@code CreateAccountActivity} provides the user interface and logic
+ * for creating a new user account within the Lotterize application.
+ *
+ * This activity allows users to enter a username and password, checks
+ * whether the username already exists in Firestore, and if not, creates
+ * a new user record in the "users" collection.
+ *
+ * It uses Firebase Firestore for backend storage and provides real-time
+ * feedback through {@link Toast} messages.
+ */
 public class CreateAccountActivity extends AppCompatActivity {
 
     private EditText newUsernameEditText;
@@ -34,6 +45,14 @@ public class CreateAccountActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private CollectionReference users;
 
+    /**
+     * Called when the activity is first created.
+     *
+     * This method initializes UI components, sets up Firestore,
+     * and defines click listeners for the account creation and back buttons.
+     *
+     * @param savedInstanceState If non-null, this activity is being re-created from a previous state.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
