@@ -132,9 +132,7 @@ public class Event {
     /** @param registrationDeadline New cutoff time */
     public void setRegistrationDeadline(Timestamp registrationDeadline) { this.registrationDeadline = registrationDeadline; }
 
-    /**
-     * @return Event location (venue)
-     */
+    /** @return Event location (venue) */
     public String getLocation() { return location; }
 
     /** @param location New venue information */

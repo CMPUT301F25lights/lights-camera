@@ -7,10 +7,17 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+
+/**
+ * Holds Text for info dialog fragment.
+ */
 public class HomeViewModel extends ViewModel {
 
     private final MutableLiveData<Spanned> mText;
 
+    /**
+     * Constructor for HomeViewModel
+     */
     public HomeViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue(Html.fromHtml(
@@ -30,6 +37,10 @@ public class HomeViewModel extends ViewModel {
         ,Html.FROM_HTML_MODE_LEGACY));
     }
 
+    /**
+     * returns text with all guidelines information
+     * @return LiveData<Spanned> - the text with guidelines information
+     */
     public LiveData<Spanned> getText() {
         return mText;
     }

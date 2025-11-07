@@ -18,18 +18,23 @@ import com.example.lotterize.R;
 
 import java.util.Objects;
 
+/**
+ * Creates the dialog fragment displaying the information
+ * about the lottery system.
+ */
 public class InfoFragment extends DialogFragment {
 
+    private TextView infoText;
+
     /**
-     * Creates the DialogFragment and obtains date from user.
+     * Creates the dialog fragment displaying the information
+     * about the lottery system.
      *
      * @param savedInstanceState The last saved instance state of the Fragment,
      * or null if this is a freshly created Fragment.
      *
      * @return returns Dialog
      */
-
-    private TextView infoText;
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {

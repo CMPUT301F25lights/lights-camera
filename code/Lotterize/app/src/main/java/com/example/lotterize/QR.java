@@ -120,7 +120,7 @@ public class QR {
         }
     }
 
-    //---------------- Testing, not used yet --------------------------------
+//---------------- Testing, not used yet --------------------------------
     public static void generatePNG(String code, String path) {
 
         try {

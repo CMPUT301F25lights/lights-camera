@@ -36,6 +36,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * Fragment that shows the home screen. Includes a display of events
+ * that user can join waitlist for along with text search, QR search (not implemented yet),
+ * and info about the lottery.
+ */
 public class HomeFragment extends Fragment {
     private FirebaseFirestore db;
     private CollectionReference events;
@@ -48,7 +53,19 @@ public class HomeFragment extends Fragment {
     private ArrayAdapter<DocumentSnapshot> eventsArray;
     private TextView info_text;
 
-
+    /**
+     * Creates the home view
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return View
+     */
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
@@ -57,6 +74,14 @@ public class HomeFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Displays events that user can join waitlist for along with text search,
+     * QR search (not implemented yet), and info about the lottery.
+     *
+     * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     */
     public void onViewCreated (@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         eventList = new ArrayList<>();
@@ -70,11 +95,18 @@ public class HomeFragment extends Fragment {
                     if (e != null){
                         Toast.makeText(getContext(), "couldn't update data - HomeFragment", Toast.LENGTH_SHORT).show();
                     } else {
-                        eventList.clear();
-                        eventList.addAll(snapshot.getDocuments());
-                        shownList.clear();
-                        shownList.addAll(eventList);
-                        eventsArray.notifyDataSetChanged();
+                        if (snapshot != null){
+                            eventList.clear();
+                            shownList.clear();
+                            for (DocumentSnapshot d : snapshot) {
+                                Timestamp t = d.getTimestamp("registrationStart");
+                                if (t != null && t.compareTo(Timestamp.now()) < 0){
+                                    eventList.add(d);
+                                    shownList.add(d);
+                                }
+                            }
+                            eventsArray.notifyDataSetChanged();
+                        }
                     }
                 });
 
@@ -145,6 +177,9 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    /**
+     * Destroys the view
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
