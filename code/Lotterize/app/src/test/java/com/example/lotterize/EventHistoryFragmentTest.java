@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Unit tests for EventHistoryFragment core logic.
  * Focuses on verifying correct event status classification
  * based on user presence in waitlist, selected, final, or cancelled lists.
  */
@@ -41,7 +40,7 @@ public class EventHistoryFragmentTest {
         } else if (cancelledList != null && cancelledList.contains(userId)) {
             return "Cancelled";
         } else {
-            return null; // User not associated with this event
+            return null;
         }
     }
 
@@ -50,7 +49,7 @@ public class EventHistoryFragmentTest {
         String status = getUserEventStatus(
                 currentUserId,
                 Collections.emptyList(),
-                Arrays.asList("user123"), // user in selected list
+                Arrays.asList("user123"),
                 Collections.emptyList(),
                 Collections.emptyList()
         );
@@ -63,7 +62,7 @@ public class EventHistoryFragmentTest {
                 currentUserId,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Arrays.asList("user123"), // user in final list
+                Arrays.asList("user123"),
                 Collections.emptyList()
         );
         assertEquals("Was Selected", status);
@@ -73,7 +72,7 @@ public class EventHistoryFragmentTest {
     public void testUserInWaitlist_ReturnsWasNotSelected() {
         String status = getUserEventStatus(
                 currentUserId,
-                Arrays.asList("user123"), // user in waitlist
+                Arrays.asList("user123"),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList()
@@ -88,7 +87,7 @@ public class EventHistoryFragmentTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Arrays.asList("user123") // user in cancelled list
+                Arrays.asList("user123")
         );
         assertEquals("Cancelled", status);
     }
@@ -109,8 +108,8 @@ public class EventHistoryFragmentTest {
     public void testPriority_SelectedOverridesWaitlist() {
         String status = getUserEventStatus(
                 currentUserId,
-                Arrays.asList("user123"),  // in waitlist
-                Arrays.asList("user123"),  // also in selected
+                Arrays.asList("user123"),
+                Arrays.asList("user123"),
                 Collections.emptyList(),
                 Collections.emptyList()
         );

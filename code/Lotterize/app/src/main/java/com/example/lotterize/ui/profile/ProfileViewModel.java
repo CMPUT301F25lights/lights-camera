@@ -21,10 +21,8 @@ public class ProfileViewModel extends ViewModel {
 
     private static final String TAG = "ProfileViewModel";
 
-    // LiveData object to observe user data in UI components
     private final MutableLiveData<User> userLiveData;
 
-    // Instance of Firestore for interacting with the users collection
     private final FirebaseFirestore db;
 
     // The currently authenticated user's ID
@@ -62,7 +60,6 @@ public class ProfileViewModel extends ViewModel {
                         return;
                     }
 
-                    // If document exists, convert to User object and update LiveData
                     if (snapshot != null && snapshot.exists()) {
                         User user = new User(
                                 snapshot.getId(),
@@ -74,7 +71,7 @@ public class ProfileViewModel extends ViewModel {
                                 snapshot.getString("password")
                         );
                         userLiveData.setValue(user);
-                        CurrentUser.set(user); // Sync with singleton
+                        CurrentUser.set(user);
                     }
                 });
     }

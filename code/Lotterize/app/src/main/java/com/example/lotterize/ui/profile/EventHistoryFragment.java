@@ -37,7 +37,6 @@ public class EventHistoryFragment extends Fragment {
 
     private FragmentEventHistoryBinding binding;
 
-    // Firestore database instance for retrieving event data
     private FirebaseFirestore db;
 
     // Current user’s unique document ID

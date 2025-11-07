@@ -2,13 +2,10 @@ package com.example.lotterize;
 
 import static org.junit.Assert.*;
 
-import android.text.InputType;
-
 import org.junit.Test;
 
 /**
- * Unit tests for AccountFragment.
- * Tests core functionality: input validation for name, email, and phone number fields.
+ * Testing input validation.
  */
 public class AccountFragmentTest {
 
@@ -17,10 +14,8 @@ public class AccountFragmentTest {
      */
     @Test
     public void testValidation_EmptyInput() {
-        // Arrange
         String input = "";
 
-        // Act & Assert
         assertTrue(input.isEmpty());
     }
 
@@ -29,10 +24,8 @@ public class AccountFragmentTest {
      */
     @Test
     public void testValidation_NonEmptyInput() {
-        // Arrange
         String input = "John Doe";
 
-        // Act & Assert
         assertFalse(input.isEmpty());
     }
 
@@ -41,13 +34,10 @@ public class AccountFragmentTest {
      */
     @Test
     public void testPhoneValidation_ValidPhone() {
-        // Arrange
         String phone = "1234567890";
 
-        // Act
         boolean isValid = phone.length() >= 10;
 
-        // Assert
         assertTrue(isValid);
     }
 
@@ -56,13 +46,10 @@ public class AccountFragmentTest {
      */
     @Test
     public void testPhoneValidation_TooShort() {
-        // Arrange
         String phone = "123456789"; // 9 digits
 
-        // Act
         boolean isValid = phone.length() >= 10;
 
-        // Assert
         assertFalse(isValid);
     }
 
@@ -71,13 +58,10 @@ public class AccountFragmentTest {
      */
     @Test
     public void testPhoneValidation_LongerPhone() {
-        // Arrange
         String phone = "12345678901"; // 11 digits
 
-        // Act
         boolean isValid = phone.length() >= 10;
 
-        // Assert
         assertTrue(isValid);
     }
 
@@ -86,13 +70,10 @@ public class AccountFragmentTest {
      */
     @Test
     public void testPhoneValidation_EmptyPhone() {
-        // Arrange
         String phone = "";
 
-        // Act
         boolean isValid = phone.length() >= 10;
 
-        // Assert
         assertFalse(isValid);
     }
 
@@ -101,13 +82,10 @@ public class AccountFragmentTest {
      */
     @Test
     public void testInputTrimming() {
-        // Arrange
         String input = "  test input  ";
 
-        // Act
         String trimmed = input.trim();
 
-        // Assert
         assertEquals("test input", trimmed);
         assertNotEquals(input, trimmed);
     }
@@ -117,13 +95,10 @@ public class AccountFragmentTest {
      */
     @Test
     public void testInputTrimming_EmptyString() {
-        // Arrange
         String input = "   ";
 
-        // Act
         String trimmed = input.trim();
 
-        // Assert
         assertEquals("", trimmed);
         assertTrue(trimmed.isEmpty());
     }
@@ -133,13 +108,10 @@ public class AccountFragmentTest {
      */
     @Test
     public void testInputTrimming_NoSpaces() {
-        // Arrange
         String input = "test";
 
-        // Act
         String trimmed = input.trim();
 
-        // Assert
         assertEquals(input, trimmed);
     }
 
@@ -148,10 +120,8 @@ public class AccountFragmentTest {
      */
     @Test
     public void testNameValidation_ValidName() {
-        // Arrange
         String name = "John Doe";
 
-        // Act & Assert
         assertFalse(name.isEmpty());
         assertTrue(name.length() > 0);
     }
