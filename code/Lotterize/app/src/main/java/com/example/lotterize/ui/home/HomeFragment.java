@@ -177,6 +177,9 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    /**
+     * Destroys the view
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
