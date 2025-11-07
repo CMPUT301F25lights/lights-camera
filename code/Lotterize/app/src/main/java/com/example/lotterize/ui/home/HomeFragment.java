@@ -14,6 +14,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.lotterize.EventScheduler;
+
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -52,6 +54,7 @@ public class HomeFragment extends Fragment {
     private ListView eventsListView;
     private ArrayAdapter<DocumentSnapshot> eventsArray;
     private TextView info_text;
+    private EventScheduler scheduler;
 
     /**
      * Creates the home view
@@ -89,6 +92,9 @@ public class HomeFragment extends Fragment {
         eventsArray = new EventListArrayAdapter(requireContext(), shownList);
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
+
+        scheduler = new EventScheduler();
+
 
         events.orderBy("registrationDeadline").whereGreaterThan("registrationDeadline", Timestamp.now())
                 .addSnapshotListener((snapshot,e) -> {
@@ -175,6 +181,7 @@ public class HomeFragment extends Fragment {
                 i.show(getActivity().getSupportFragmentManager(), "Info");
             }
         });
+        scheduler.monitorEvents();
     }
 
     /**

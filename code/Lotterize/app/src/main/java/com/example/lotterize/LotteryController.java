@@ -6,7 +6,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.List;
 
 /**
- * This class is used as a controller for my Lottery model which
+ * This class is used as a controller for my Lottery model which will have to be added in later
+ *
  */
 public class LotteryController {
 
@@ -32,8 +33,8 @@ public class LotteryController {
     /**
      * Handles when a selected user accepts their invitation.
      * Moves them from selectedList to finalList.
-     * @param
-     * @param
+     * @param event
+     * @param userId
      */
     public void acceptInvitation(Event event, String userId) {
         if (event.getSelectedList().contains(userId)) {
@@ -47,6 +48,8 @@ public class LotteryController {
      * Handles when a selected user declines their invitation.
      * Moves them to cancelledList, and possibly replaces them
      * with a new user from the waitlist.
+     * @param event
+     * @param userId
      */
     public void declineInvitation(Event event, String userId) {
         if (event.getSelectedList().contains(userId)) {
