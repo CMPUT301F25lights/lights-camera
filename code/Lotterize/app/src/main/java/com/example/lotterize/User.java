@@ -126,5 +126,4 @@ public class User {
         if (this.registeredEventIds == null) this.registeredEventIds = new ArrayList<>();
         this.registeredEventIds.add(eventId);
     }
-
 }

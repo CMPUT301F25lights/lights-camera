@@ -15,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
+import com.example.lotterize.QR;
 import com.example.lotterize.R;
 import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentNewEventBinding;
@@ -35,6 +36,14 @@ import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+/**
+ * {@code NewEventFragment} handles the creation of new events within the Lotterize app.
+ * This fragment provides a user interface for event organizers to input event details,
+ * select an optional image, validate input fields, and submit the event to Firebase Firestore.
+ * It also updates the current user's owned event list upon successful creation.
+ * The fragment uses the {@link FragmentNewEventBinding} class for view binding,
+ * and integrates with {@link FirebaseFirestore} for persistent data storage.
+ */
 public class NewEventFragment extends Fragment {
     private FirebaseFirestore db;
     private CollectionReference events;
@@ -43,20 +52,11 @@ public class NewEventFragment extends Fragment {
     private Uri ImageUri;
     private TextView imageSelectedTextView;
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        NewEventViewModel newEventViewModel =
-                new ViewModelProvider(this).get(NewEventViewModel.class);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        binding = FragmentNewEventBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
-
-        db = FirebaseFirestore.getInstance();
-        events = db.collection("events");
-
-        imageSelectedTextView = binding.imageSelectedTextView;
-        imageSelectedTextView.setVisibility(View.GONE);
-
+        // Initialize photo picker
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
             if (uri != null) {// image selected
                 Log.d("PhotoPicker", "Selected URI: " + uri);
@@ -70,6 +70,30 @@ public class NewEventFragment extends Fragment {
                 Log.d("PhotoPicker", "No media selected");
             }
         });
+    }
+
+    /**
+     * Called when the fragment is first created.
+     * Initializes the photo picker to allow users to select an event image from their device.
+     *
+     * @param savedInstanceState If non-null, this fragment is being re-created from a previous state.
+     */
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+        NewEventViewModel newEventViewModel =
+                new ViewModelProvider(this).get(NewEventViewModel.class);
+
+        binding = FragmentNewEventBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
+
+        db = FirebaseFirestore.getInstance();
+        events = db.collection("events");
+
+        // selected image textview
+        imageSelectedTextView = binding.imageSelectedTextView;
+        imageSelectedTextView.setVisibility(View.GONE);
+
+        // select image button
         binding.buttonSelectImage.setOnClickListener(v -> {
             // launch photo picker
             pickMedia.launch(new PickVisualMediaRequest.Builder()
@@ -94,7 +118,7 @@ public class NewEventFragment extends Fragment {
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
             Long entrantsLimit = Long.parseLong(entrantsLimitString); //-------------------------------
-            String qrCode = binding.qrCodeInput.getText().toString().trim();
+            String qrCode = QR.generateCode();
 
             // Required field check
             if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||

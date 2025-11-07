@@ -22,7 +22,14 @@
     <string name="create_event">Create</string>
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
-    <string name="sample_text">Sample text</string>
+    <string name="sample_text">sample_text</string>
     <string name="view_details">View Details</string>
     <string name="waiting_list">Waiting List</string>
+    <string name="join_waiting_list">Join Waiting List</string>
+    <string name="leave_waiting_list_string">Leave Waiting List</string>
+    <string name="waiting_list">Waiting List</string>
+    <string name="sample_text_50">12345678901234567890123456789012345678901234567890</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="text_new_event">Create New Event</string>
 </resources>

@@ -3,7 +3,6 @@ package com.example.lotterize.ui.home;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -19,17 +18,25 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
+/**
+ * Displays event details relevant to the user.
+ */
 public class EventDetailsActivity extends AppCompatActivity {
 
     FirebaseFirestore db;
     CollectionReference events;
     ActivityEventDetailsBinding binding;
 
+    /**
+     * Displays event details relevant to the user.
+     *
+     * @param savedInstanceState intent contains a String in
+     *                           "eventId" field
+     *
+     */
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -90,7 +97,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                         waitListButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Intent intent = new Intent(EventDetailsActivity.this, ActivityShowWaitingList.class);
+                                Intent intent = new Intent(EventDetailsActivity.this, ShowWaitingListActivity.class);
                                 intent.putExtra("eventId", getIntent().getStringExtra("eventId"));
                                 startActivity(intent);
                             }

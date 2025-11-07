@@ -23,16 +23,32 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 
 /**
- * Fragment for showing the notifications list.
- * - Sets up ListView + adapter using the NotificationArrayAdapter
- * - Observes the ViewModel LiveData to update UI
+ * This is a fragment that displays a list of {@link Notification} items.
+ * It sets up the {@link ListView} with a {@link NotificationArrayAdapter}
+ * and observes {@link NotificationsViewModel} to update the UI when data changes.
  */
 public class NotificationsFragment extends Fragment {
 
+    /** View binding for the notifications fragment layout. */
     private FragmentNotificationsBinding binding;
+
+    /** ViewModel that provides LiveData of notifications for this fragment. */
     private NotificationsViewModel viewModel;
     private NotificationArrayAdapter notificationArrayAdapter;
 
+    /**
+     * This inflates the fragment layout, initializes the ListView and adapter,
+     * and starts observing the notifications LiveData from the ViewModel.
+     *
+     * @param inflater
+     *      The LayoutInflater object that can be used to inflate any views in the fragment
+     * @param container
+     *      If non-null, this is the parent view that the fragment's UI should be attached to
+     * @param savedInstanceState
+     *      If non-null, this fragment is being re-constructed from a previous saved state
+     * @return
+     *      Returns the root view of the fragment layout
+     */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -58,6 +74,10 @@ public class NotificationsFragment extends Fragment {
 
     }
 
+    /**
+     * This is a helper method used for testing; it creates a sample {@link Notification}
+     * and sends it using {@link NotificationSender}. Not intended for production usage.
+     */
     public void testAddNotificationWithNewId(){
         Notification notification = new Notification();
         notification.setMessage("Testing!! Congratulations!!! You were selected to join the class CMPUT 301.");
@@ -69,6 +89,11 @@ public class NotificationsFragment extends Fragment {
         notificationSender.sendNotification(notification);
     }
 
+
+    /**
+     * This deletes a specific notification document from Firestore by id.
+     * Intended for debugging.
+     */
     public void deleteDB(){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("notifications").document("Gj8UwTLo8yLx5lP2T5wb").delete()
@@ -80,6 +105,10 @@ public class NotificationsFragment extends Fragment {
 
     }
 
+    /**
+     * This clears the view binding reference when the view is destroyed
+     * to avoid memory leaks.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
