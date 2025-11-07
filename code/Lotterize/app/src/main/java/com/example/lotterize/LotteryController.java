@@ -32,6 +32,8 @@ public class LotteryController {
     /**
      * Handles when a selected user accepts their invitation.
      * Moves them from selectedList to finalList.
+     * @param
+     * @param
      */
     public void acceptInvitation(Event event, String userId) {
         if (event.getSelectedList().contains(userId)) {
@@ -62,7 +64,7 @@ public class LotteryController {
 
     /**
      * Pushes updated event data to Firestore. Needs some work still too
-     *
+     * @param event
      */
     private void updateEventInFirestore(Event event) {
         db.collection("events")
