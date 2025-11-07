@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * This class handles the lottery functionality
+ */
 public class Lottery {
 
     private final Random random;

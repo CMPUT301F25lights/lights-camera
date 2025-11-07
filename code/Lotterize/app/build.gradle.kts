@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     //these will have to be removed
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
     testImplementation("org.mockito:mockito-core:5.5.0")
     androidTestImplementation(libs.ext.junit)
