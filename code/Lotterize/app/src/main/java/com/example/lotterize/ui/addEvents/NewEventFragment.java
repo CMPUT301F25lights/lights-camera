@@ -37,6 +37,14 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 
+/**
+ * {@code NewEventFragment} handles the creation of new events within the Lotterize app.
+ * This fragment provides a user interface for event organizers to input event details,
+ * select an optional image, validate input fields, and submit the event to Firebase Firestore.
+ * It also updates the current user's owned event list upon successful creation.
+ * The fragment uses the {@link FragmentNewEventBinding} class for view binding,
+ * and integrates with {@link FirebaseFirestore} for persistent data storage.
+ */
 public class NewEventFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseStorage storage;
@@ -95,6 +103,12 @@ public class NewEventFragment extends Fragment {
         });
     }
 
+    /**
+     * Called when the fragment is first created.
+     * Initializes the photo picker to allow users to select an event image from their device.
+     *
+     * @param savedInstanceState If non-null, this fragment is being re-created from a previous state.
+     */
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         NewEventViewModel newEventViewModel =
