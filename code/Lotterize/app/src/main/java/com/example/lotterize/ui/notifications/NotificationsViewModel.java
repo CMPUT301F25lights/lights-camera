@@ -62,6 +62,7 @@ public class NotificationsViewModel extends ViewModel {
 
         registration = db.collection("notifications")
                 .whereArrayContains("receiversId", currentUserId)
+                //.orderBy("time", Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error)->{
 
                         if (error != null) {

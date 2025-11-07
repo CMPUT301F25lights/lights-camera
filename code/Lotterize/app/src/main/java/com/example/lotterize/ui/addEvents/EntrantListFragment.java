@@ -61,7 +61,9 @@ public class EntrantListFragment extends Fragment {
      */
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_entrant_list, container, false);
     }
 
@@ -116,16 +118,11 @@ public class EntrantListFragment extends Fragment {
      */
     private String ListLabel(String s) {
         switch (s) {
-            case "WAITLIST":
-                return "Waitlist Entrants";
-            case "CHOSEN":
-                return "Chosen Entrants";
-            case "CANCELLED":
-                return "Cancelled Entrants";
-            case "ENROLLED":
-                return "Enrolled Entrants";
-            default:
-                return "Entrants";
+            case "WAITLIST":  return "Waitlist Entrants";
+            case "CHOSEN":    return "Chosen Entrants";
+            case "CANCELLED": return "Cancelled Entrants";
+            case "ENROLLED":  return "Enrolled Entrants";
+            default:          return "Entrants";
         }
     }
 
@@ -139,16 +136,11 @@ public class EntrantListFragment extends Fragment {
      */    @Nullable
     private String listField(String s) {
         switch (s) {
-            case "WAITLIST":
-                return "waitList";
-            case "CHOSEN":
-                return "selectedList";
-            case "CANCELLED":
-                return "cancelledList";
-            case "ENROLLED":
-                return "finalList";
-            default:
-                return null;
+            case "WAITLIST":  return "waitList";
+            case "CHOSEN":    return "selectedList";
+            case "CANCELLED": return "cancelledList";
+            case "ENROLLED":  return "finalList";
+            default:          return null;
         }
     }
 
@@ -231,9 +223,7 @@ public class EntrantListFragment extends Fragment {
                         String name = d.getString("name");
                         idToNameMap.put(id, (name != null && !name.isEmpty()) ? name : id);
                     }
-                    rows.clear();
-                    rows.addAll(applyNames(docIds, idToNameMap));
-                    adapter.notifyDataSetChanged();
+                    applyNames(docIds);
                 })
                 .addOnFailureListener(e -> {
 
@@ -252,13 +242,13 @@ public class EntrantListFragment extends Fragment {
      * @param docIds
      *      The entrant ids in display order
      */
-    public static ArrayList<String> applyNames(@NonNull ArrayList<String> docIds, Map<String, String> idToNameMap) {
-        ArrayList<String> userNames = new ArrayList<String>();
+    private void applyNames(@NonNull ArrayList<String> docIds) {
+        rows.clear();
         for (String id : docIds) {
             String name = idToNameMap.get(id);
-            userNames.add((name != null && !name.isEmpty()) ? name : id);
+            rows.add((name != null && !name.isEmpty()) ? name : id);
         }
-        return userNames;
+        adapter.notifyDataSetChanged();
     }
 
     /**
