@@ -223,8 +223,9 @@ public class EntrantListFragment extends Fragment {
                         String name = d.getString("name");
                         idToNameMap.put(id, (name != null && !name.isEmpty()) ? name : id);
                     }
-                    applyNames(docIds);
-                })
+                    rows.clear();
+                    rows.addAll(applyNames(docIds, idToNameMap));
+                    adapter.notifyDataSetChanged();                })
                 .addOnFailureListener(e -> {
 
                     // If we fail to build the cache, show raw ids
@@ -236,19 +237,22 @@ public class EntrantListFragment extends Fragment {
     }
 
     /**
-     * This fills {@link #rows} using {@link #idToNameMap} in the same order as the given ids,
-     * preferring display names and falling back to the raw id if a name is not found.
+     * This resolves display names for the given user IDs using the provided lookup map,
+     * preserving the order of {@code docIds}. If an ID is absent from the map or
+     * its mapped value is {@code null} or empty, the ID itself is used as a fallback.
      *
-     * @param docIds
-     *      The entrant ids in display order
+     *
+     * @param docIds       ordered list of user document IDs to resolve (non-null)
+     * @param idToNameMap  map of userId → display name; may be empty or missing entries
+     * @return a new list of display strings corresponding 1-to-1 with {@code docIds}
      */
-    private void applyNames(@NonNull ArrayList<String> docIds) {
-        rows.clear();
+    public static ArrayList<String> applyNames(@NonNull ArrayList<String> docIds, Map<String, String> idToNameMap) {
+        ArrayList<String> userNames = new ArrayList<String>();
         for (String id : docIds) {
             String name = idToNameMap.get(id);
-            rows.add((name != null && !name.isEmpty()) ? name : id);
+            userNames.add((name != null && !name.isEmpty()) ? name : id);
         }
-        adapter.notifyDataSetChanged();
+        return userNames;
     }
 
     /**
