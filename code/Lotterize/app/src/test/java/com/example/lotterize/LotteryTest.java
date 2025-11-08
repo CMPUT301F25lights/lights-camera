@@ -45,7 +45,8 @@ public class LotteryTest {
                 2L,
                 "Outdoor event",
                 10L,
-                "qr123"
+                "qr123",
+                ""
         );
 
         // Mock NotificationSender and Lottery
@@ -104,7 +105,8 @@ public class LotteryTest {
                     3L,
                     "No participants",
                     10L,
-                    "qr456"
+                    "qr456",
+                    ""
             );
 
             List<String> winners = lottery.drawWinners(emptyEvent);
