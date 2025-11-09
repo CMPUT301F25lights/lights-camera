@@ -16,6 +16,10 @@
             android:exported="false"
             android:theme="@style/Theme.Lotterize" />
         <activity
+            android:name=".AdminSignInActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Lotterize" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name">
@@ -26,6 +30,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".UserActivity">
+        </activity>
+        <activity android:name=".AdminActivity">
         </activity>
         <activity android:name=".ui.home.EventDetailsActivity">
         </activity>

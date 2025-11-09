@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/admin_navigation"
+    app:startDestination="@id/navigation_admin_events">
+
+    <fragment
+        android:id="@+id/navigation_admin_events"
+        android:name="com.example.lotterize.ui.admin.adminEvents.AdminEventsFragment"
+        android:label="Events"
+        tools:layout="@layout/fragment_admin_events" />
+
+    <fragment
+        android:id="@+id/navigation_admin_images"
+        android:name="com.example.lotterize.ui.admin.adminImages.AdminImagesFragment"
+        android:label="Images"
+        tools:layout="@layout/fragment_admin_images" />
+
+    <fragment
+        android:id="@+id/navigation_admin_users"
+        android:name="com.example.lotterize.ui.admin.adminUsers.AdminUsersFragment"
+        android:label="Users"
+        tools:layout="@layout/fragment_admin_users" />
+
+    <fragment
+        android:id="@+id/navigation_admin_profile"
+        android:name="com.example.lotterize.ui.admin.AdminProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_admin_profile" />
+</navigation>
