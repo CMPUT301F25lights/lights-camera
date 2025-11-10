@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText passwordEditText;
     private Button signInButton;
     private Button createAccountButton;
+    private Button adminSignInButton;
 
     /**
      * Called when the activity is first created.
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.editTextPassword);
         signInButton = findViewById(R.id.buttonSignin);
         createAccountButton = findViewById(R.id.buttonCreateAccount);
+        adminSignInButton = findViewById(R.id.buttonAdminSignin);
 
 
         signInButton.setOnClickListener(v -> {
@@ -126,6 +128,11 @@ public class MainActivity extends AppCompatActivity {
         createAccountButton.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, CreateAccountActivity.class))
         );
+
+        adminSignInButton.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, AdminSignInActivity.class))
+        );
+
     }
 
 }
