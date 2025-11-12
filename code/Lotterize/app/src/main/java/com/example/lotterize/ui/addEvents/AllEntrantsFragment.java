@@ -9,15 +9,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.NavController;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.lotterize.CurrentUser;
 import com.example.lotterize.R;
-import com.example.lotterize.Event;
 import com.example.lotterize.databinding.FragmentAllEntrantsBinding;
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
+import com.example.lotterize.ui.notifications.NotificationsViewModel;
+import com.example.lotterize.ui.notifications.SendNotificationDialogFragment;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 
@@ -32,6 +31,7 @@ public class AllEntrantsFragment extends Fragment {
     private FragmentAllEntrantsBinding binding;
     private FirebaseFirestore db;
     private String eventId;
+    private NotificationsViewModel viewModel;
 
     /**
      * This inflates the fragment layout and initializes the view binding.
@@ -76,6 +76,10 @@ public class AllEntrantsFragment extends Fragment {
                 NavHostFragment.findNavController(this).popBackStack()
         );
 
+
+        viewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
+
+
         // Open reusable list screen with a status flag
         binding.rowWaitlistList.setOnClickListener(view -> openList("WAITLIST"));
         binding.rowChosenList.setOnClickListener(view -> openList("CHOSEN"));
@@ -87,11 +91,36 @@ public class AllEntrantsFragment extends Fragment {
                 Toast.makeText(requireContext(), "Map coming soon", Toast.LENGTH_SHORT).show()
         );
 
+        //Notify buttons -> open dialog
+        binding.btnNotifyCancelled.setOnClickListener(v12 -> openNotifyDialog("cancelledList"));
+        binding.btnNotifyChosen.setOnClickListener(v13 -> openNotifyDialog("selectedList"));
+        binding.btnNotifyWaitlist.setOnClickListener(v14 -> openNotifyDialog("waitList"));
+
+        // Listen for a result sent by a child fragment. We register the listener against this fragment's
+        // view lifecycle so it automatically stops listening when the view is destroyed.
+        getChildFragmentManager().setFragmentResultListener(
+                SendNotificationDialogFragment.RESULT_KEY //the channel identifier
+                ,getViewLifecycleOwner(),
+                (key, bundle) -> {
+                    String eventId = bundle.getString(SendNotificationDialogFragment.RESULT_EVENT_ID, "");
+                    String status = bundle.getString(SendNotificationDialogFragment.RESULT_STATUS, "");
+                    String message = bundle.getString(SendNotificationDialogFragment.RESULT_MESSAGE, "");
+                    if (eventId.isEmpty() || status.isEmpty() || message.isEmpty()) return;
+
+                    viewModel.sendToStatus(eventId, status, message, CurrentUser.get().getUserId());
+                    viewModel.toast().observe(getViewLifecycleOwner(), notify->{
+                        if (notify != null){
+                            Toast.makeText(requireContext(), notify, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+        );
+
+
+
+
         // TODOs for the bottom buttons
         binding.btnExportCsv.setOnClickListener(v1 -> {/* export */});
-        binding.btnNotifyCancelled.setOnClickListener(v12 -> {/* notify */});
-        binding.btnNotifyChosen.setOnClickListener(v13 -> {/* notify */});
-        binding.btnNotifyWaitlist.setOnClickListener(v14 -> {/* notify */});
         binding.btnDrawReplacement.setOnClickListener(v15 -> {/* draw */});
     }
 
@@ -112,6 +141,25 @@ public class AllEntrantsFragment extends Fragment {
         b.putString("status", status);
         NavHostFragment.findNavController(this).navigate(R.id.navigation_entrantList, b);
     }
+
+    /**
+     * This navigates to a dialog where the organizer can send notifications to a given status group while
+     * passing the current {@code eventId} as an argument.
+     *
+     * @param status
+     *      The entrant status to display (e.g., {@code "WAITLIST"}, {@code "CHOSEN"})
+     */
+    private void openNotifyDialog(@NonNull String status) {
+        if (eventId == null) {
+            Toast.makeText(requireContext(), "Missing eventId", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (getChildFragmentManager().findFragmentByTag("SendNotificationDialog") == null) {
+            SendNotificationDialogFragment.newInstance(eventId, status)
+                    .show(getChildFragmentManager(), "SendNotificationDialog");
+        }
+    }
+
 
     /**
      * This reads the {@code eventId} from the fragment arguments and normalizes

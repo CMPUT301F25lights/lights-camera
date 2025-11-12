@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel;
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.MainActivity;
 import com.example.lotterize.Notification;
+import com.example.lotterize.NotificationSender;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -35,12 +36,15 @@ public class NotificationsViewModel extends ViewModel {
     /** LiveData holding the current list of notifications for the signed-in user. */
     private final MutableLiveData<ArrayList<Notification>> notificationsLiveData =
             new MutableLiveData<>(new ArrayList<>());
-
+    private final NotificationSender sender = new NotificationSender();
 
     /** Firestore listener registration used to remove the listener when cleared. */
     private ListenerRegistration registration;
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    private final MutableLiveData<String> toast = new MutableLiveData<>();
     private final String currentUserId = CurrentUser.get().getUserId();
+
 
     /**
      * This is the constructor for the ViewModel.
@@ -50,6 +54,47 @@ public class NotificationsViewModel extends ViewModel {
         startListening();
     }
 
+    /**
+     * This fetches the event’s recipient list (by {@code listStatus}) from Firestore
+     * and sends {@code message} to those user IDs via {@code NotificationSender}.
+     * Posts a short status to {@code toast} (not found / empty / sent / failure).
+     *
+     * @param eventId   Event document ID
+     * @param listStatus Field name holding recipients
+     * @param message   The message of Notification
+     * @param senderId  ID of the user sending the notification
+     */
+    public void sendToStatus(String eventId, String listStatus, String message, String senderId) {
+        db.collection("events").document(eventId)
+                .get()
+                .addOnSuccessListener(snap -> {
+                    if (snap == null || !snap.exists()) {
+                        toast.postValue("Event not found");
+                        return;
+                    }
+
+                    // Read the array field (e.g., "WAITLIST", "CHOSEN", etc.)
+                    Object raw = snap.get(listStatus);
+
+                    ArrayList<String> ids = new ArrayList<>();
+                    if (raw instanceof java.util.List) {
+                        for (Object o : (java.util.List<?>) raw) {
+                            if (o != null) ids.add(String.valueOf(o));
+                        }
+                    }
+
+                    if (ids.isEmpty()) {
+                        toast.postValue("No recipients for " + listStatus.toLowerCase());
+                        return;
+                    }
+
+                    sender.sendNotification(senderId, message, ids);
+                    toast.postValue("Sent to " + ids.size() + " " + listStatus.toLowerCase() + " entrant(s)");
+                })
+                .addOnFailureListener(e -> {
+                    toast.postValue("Failed to load recipients: " + e.getMessage());
+                });
+    }
 
     /**
      * This starts a Firestore snapshot listener that loads notifications where
@@ -58,8 +103,6 @@ public class NotificationsViewModel extends ViewModel {
      * Note: The query can be ordered by time.
      */
     private void startListening() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
         registration = db.collection("notifications")
                 .whereArrayContains("receiversId", currentUserId)
                 //.orderBy("time", Query.Direction.DESCENDING)
@@ -129,4 +172,11 @@ public class NotificationsViewModel extends ViewModel {
             registration = null;
         }
     }
+
+    /**
+     * This shows a short toast message.
+     *
+     * @return toast - show whether we successfully send notifications or not
+     */
+    public LiveData<String> toast() { return this.toast; }
 }
