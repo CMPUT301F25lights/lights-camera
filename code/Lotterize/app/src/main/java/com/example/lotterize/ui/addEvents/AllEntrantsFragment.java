@@ -1,11 +1,16 @@
 package com.example.lotterize.ui.addEvents;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -13,11 +18,18 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.CurrentUser;
+import com.example.lotterize.EventCsvExporter;
 import com.example.lotterize.R;
 import com.example.lotterize.databinding.FragmentAllEntrantsBinding;
 import com.example.lotterize.ui.notifications.NotificationsViewModel;
 import com.example.lotterize.ui.notifications.SendNotificationDialogFragment;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 
 /**
@@ -33,6 +45,33 @@ public class AllEntrantsFragment extends Fragment {
     private String eventId;
     private NotificationsViewModel viewModel;
 
+    // SAF launcher that asks the user where to save the CSV, then builds and writes it.
+    private final ActivityResultLauncher<Intent> createCsvLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
+                    Toast.makeText(requireContext(),"Export cancelled",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Retrieve the Uri to the user-chosen file (this is where we will write)
+                Uri uri = result.getData().getData();
+                if (uri == null) {
+                    Toast.makeText(requireContext(),"No File URI",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Build CSV
+                EventCsvExporter.buildEnrolledCsv(db, eventId,
+                        new EventCsvExporter.Callback() {
+                            @Override public void onSuccess(@NonNull String csv) {
+                                boolean ok = writeCsvStringToUri(uri, csv);
+                                Toast.makeText(requireContext(),ok ? "CSV exported" : "Failed to export csv file",Toast.LENGTH_SHORT).show();
+                            }
+                            @Override public void onError(@NonNull String message) {
+                                Toast.makeText(requireContext(),message,Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            });
     /**
      * This inflates the fragment layout and initializes the view binding.
      *
@@ -116,11 +155,21 @@ public class AllEntrantsFragment extends Fragment {
                 }
         );
 
+        binding.btnExportCsv.setOnClickListener(v1 -> {
+            if (eventId == null) {
+                Toast.makeText(requireContext(), "Missing eventId", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String fileName = "Enrolled List _ " + "EventId: "+ eventId + new SimpleDateFormat("yyyyMMdd", Locale.CANADA).format(new Date()) + ".csv";
+            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/csv").putExtra(Intent.EXTRA_TITLE, fileName);
+
+            createCsvLauncher.launch(i);
+
+        });
 
 
 
         // TODOs for the bottom buttons
-        binding.btnExportCsv.setOnClickListener(v1 -> {/* export */});
         binding.btnDrawReplacement.setOnClickListener(v15 -> {/* draw */});
     }
 
@@ -160,6 +209,24 @@ public class AllEntrantsFragment extends Fragment {
         }
     }
 
+    /**
+     * Writes CSV text to the given SAF {@link Uri} in UTF-8.
+     *
+     * @param uri     Writable document Uri (e.g., from ACTION_CREATE_DOCUMENT).
+     * @param csvText CSV content to save.
+     * @return true if write succeeds; false otherwise.
+     */
+    private boolean writeCsvStringToUri(@NonNull Uri uri, @NonNull String csvText) {
+        try (OutputStream os = requireContext().getContentResolver().openOutputStream(uri)) {
+            if (os == null) return false;
+            os.write(csvText.getBytes(StandardCharsets.UTF_8));
+            os.flush();
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
 
     /**
      * This reads the {@code eventId} from the fragment arguments and normalizes
@@ -174,4 +241,6 @@ public class AllEntrantsFragment extends Fragment {
         String v = args.getString("eventId");
         return (v == null || v.isEmpty()) ? null : v;
     }
+
+
 }

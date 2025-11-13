@@ -211,7 +211,8 @@ public class EntrantListFragment extends Fragment {
      *
      * @param docIds
      *      The entrant user ids to display in order
-     */    private void resolveNamesByDocId(@NonNull ArrayList<String> docIds) {
+     */
+    private void resolveNamesByDocId(@NonNull ArrayList<String> docIds) {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
