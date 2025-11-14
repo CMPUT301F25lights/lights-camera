@@ -77,8 +77,8 @@ public class NotificationsViewModel extends ViewModel {
                     Object raw = snap.get(listStatus);
 
                     ArrayList<String> ids = new ArrayList<>();
-                    if (raw instanceof java.util.List) {
-                        for (Object o : (java.util.List<?>) raw) {
+                    if (raw instanceof List) {
+                        for (Object o : (List<?>) raw) {
                             if (o != null) ids.add(String.valueOf(o));
                         }
                     }
@@ -89,7 +89,12 @@ public class NotificationsViewModel extends ViewModel {
                     }
 
                     sender.sendNotification(senderId, message, ids);
-                    toast.postValue("Sent to " + ids.size() + " " + listStatus.toLowerCase() + " entrant(s)");
+                    if (sender.getNumOfReceivers() == 0){
+                        toast.postValue("No entrants want to receive notifications!!");
+                    }
+                    else{
+                        toast.postValue("Sent to " + sender.getNumOfReceivers() + " " + listStatus.toLowerCase() + " entrant(s)");
+                    }
                 })
                 .addOnFailureListener(e -> {
                     toast.postValue("Failed to load recipients: " + e.getMessage());
