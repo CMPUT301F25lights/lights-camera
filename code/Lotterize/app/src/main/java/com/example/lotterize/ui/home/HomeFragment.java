@@ -1,7 +1,9 @@
 package com.example.lotterize.ui.home;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -10,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,6 +20,9 @@ import android.widget.Toast;
 import com.example.lotterize.EventScheduler;
 
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContract;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -53,7 +59,7 @@ public class HomeFragment extends Fragment {
     private ImageButton info;
     private ListView eventsListView;
     private ArrayAdapter<DocumentSnapshot> eventsArray;
-    private TextView info_text;
+    private ImageButton qrCodeButton;
     private EventScheduler scheduler;
 
     /**
@@ -73,6 +79,7 @@ public class HomeFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
 
         return root;
     }
@@ -119,11 +126,13 @@ public class HomeFragment extends Fragment {
 
         info = binding.infoButton;
         eventsListView = binding.eventsList;
+        qrCodeButton = binding.QRScanButton;
         TextInputEditText searchBar = binding.searchBar;
 
         eventsListView.setAdapter(eventsArray);
 
         MaterialButton waitListedEvents = binding.waitlistedEventsButton;
+        MaterialButton filterEvents = binding.filterEventsButton;
         String currUserId = CurrentUser.get().getUserId();
         waitListedEvents.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -137,6 +146,28 @@ public class HomeFragment extends Fragment {
                     shownList.clear();
                     for (DocumentSnapshot d : eventList){
                         List<String> l = (List<String>) d.get("waitList");
+                        if (l != null && l.contains(currUserId)){
+                            shownList.add(d);
+                        }
+                    }
+                    eventsArray.notifyDataSetChanged();
+                }
+            }
+        });
+
+        filterEvents.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                v.setSelected(!v.isSelected());
+                if (!v.isSelected()) {
+                    shownList.clear();
+                    shownList.addAll(eventList);
+                    eventsArray.notifyDataSetChanged();
+                } else {
+                    // Filter here once data set changed
+
+                    for (DocumentSnapshot d : eventList){
+                        List<String> l = (List<String>) d.get("filters");
                         if (l != null && l.contains(currUserId)){
                             shownList.add(d);
                         }
@@ -174,6 +205,16 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
+
+
+        qrCodeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getContext(), "FORNITE BATTLEPASS", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
 
         info.setOnClickListener(new View.OnClickListener() {
             @Override
