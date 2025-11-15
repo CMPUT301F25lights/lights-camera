@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+
+        <!-- Notification ID -->
+        <TextView
+            android:id="@+id/text_notification_id_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Notification ID:"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_notification_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Sender -->
+        <TextView
+            android:id="@+id/text_sender_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sender:"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_sender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Time -->
+        <TextView
+            android:id="@+id/text_time_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Time:"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Message -->
+        <TextView
+            android:id="@+id/text_message_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Message:"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/text_receivers_count_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Number of receivers:"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_receivers_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/text_receivers_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Receivers (IDs):"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_receivers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp" />
+
+    </LinearLayout>
+</ScrollView>
