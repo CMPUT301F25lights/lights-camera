@@ -33,6 +33,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import kotlin._Assertions;
+
 
 /**
  * Fragment that shows the home screen. Includes a display of events
@@ -102,6 +104,8 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
                         Toast.makeText(getContext(), "couldn't update data - HomeFragment", Toast.LENGTH_SHORT).show();
                     } else {
                         if (snapshot != null){
+                            filtersList = new ArrayList<>();
+                            shownDate = null;
                             eventList.clear();
                             shownList.clear();
                             for (DocumentSnapshot d : snapshot) {
@@ -153,6 +157,7 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
                 FilterFragment filterFragment = new FilterFragment();
                 Bundle args = new Bundle();
                 args.putSerializable("Current Filters", filtersList);
+                args.putSerializable("date", shownDate);
                 filterFragment.setArguments(args);
                 filterFragment.setListener(HomeFragment.this);
                 filterFragment.show(getActivity().getSupportFragmentManager(), "Filter");
@@ -213,13 +218,7 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
     @Override
     public void removeFilter(String f) {
         filtersList.remove(f);
-        if (filtersList.isEmpty()) {
-            shownList.clear();
-            shownList.addAll(eventList);
-            shownListAdapter.notifyDataSetChanged();
-        } else {
-            updateShownList();
-        }
+        updateShownList();
     }
 
     @Override
@@ -243,15 +242,20 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
         for (DocumentSnapshot d : eventList){
             boolean containsAll = true;
             boolean sameDay = false;
-            if (d.get("filtersList") != null) {
-                List<String> eventsFilters = (List<String>) d.get("filtersList");
-                for (String filter : filtersList) {
-                    if (!eventsFilters.contains(filter)) {
-                        containsAll = false;
-                        break;
+            if (!filtersList.isEmpty()) {
+                if (d.get("filtersList") != null) {
+                    List<String> eventsFilters = (List<String>) d.get("filtersList");
+                    for (String filter : filtersList) {
+                        if (!eventsFilters.contains(filter)) {
+                            containsAll = false;
+                            break;
+                        }
                     }
+                } else {
+                    containsAll = false;
                 }
             }
+
             if (shownDate != null) {
                 Timestamp eventDate = d.getTimestamp("date");
                 if (eventDate != null) {

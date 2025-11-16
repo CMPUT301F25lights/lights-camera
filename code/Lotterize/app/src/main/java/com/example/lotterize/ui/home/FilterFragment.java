@@ -25,6 +25,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class FilterFragment extends DialogFragment {
 
@@ -84,6 +85,10 @@ public class FilterFragment extends DialogFragment {
         });
 
         CalendarView calendar = view.findViewById(R.id.filter_calendar);
+        Calendar shownDate = (Calendar) getArguments().getSerializable("date");
+        if (shownDate != null) {
+            calendar.setDate(shownDate.getTimeInMillis());
+        }
 
         calendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
