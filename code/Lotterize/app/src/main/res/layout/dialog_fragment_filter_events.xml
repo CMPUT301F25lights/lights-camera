@@ -1,7 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:orientation="vertical"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="15dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Filters"
+            android:textAlignment="center"
+            android:textSize="20sp"/>
 
-</LinearLayout>
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/filter_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="15dp"
+            app:horizontalItemSpacing="10dp"
+            app:singleSelection="false"
+            app:selectionRequired="false">
+        </com.google.android.material.chip.ChipGroup>
+
+        <TextView
+            android:paddingTop="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="View a day you are available:"
+            android:textAlignment="center"
+            android:textSize="20sp"/>
+        <CalendarView
+            android:id="@+id/filter_calendar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        
+        <Button
+            android:id="@+id/clear_date_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/black"
+            android:text="Clear Date"/>
+    </LinearLayout>
+
+
+</ScrollView>

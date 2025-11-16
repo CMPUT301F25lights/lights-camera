@@ -11,4 +11,5 @@
     <color name="colorDividerLine">#96D6FF</color>
     <color name="colorButtonBackground">#70A0BF</color>
     <color name="colorSenderText">#2F3C7E</color>
+    <color name="gray">#CCCCCC</color>
 </resources>
