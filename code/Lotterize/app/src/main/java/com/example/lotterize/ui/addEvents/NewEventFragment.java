@@ -24,7 +24,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 
 import android.net.Uri;
 import android.util.Log;
@@ -148,6 +150,7 @@ public class NewEventFragment extends Fragment {
             Long totalSpots = Long.parseLong(totalSpotsString); //-------------------------------
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
+            String filtersListString = binding.filtersInput.getText().toString().trim();
 
             Long entrantsLimit = !entrantsLimitString.equals("") ? Long.parseLong(entrantsLimitString) : 0; //-------------------------------
             String qrCode = QR.generateCode();
@@ -223,12 +226,42 @@ public class NewEventFragment extends Fragment {
             ArrayList<String> cancelledList = new ArrayList<>();
             ArrayList<String> finalList = new ArrayList<>();
 
+            // Parse filters
+            ArrayList<String> filtersList = new ArrayList<>();
+            if (filtersListString != null && !filtersListString.trim().isEmpty()) {
+                String[] parts = filtersListString.split(", ");  // split on comma + space
+                Collections.addAll(filtersList, parts);          // add to ArrayList
+            }
 
+            for (String filterName : filtersList) {
+
+                if (filterName == null || filterName.trim().isEmpty()) continue;
+
+                String cleanName = filterName.trim();
+
+                // Query for existing documents with the same name
+                db.collection("filters")
+                        .whereEqualTo("name", cleanName)
+                        .get()
+                        .addOnSuccessListener(querySnapshot -> {
+                            if (querySnapshot.isEmpty()) {
+                                // No doc exists, add a new one
+                                HashMap<String, Object> data = new HashMap<>();
+                                data.put("name", cleanName);
+
+                                db.collection("filters")
+                                        .add(data)
+                                        .addOnSuccessListener(docRef -> {
+                                            // success
+                                        });
+                            }
+                        });
+            }
 
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, qrCode, imageUrl);
+                    totalSpots, description, entrantsLimit, qrCode, imageUrl, filtersList);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
