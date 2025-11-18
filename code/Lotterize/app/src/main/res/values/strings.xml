@@ -19,7 +19,7 @@
     <string name="edit">Edit</string>
     <string name="new_event">New Event</string>
     <string name="cancel_create_event">Cancel</string>
-    <string name="create_event">Create</string>
+    <string name="create_event">Create Event</string>
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="sample_text">sample_text</string>

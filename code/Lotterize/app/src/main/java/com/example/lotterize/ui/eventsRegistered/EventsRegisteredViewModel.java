@@ -59,7 +59,8 @@ public class EventsRegisteredViewModel extends ViewModel {
                 "Temporary description",
                 10L,
                 "ABC123",
-                null
+                null,
+                new ArrayList<>()
         ));
 
         registeredEventsLiveData.setValue(testList);

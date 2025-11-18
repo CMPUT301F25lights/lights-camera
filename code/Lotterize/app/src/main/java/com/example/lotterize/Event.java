@@ -31,6 +31,7 @@ public class Event {
     private long entrantsLimit;
     private String qrCode;
     private String imageUrl;
+    private ArrayList<String> filtersList;
 
     /**
      * Required empty constructor for Firestore.
@@ -64,7 +65,7 @@ public class Event {
                  String eventName, Timestamp date, Timestamp registrationStart,
                  Timestamp registrationDeadline, String location,
                  long totalSpots, String description,
-                 long entrantsLimit, String qrCode, String imageUrl) {
+                 long entrantsLimit, String qrCode, String imageUrl, ArrayList<String> filtersList) {
 
         this.eventId = eventId;
         this.ownerId = ownerId;
@@ -82,6 +83,7 @@ public class Event {
         this.entrantsLimit = entrantsLimit;
         this.qrCode = qrCode;
         this.imageUrl = imageUrl;
+        this.filtersList = filtersList;
     }
 
     /** @return Firestore ID of the event */
@@ -123,6 +125,13 @@ public class Event {
     public Timestamp getDate() { return date; }
     /** @param date New timestamp for event date */
     public void setDate(Timestamp date) { this.date = date; }
+
+    public void setFiltersList(ArrayList<String> filtersList) {
+        this.filtersList = filtersList;
+    }
+    public ArrayList<String> getFiltersList() {
+        return filtersList;
+    }
 
     /** @return Sign-up opening time */
     public Timestamp getRegistrationStart() { return registrationStart; }
@@ -203,9 +212,12 @@ public class Event {
         String qrCode = doc.getString("qrCode");
         String imageUrl = doc.getString("imageUrl");
 
+        @SuppressWarnings("unchecked")
+        ArrayList<String> filtersList = (ArrayList<String>) (doc.get("filtersList") != null ? doc.get("filtersList") : new ArrayList<String>());
+
         return new Event(eventId, ownerId, waitList,  selectedList, cancelledList,
                 finalList, eventName, date, registrationStart, registrationDeadline, location,
-                totalSpots,  description,  entrantsLimit,  qrCode, imageUrl);
+                totalSpots,  description,  entrantsLimit,  qrCode, imageUrl, filtersList);
 
     }
 }
