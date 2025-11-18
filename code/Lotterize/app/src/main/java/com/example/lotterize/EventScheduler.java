@@ -21,8 +21,16 @@ public class EventScheduler {
             if (error != null || value == null) return;
 
             for (DocumentSnapshot doc : value.getDocuments()) {
+                if (!doc.exists()) continue; // skip deleted docs
+
                 Event event = doc.toObject(Event.class);
-                if (event != null && Timestamp.now().compareTo(event.getRegistrationDeadline()) >= 0) {
+
+                if (event == null) continue; // skip if event is null
+
+                event.setEventId(doc.getId()); // make sure we have the Firestore ID
+
+                if (event.getRegistrationDeadline() != null &&
+                        Timestamp.now().compareTo(event.getRegistrationDeadline()) >= 0) {
                     runLottery(event);
                 }
             }
