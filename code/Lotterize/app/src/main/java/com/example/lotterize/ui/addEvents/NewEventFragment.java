@@ -14,6 +14,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
+import com.example.lotterize.ImageHandler;
 import com.example.lotterize.QR;
 import com.example.lotterize.R;
 import com.example.lotterize.User;
@@ -49,16 +50,10 @@ import com.google.firebase.storage.UploadTask;
  */
 public class NewEventFragment extends Fragment {
     private FirebaseFirestore db;
-    private FirebaseStorage storage;
-    private StorageReference storageRef;
-
+    private ImageHandler imageHandler;
     private CollectionReference events;
     private FragmentNewEventBinding binding;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
-    private Uri localImageUri;
-    private String uploadedImageUrl = null;
-    private String uploadedImagePath = null;
-    private UploadTask currentUploadTask = null;
     private TextView imageSelectedTextView;
 
     /**
@@ -71,46 +66,19 @@ public class NewEventFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference().child("event_posters");
-
-        // Initialize photo picker
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
-            if (uri != null) {// image selected
-                removeImageFromFirebase();
-                Log.d("PhotoPicker", "Selected URI: " + uri);
-                // store selected image uri
-                localImageUri = uri;
-                // update textview to show image selected
-                imageSelectedTextView.setText(uri.toString());
-                imageSelectedTextView.setVisibility(View.VISIBLE);
-                Toast.makeText(getContext(),"Uploading image ...",Toast.LENGTH_SHORT).show();
-                Log.d("Upload", "=== STARTING UPLOAD ===");
-                Log.d("Upload", "URI: " + localImageUri);
+            if (uri != null) {
+                binding.imageSelectedTextView.setText(uri.toString());
+                binding.imageSelectedTextView.setVisibility(View.VISIBLE);
+                imageHandler.addImage(getContext(), uri,
+                        () -> {
+                            // onSuccess
+                        },
+                        () -> {
+                            // onFailure
+                        }
+                );
 
-                StorageReference imageRef = storageRef.child( "EventImage_" + System.currentTimeMillis() + ".jpg");
-
-                currentUploadTask = imageRef.putFile(localImageUri);
-
-                currentUploadTask.addOnSuccessListener(taskSnapshot -> {
-                    Log.d("Upload", "=== UPLOAD SUCCESS ===");
-                    uploadedImagePath = imageRef.getPath();
-                    imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                        this.uploadedImageUrl = downloadUri.toString();
-                        Log.d("Upload", "Got download URL: " + this.uploadedImageUrl);
-                        Toast.makeText(getContext(), "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
-                    }).addOnFailureListener(e -> {
-                        Log.e("Upload", "Failed to get download URL", e);
-                        this.uploadedImageUrl = null;
-                    });
-                }).addOnFailureListener(e -> {
-                    Log.e("Upload", "=== UPLOAD FAILED ===", e);
-                    Toast.makeText(getContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-
-            } else {
-                // no image selected
-                Log.d("PhotoPicker", "No media selected");
             }
         });
     }
@@ -131,6 +99,8 @@ public class NewEventFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
 
+        imageHandler = new ImageHandler();
+
         // selected image textview
         imageSelectedTextView = binding.imageSelectedTextView;
         imageSelectedTextView.setVisibility(View.GONE);
@@ -145,13 +115,7 @@ public class NewEventFragment extends Fragment {
 
         // remove image button
         binding.buttonRemoveImage.setOnClickListener(v -> {
-            removeImageFromFirebase();
-            // Clear all local state
-            localImageUri = null;
-            uploadedImageUrl = null;
-            uploadedImagePath = null;
-            currentUploadTask = null;
-
+            imageHandler.removeImage(getContext(),null);
             // Reset UI
             imageSelectedTextView.setText("");
             imageSelectedTextView.setVisibility(View.GONE);
@@ -161,7 +125,7 @@ public class NewEventFragment extends Fragment {
         binding.buttonCreateEvent.setOnClickListener(v -> {
 
             // wait until image is uploaded
-            if (localImageUri != null && uploadedImageUrl == null) {
+            if (imageHandler.isUploading()) {
                 Toast.makeText(getContext(), "Please wait: image is uploading", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -289,7 +253,7 @@ public class NewEventFragment extends Fragment {
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, qrCode, uploadedImageUrl, uploadedImagePath, filtersList);
+                    totalSpots, description, entrantsLimit, qrCode, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
@@ -321,7 +285,7 @@ public class NewEventFragment extends Fragment {
         });
 
         binding.buttonCancelCreateEvent.setOnClickListener(v ->{
-            removeImageFromFirebase();
+            imageHandler.removeImage(getContext(),null);
             NavHostFragment.findNavController(NewEventFragment.this)
                     .navigate(R.id.navigation_addEvents);
         });
@@ -333,32 +297,6 @@ public class NewEventFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
-    }
-
-    /**
-     * Removes the currently uploaded image from Firebase Storage.
-     * Cancels an ongoing upload if it is still in progress.
-     * Updates the UI and displays a toast message on success or failure.
-     */
-    private void removeImageFromFirebase(){
-        // Cancel upload if still running
-        if (currentUploadTask != null && !currentUploadTask.isComplete()) {
-            currentUploadTask.cancel();
-            Toast.makeText(getContext(), "Upload cancelled", Toast.LENGTH_SHORT).show();
-        }
-
-        // If an uploaded image exists, delete it from Firebase Storage
-        if (uploadedImagePath != null) {
-            StorageReference imgRef = FirebaseStorage.getInstance().getReference().child(uploadedImagePath);
-
-            imgRef.delete()
-                    .addOnSuccessListener(unused -> {
-                        Toast.makeText(getContext(), "Image removed from Firebase", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-        }
     }
 
 }

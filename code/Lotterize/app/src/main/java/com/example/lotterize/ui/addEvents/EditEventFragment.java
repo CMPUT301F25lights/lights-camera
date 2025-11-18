@@ -19,6 +19,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.Event;
+import com.example.lotterize.ImageHandler;
 import com.example.lotterize.QR;
 import com.example.lotterize.R;
 import com.example.lotterize.databinding.FragmentEditEventBinding;
@@ -56,13 +57,8 @@ public class EditEventFragment extends Fragment {
     private final DateFormat timeFmt = new SimpleDateFormat("hh:mm a", Locale.getDefault());
     private String currentQrCode;
     private ActivityResultLauncher<String> saveQrLauncher;
-    private FirebaseStorage storage;
-    private StorageReference storageRef;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
-    private Uri localImageUri;
-    private String uploadedImageUrl = null;
-    private String uploadedImagePath = null;
-    private UploadTask currentUploadTask = null;
+    private ImageHandler imageHandler;
     private TextView posterTextView;
 
     /**
@@ -95,48 +91,20 @@ public class EditEventFragment extends Fragment {
                 }
         );
 
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference().child("event_posters");
-
-        // Initialize photo picker
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
-            if (uri != null) {// image selected
-                removeImageFromFirebase();
-                Log.d("PhotoPicker", "Selected URI: " + uri);
-                // store selected image uri
-                localImageUri = uri;
-                // update textview to show image selected
-                posterTextView.setText(uri.toString());
-                posterTextView.setVisibility(View.VISIBLE);
-                Toast.makeText(getContext(),"Uploading image ...",Toast.LENGTH_SHORT).show();
-                Log.d("Upload", "=== STARTING UPLOAD ===");
-                Log.d("Upload", "URI: " + localImageUri);
-
-                StorageReference imageRef = storageRef.child( "EventImage_" + System.currentTimeMillis() + ".jpg");
-
-                currentUploadTask = imageRef.putFile(localImageUri);
-
-                currentUploadTask.addOnSuccessListener(taskSnapshot -> {
-                    Log.d("Upload", "=== UPLOAD SUCCESS ===");
-                    uploadedImagePath = imageRef.getPath();
-                    imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                        this.uploadedImageUrl = downloadUri.toString();
-                        eventDocRef.update("imageUrl", uploadedImageUrl);
-                        eventDocRef.update("imagePath", uploadedImagePath);
-                        Log.d("Upload", "Got download URL: " + this.uploadedImageUrl);
-                        Toast.makeText(getContext(), "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
-                    }).addOnFailureListener(e -> {
-                        Log.e("Upload", "Failed to get download URL", e);
-                        this.uploadedImageUrl = null;
-                    });
-                }).addOnFailureListener(e -> {
-                    Log.e("Upload", "=== UPLOAD FAILED ===", e);
-                    Toast.makeText(getContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-
-            } else {
-                // no image selected
-                Log.d("PhotoPicker", "No media selected");
+            if (uri != null) {
+                binding.posterTextView.setText(uri.toString());
+                binding.posterTextView.setVisibility(View.VISIBLE);
+                imageHandler.addImage(getContext(), uri,
+                        () -> {
+                            // Immediately update event document
+                            eventDocRef.update("imageUrl", imageHandler.getUploadedImageUrl(),
+                                    "imagePath", imageHandler.getUploadedImagePath());
+                        },
+                        () -> {
+                            // Handle failure if needed
+                        }
+                );
             }
         });
     }
@@ -181,7 +149,7 @@ public class EditEventFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         db = FirebaseFirestore.getInstance();
-
+        imageHandler = new ImageHandler();
         final String eventIdArg = getEventIdArg();
 
         //Go back to previous page if eventId is missing
@@ -229,12 +197,9 @@ public class EditEventFragment extends Fragment {
 
         // remove poster button
         binding.buttonRemovePoster.setOnClickListener(v -> {
-            removeImageFromFirebase();
-            // Clear all local state
-            localImageUri = null;
-            uploadedImageUrl = null;
-            uploadedImagePath = null;
-            currentUploadTask = null;
+            imageHandler.removeImage(getContext(), ()->{
+                eventDocRef.update("imageUrl", null, "imagePath", null);
+            });
             posterTextView.setVisibility(View.GONE);
         });
 
@@ -290,11 +255,8 @@ public class EditEventFragment extends Fragment {
         Boolean geo = doc.getBoolean("geolocationEnabled");
         if (geo != null) binding.switchGeolocation.setChecked(geo);
 
-        String imageUrl = doc.getString("imageUrl");
         String imagePath = doc.getString("imagePath");
-        if (imageUrl != null && !imageUrl.isEmpty()) {
-            uploadedImageUrl = imageUrl;
-            uploadedImagePath = imagePath;
+        if (imagePath != null && !imagePath.isEmpty()) {
             posterTextView.setText(imagePath);
             posterTextView.setVisibility(View.VISIBLE);
 
@@ -315,34 +277,6 @@ public class EditEventFragment extends Fragment {
         if (args == null) return null;
         String v = args.getString("eventId");
         return (v == null || v.isEmpty()) ? null : v;
-    }
-
-    /**
-     * Removes the currently uploaded image from Firebase Storage.
-     * Cancels an ongoing upload if it is still in progress.
-     * Updates the UI and displays a toast message on success or failure.
-     */
-    private void removeImageFromFirebase(){
-        // Cancel upload if still running
-        if (currentUploadTask != null && !currentUploadTask.isComplete()) {
-            currentUploadTask.cancel();
-            Toast.makeText(getContext(), "Upload cancelled", Toast.LENGTH_SHORT).show();
-        }
-
-        // If an uploaded image exists, delete it from Firebase Storage
-        if (uploadedImagePath != null) {
-            StorageReference imgRef = FirebaseStorage.getInstance().getReference().child(uploadedImagePath);
-
-            imgRef.delete()
-                    .addOnSuccessListener(unused -> {
-                        eventDocRef.update("imageUrl", null, "imagePath", null);
-
-                        Toast.makeText(getContext(), "Image removed from Firebase", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-        }
     }
 
     /**
