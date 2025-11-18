@@ -55,8 +55,10 @@ public class NewEventFragment extends Fragment {
     private CollectionReference events;
     private FragmentNewEventBinding binding;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
-    private Uri ImageUri;
-    private String imageUrl = null;
+    private Uri localImageUri;
+    private String uploadedImageUrl = null;
+    private String uploadedImagePath = null;
+    private UploadTask currentUploadTask = null;
     private TextView imageSelectedTextView;
 
     @Override
@@ -71,27 +73,28 @@ public class NewEventFragment extends Fragment {
             if (uri != null) {// image selected
                 Log.d("PhotoPicker", "Selected URI: " + uri);
                 // store selected image uri
-                ImageUri = uri;
+                localImageUri = uri;
                 // update textview to show image selected
                 imageSelectedTextView.setText(uri.toString());
                 imageSelectedTextView.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(),"Uploading image ...",Toast.LENGTH_SHORT).show();
                 Log.d("Upload", "=== STARTING UPLOAD ===");
-                Log.d("Upload", "URI: " + ImageUri);
+                Log.d("Upload", "URI: " + localImageUri);
 
-                StorageReference imageRef = storageRef.child( "TestImage_" + System.currentTimeMillis() + ".jpg");
-                Log.d("Upload", "Storage path: " + imageRef.getPath());
+                StorageReference imageRef = storageRef.child( "EventImage_" + System.currentTimeMillis() + ".jpg");
 
-                UploadTask uploadTask = imageRef.putFile(ImageUri);
+                currentUploadTask = imageRef.putFile(localImageUri);
 
-                uploadTask.addOnSuccessListener(taskSnapshot -> {
+                currentUploadTask.addOnSuccessListener(taskSnapshot -> {
                     Log.d("Upload", "=== UPLOAD SUCCESS ===");
+                    uploadedImagePath = imageRef.getPath();
                     imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                        this.imageUrl = downloadUri.toString();
-                        Log.d("Upload", "Got download URL: " + this.imageUrl);
+                        this.uploadedImageUrl = downloadUri.toString();
+                        Log.d("Upload", "Got download URL: " + this.uploadedImageUrl);
                         Toast.makeText(getContext(), "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
                     }).addOnFailureListener(e -> {
                         Log.e("Upload", "Failed to get download URL", e);
-                        this.imageUrl = null;
+                        this.uploadedImageUrl = null;
                     });
                 }).addOnFailureListener(e -> {
                     Log.e("Upload", "=== UPLOAD FAILED ===", e);
@@ -134,7 +137,28 @@ public class NewEventFragment extends Fragment {
                     .build());
         });
 
+        // remove image button
+        binding.buttonRemoveImage.setOnClickListener(v -> {
+            removeImage();
+            // Clear all local state
+            localImageUri = null;
+            uploadedImageUrl = null;
+            uploadedImagePath = null;
+            currentUploadTask = null;
+
+            // Reset UI
+            imageSelectedTextView.setText("");
+            imageSelectedTextView.setVisibility(View.GONE);
+        });
+
+
         binding.buttonCreateEvent.setOnClickListener(v -> {
+
+            // wait until image is uploaded
+            if (localImageUri != null && uploadedImageUrl == null) {
+                Toast.makeText(getContext(), "Please wait: image is uploading", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             // Collect user inputs
             String eventName = binding.eventNameInput.getText().toString().trim();
@@ -147,12 +171,9 @@ public class NewEventFragment extends Fragment {
             Timestamp registrationEndDate; //-------------------------------
             String location = binding.locationInput.getText().toString().trim(); //-------------------------------
             String totalSpotsString = binding.totalSpotsInput.getText().toString().trim();
-            Long totalSpots = Long.parseLong(totalSpotsString); //-------------------------------
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
             String filtersListString = binding.filtersInput.getText().toString().trim();
-
-            Long entrantsLimit = !entrantsLimitString.equals("") ? Long.parseLong(entrantsLimitString) : 0; //-------------------------------
             String qrCode = QR.generateCode();
 
             // Required field check
@@ -162,7 +183,8 @@ public class NewEventFragment extends Fragment {
                 Toast.makeText(getContext(), "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
                 return;
             }
-
+            Long totalSpots = Long.parseLong(totalSpotsString); //-------------------------------
+            Long entrantsLimit = !entrantsLimitString.equals("") ? Long.parseLong(entrantsLimitString) : 0; //-------------------------------
 
             // Validate number inputs
             try {
@@ -261,7 +283,7 @@ public class NewEventFragment extends Fragment {
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, qrCode, imageUrl, filtersList);
+                    totalSpots, description, entrantsLimit, qrCode, uploadedImageUrl, filtersList);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
@@ -292,19 +314,43 @@ public class NewEventFragment extends Fragment {
             );
         });
 
-        binding.buttonCancelCreateEvent.setOnClickListener(v ->
-                NavHostFragment.findNavController(NewEventFragment.this)
-                        .navigate(R.id.navigation_addEvents)
-        );
+        binding.buttonCancelCreateEvent.setOnClickListener(v ->{
+            removeImage();
+            NavHostFragment.findNavController(NewEventFragment.this)
+                    .navigate(R.id.navigation_addEvents);
+        });
 
         return root;
     }
-
-
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
+
+    /**
+     * Removes uploaded image from firebase. Cancels upload if image is in the process of uploading.
+     */
+    private void removeImage(){
+        // Cancel upload if still running
+        if (currentUploadTask != null && !currentUploadTask.isComplete()) {
+            currentUploadTask.cancel();
+            Toast.makeText(getContext(), "Upload cancelled", Toast.LENGTH_SHORT).show();
+        }
+
+        // If an uploaded image exists, delete it from Firebase Storage
+        if (uploadedImagePath != null) {
+            StorageReference imgRef = FirebaseStorage.getInstance().getReference().child(uploadedImagePath);
+
+            imgRef.delete()
+                    .addOnSuccessListener(unused -> {
+                        Toast.makeText(getContext(), "Image removed from Firebase", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        }
+    }
+
 }

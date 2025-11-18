@@ -31,8 +31,7 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:fillViewport="true">
 
         <LinearLayout
@@ -143,6 +142,7 @@
 
                 <EditText
                     android:id="@+id/totalSpotsInput"
+                    android:inputType="number"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -165,6 +165,7 @@
 
                 <EditText
                     android:id="@+id/entrantsLimitInput"
+                    android:inputType="number"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -279,16 +280,34 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <Button
-                        android:id="@+id/button_select_image"
-                        android:layout_width="280dp"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:backgroundTint="#000000"
-                        android:text="Select Image"
-                        android:textColorHint="#000000"
-                        android:textColorLink="#000000"
-                        app:rippleColor="#000000" />
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/button_select_image"
+                            android:layout_width="165dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:backgroundTint="#000000"
+                            android:text="Select Image"
+                            android:textColorHint="#000000"
+                            android:textColorLink="#000000"
+                            app:rippleColor="#000000" />
+
+                        <Button
+                            android:id="@+id/button_remove_image"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:backgroundTint="#000000"
+                            android:text="Remove Image"
+                            android:textColorHint="#000000"
+                            android:textColorLink="#000000"
+                            app:rippleColor="#000000" />
+
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/imageSelectedTextView"
