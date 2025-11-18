@@ -61,6 +61,12 @@ public class NewEventFragment extends Fragment {
     private UploadTask currentUploadTask = null;
     private TextView imageSelectedTextView;
 
+    /**
+     * Initializes the fragment and sets up the photo picker for event images.
+     * Handles image selection, uploading to Firebase Storage, and storing the download URL.
+     *
+     * @param savedInstanceState If non-null, this fragment is being re-created from a previous state.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +77,7 @@ public class NewEventFragment extends Fragment {
         // Initialize photo picker
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
             if (uri != null) {// image selected
+                removeImageFromFirebase();
                 Log.d("PhotoPicker", "Selected URI: " + uri);
                 // store selected image uri
                 localImageUri = uri;
@@ -110,7 +117,6 @@ public class NewEventFragment extends Fragment {
 
     /**
      * Called when the fragment is first created.
-     * Initializes the photo picker to allow users to select an event image from their device.
      *
      * @param savedInstanceState If non-null, this fragment is being re-created from a previous state.
      */
@@ -139,7 +145,7 @@ public class NewEventFragment extends Fragment {
 
         // remove image button
         binding.buttonRemoveImage.setOnClickListener(v -> {
-            removeImage();
+            removeImageFromFirebase();
             // Clear all local state
             localImageUri = null;
             uploadedImageUrl = null;
@@ -283,7 +289,7 @@ public class NewEventFragment extends Fragment {
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, qrCode, uploadedImageUrl, filtersList);
+                    totalSpots, description, entrantsLimit, qrCode, uploadedImageUrl, uploadedImagePath, filtersList);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
@@ -315,7 +321,7 @@ public class NewEventFragment extends Fragment {
         });
 
         binding.buttonCancelCreateEvent.setOnClickListener(v ->{
-            removeImage();
+            removeImageFromFirebase();
             NavHostFragment.findNavController(NewEventFragment.this)
                     .navigate(R.id.navigation_addEvents);
         });
@@ -330,9 +336,11 @@ public class NewEventFragment extends Fragment {
     }
 
     /**
-     * Removes uploaded image from firebase. Cancels upload if image is in the process of uploading.
+     * Removes the currently uploaded image from Firebase Storage.
+     * Cancels an ongoing upload if it is still in progress.
+     * Updates the UI and displays a toast message on success or failure.
      */
-    private void removeImage(){
+    private void removeImageFromFirebase(){
         // Cancel upload if still running
         if (currentUploadTask != null && !currentUploadTask.isComplete()) {
             currentUploadTask.cancel();

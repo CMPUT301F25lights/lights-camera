@@ -1,15 +1,16 @@
 package com.example.lotterize.ui.addEvents;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,8 +26,10 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
-import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -35,6 +38,7 @@ import java.util.Locale;
  * This is a fragment that displays and edits details for a single {@link Event}.
  * It loads an event by {@code eventId} argument from Firestore, binds fields to the UI,
  * allows navigation to the entrants screen, and toggles geolocation for the event.
+ * It supports functionality for saving the event QR code to local storage and changing/removing the event poster.
  */
 public class EditEventFragment extends Fragment {
 
@@ -44,16 +48,33 @@ public class EditEventFragment extends Fragment {
 
     /** Reference to the current event document for in-place updates (e.g., toggles). */
     private DocumentReference eventDocRef;
-    private String currentQrCode;
 
     /** Date formatter for the event date label. */
     private final DateFormat dateFmt = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
 
     /** Time formatter for the event time label. */
     private final DateFormat timeFmt = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-
+    private String currentQrCode;
     private ActivityResultLauncher<String> saveQrLauncher;
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
+    private Uri localImageUri;
+    private String uploadedImageUrl = null;
+    private String uploadedImagePath = null;
+    private UploadTask currentUploadTask = null;
+    private TextView posterTextView;
 
+    /**
+     * Initializes the fragment by setting up:
+     * <ul>
+     *     <li>QR code save launcher</li>
+     *     <li>Firebase Storage references</li>
+     *     <li>Photo picker launcher for selecting and uploading event posters</li>
+     * </ul>
+     *
+     * @param savedInstanceState Bundle containing previous state, or null if fresh.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +94,51 @@ public class EditEventFragment extends Fragment {
                     }
                 }
         );
+
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference().child("event_posters");
+
+        // Initialize photo picker
+        pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+            if (uri != null) {// image selected
+                removeImageFromFirebase();
+                Log.d("PhotoPicker", "Selected URI: " + uri);
+                // store selected image uri
+                localImageUri = uri;
+                // update textview to show image selected
+                posterTextView.setText(uri.toString());
+                posterTextView.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(),"Uploading image ...",Toast.LENGTH_SHORT).show();
+                Log.d("Upload", "=== STARTING UPLOAD ===");
+                Log.d("Upload", "URI: " + localImageUri);
+
+                StorageReference imageRef = storageRef.child( "EventImage_" + System.currentTimeMillis() + ".jpg");
+
+                currentUploadTask = imageRef.putFile(localImageUri);
+
+                currentUploadTask.addOnSuccessListener(taskSnapshot -> {
+                    Log.d("Upload", "=== UPLOAD SUCCESS ===");
+                    uploadedImagePath = imageRef.getPath();
+                    imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                        this.uploadedImageUrl = downloadUri.toString();
+                        eventDocRef.update("imageUrl", uploadedImageUrl);
+                        eventDocRef.update("imagePath", uploadedImagePath);
+                        Log.d("Upload", "Got download URL: " + this.uploadedImageUrl);
+                        Toast.makeText(getContext(), "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
+                    }).addOnFailureListener(e -> {
+                        Log.e("Upload", "Failed to get download URL", e);
+                        this.uploadedImageUrl = null;
+                    });
+                }).addOnFailureListener(e -> {
+                    Log.e("Upload", "=== UPLOAD FAILED ===", e);
+                    Toast.makeText(getContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+
+            } else {
+                // no image selected
+                Log.d("PhotoPicker", "No media selected");
+            }
+        });
     }
 
     /**
@@ -103,6 +169,8 @@ public class EditEventFragment extends Fragment {
      * - Sets navigation for the back button and entrants row
      * - Listens to Firestore for the event snapshot and binds it to the UI
      * - Updates the {@code geolocationEnabled} field when the switch toggles
+     * - Handles poster image selection, upload, and removal
+     * - Sets up QR code save button
      *
      * @param view
      *      The root view returned by {@link #onCreateView}
@@ -151,6 +219,25 @@ public class EditEventFragment extends Fragment {
             }
         });
 
+        posterTextView = binding.posterTextView;
+        // change/add poster button
+        binding.buttonChangePoster.setOnClickListener(v -> pickMedia.launch(
+                new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build()
+        ));
+
+        // remove poster button
+        binding.buttonRemovePoster.setOnClickListener(v -> {
+            removeImageFromFirebase();
+            // Clear all local state
+            localImageUri = null;
+            uploadedImageUrl = null;
+            uploadedImagePath = null;
+            currentUploadTask = null;
+            posterTextView.setVisibility(View.GONE);
+        });
+
         db.collection("events")
                 .whereEqualTo("eventId", eventIdArg)
                 .limit(1)
@@ -174,7 +261,7 @@ public class EditEventFragment extends Fragment {
 
     /**
      * This binds a loaded {@link Event} and its backing document to the UI fields.
-     * It formats date/time, fills textual fields, and applies the geolocation toggle state.
+     * It formats date/time, fills textual fields, displays poster image path if available, and applies the geolocation toggle state.
      *
      * @param e
      *      The event model built from the Firestore document
@@ -202,6 +289,18 @@ public class EditEventFragment extends Fragment {
 
         Boolean geo = doc.getBoolean("geolocationEnabled");
         if (geo != null) binding.switchGeolocation.setChecked(geo);
+
+        String imageUrl = doc.getString("imageUrl");
+        String imagePath = doc.getString("imagePath");
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            uploadedImageUrl = imageUrl;
+            uploadedImagePath = imagePath;
+            posterTextView.setText(imagePath);
+            posterTextView.setVisibility(View.VISIBLE);
+
+        } else {
+            posterTextView.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -216,6 +315,34 @@ public class EditEventFragment extends Fragment {
         if (args == null) return null;
         String v = args.getString("eventId");
         return (v == null || v.isEmpty()) ? null : v;
+    }
+
+    /**
+     * Removes the currently uploaded image from Firebase Storage.
+     * Cancels an ongoing upload if it is still in progress.
+     * Updates the UI and displays a toast message on success or failure.
+     */
+    private void removeImageFromFirebase(){
+        // Cancel upload if still running
+        if (currentUploadTask != null && !currentUploadTask.isComplete()) {
+            currentUploadTask.cancel();
+            Toast.makeText(getContext(), "Upload cancelled", Toast.LENGTH_SHORT).show();
+        }
+
+        // If an uploaded image exists, delete it from Firebase Storage
+        if (uploadedImagePath != null) {
+            StorageReference imgRef = FirebaseStorage.getInstance().getReference().child(uploadedImagePath);
+
+            imgRef.delete()
+                    .addOnSuccessListener(unused -> {
+                        eventDocRef.update("imageUrl", null, "imagePath", null);
+
+                        Toast.makeText(getContext(), "Image removed from Firebase", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        }
     }
 
     /**

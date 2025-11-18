@@ -60,6 +60,7 @@ public class EventsRegisteredViewModel extends ViewModel {
                 10L,
                 "ABC123",
                 null,
+                null,
                 new ArrayList<>()
         ));
 

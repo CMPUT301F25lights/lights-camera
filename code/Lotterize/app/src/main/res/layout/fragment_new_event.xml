@@ -336,26 +336,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_marginBottom="85dp"/>
-<!--            <LinearLayout-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:orientation="horizontal"-->
-<!--                android:layout_marginBottom="12dp">-->
-
-<!--                <TextView-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:text="QR Code: "-->
-<!--                    android:layout_gravity="center_vertical"-->
-<!--                    android:layout_marginEnd="8dp" />-->
-
-<!--                <EditText-->
-<!--                    android:id="@+id/qrCodeInput"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:hint="Enter QR Code"/>-->
-<!--            </LinearLayout>-->
 
         </LinearLayout>
 
