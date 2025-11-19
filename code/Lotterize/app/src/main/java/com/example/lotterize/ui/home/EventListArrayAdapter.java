@@ -88,6 +88,9 @@ public class EventListArrayAdapter extends ArrayAdapter<DocumentSnapshot> {
         String imageUrl = event.getString("imageUrl");
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(getContext()).load(imageUrl).into(eventImg);
+        }else {
+            // Clear the previous image to avoid showing wrong one
+            Glide.with(getContext()).clear(eventImg);
         }
 
         Button eventDetails = view.findViewById(R.id.event_details_button);
