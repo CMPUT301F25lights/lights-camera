@@ -204,19 +204,16 @@ public class EditEventFragment extends Fragment {
         });
 
         db.collection("events")
-                .whereEqualTo("eventId", eventIdArg)
-                .limit(1)
-                .addSnapshotListener((snap, err) -> {
+                .document(eventIdArg)
+                .addSnapshotListener((doc, err) -> {
                     if (err != null) {
                         Toast.makeText(requireContext(), "Failed to load event", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (snap == null || snap.isEmpty()) {
+                    if (doc == null || !doc.exists()) {
                         Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    DocumentSnapshot doc = snap.getDocuments().get(0);
-                    eventDocRef = doc.getReference();
 
                     Event e = Event.addEventDetailsFromSnapShot(doc);
                     currentQrCode = e.getQrCode();

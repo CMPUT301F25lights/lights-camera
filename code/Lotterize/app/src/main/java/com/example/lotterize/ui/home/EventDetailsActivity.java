@@ -58,10 +58,11 @@ public class EventDetailsActivity extends AppCompatActivity {
         ImageView qrCode = binding.qrCodeImage;
         Button waitListButton = binding.seeWaitList;
 
-        if (getIntent().getStringExtra("eventId") != null) {
-            events.whereEqualTo("eventId", getIntent().getStringExtra("eventId")).limit(1).get().addOnSuccessListener(snapshot -> {
-                if (!snapshot.isEmpty()) {
-                    DocumentSnapshot event = snapshot.getDocuments().get(0);
+        String eventId = getIntent().getStringExtra("eventId");
+
+        if (eventId != null) {
+            events.document(eventId).get().addOnSuccessListener(event -> {
+                if (event.exists()) {
                     header.setText(event.getString("eventName"));
 
                     Calendar dateTime = Calendar.getInstance();
@@ -100,7 +101,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                             @Override
                             public void onClick(View v) {
                                 Intent intent = new Intent(EventDetailsActivity.this, ShowWaitingListActivity.class);
-                                intent.putExtra("eventId", getIntent().getStringExtra("eventId"));
+                                intent.putExtra("eventId", eventId);
                                 startActivity(intent);
                             }
                         });
