@@ -91,16 +91,19 @@ public class EditEventFragment extends Fragment {
                 }
         );
 
+        // media picker for poster image
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
             if (uri != null) {
                 binding.posterTextView.setText(uri.toString());
                 binding.posterTextView.setVisibility(View.VISIBLE);
                 imageHandler.addImage(getContext(), uri,
                         () -> {
+                            if (!isAdded() || getContext() == null) return;
                             // Immediately update event document
-                            eventDocRef.update("imageUrl", imageHandler.getUploadedImageUrl(),
-                                    "imagePath", imageHandler.getUploadedImagePath());
-                        },
+                            if(eventDocRef!=null){
+                                eventDocRef.update("imageUrl", imageHandler.getUploadedImageUrl(),
+                                        "imagePath", imageHandler.getUploadedImagePath());
+                            }},
                         () -> {
                             // Handle failure if needed
                         }
@@ -151,6 +154,8 @@ public class EditEventFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         imageHandler = new ImageHandler();
         final String eventIdArg = getEventIdArg();
+        assert eventIdArg != null;
+        eventDocRef = db.collection("events").document(eventIdArg);
 
         //Go back to previous page if eventId is missing
         if (eventIdArg == null || eventIdArg.isEmpty()) {
@@ -188,6 +193,7 @@ public class EditEventFragment extends Fragment {
         });
 
         posterTextView = binding.posterTextView;
+
         // change/add poster button
         binding.buttonChangePoster.setOnClickListener(v -> pickMedia.launch(
                 new PickVisualMediaRequest.Builder()
@@ -198,7 +204,8 @@ public class EditEventFragment extends Fragment {
         // remove poster button
         binding.buttonRemovePoster.setOnClickListener(v -> {
             imageHandler.removeImage(getContext(), ()->{
-                eventDocRef.update("imageUrl", null, "imagePath", null);
+                if (!isAdded() || getContext() == null) return;
+                if(eventDocRef != null) eventDocRef.update("imageUrl", null, "imagePath", null);
             });
             posterTextView.setVisibility(View.GONE);
         });
@@ -214,7 +221,6 @@ public class EditEventFragment extends Fragment {
                         Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show();
                         return;
                     }
-
                     Event e = Event.addEventDetailsFromSnapShot(doc);
                     currentQrCode = e.getQrCode();
                     bindEventToUi(e, doc);
@@ -252,7 +258,9 @@ public class EditEventFragment extends Fragment {
         Boolean geo = doc.getBoolean("geolocationEnabled");
         if (geo != null) binding.switchGeolocation.setChecked(geo);
 
+        String imageUrl = doc.getString("imageUrl");
         String imagePath = doc.getString("imagePath");
+        imageHandler.setExistingImage(imageUrl, imagePath);
         if (imagePath != null && !imagePath.isEmpty()) {
             posterTextView.setText(imagePath);
             posterTextView.setVisibility(View.VISIBLE);
@@ -282,6 +290,7 @@ public class EditEventFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if(imageHandler != null) imageHandler.cancelUpload(null);
         binding = null;
     }
 }
