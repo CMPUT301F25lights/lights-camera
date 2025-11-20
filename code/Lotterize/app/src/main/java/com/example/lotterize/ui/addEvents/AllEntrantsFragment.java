@@ -121,7 +121,16 @@ public class AllEntrantsFragment extends Fragment {
 
         // Open reusable list screen with a status flag
         binding.rowWaitlistList.setOnClickListener(view -> openList("WAITLIST"));
-        binding.rowChosenList.setOnClickListener(view -> openList("CHOSEN"));
+        binding.rowChosenList.setOnClickListener(view -> {
+            if (eventId == null) {
+                Toast.makeText(requireContext(), "Missing eventId", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Bundle b = new Bundle();
+            b.putString("eventId", eventId);
+
+            NavHostFragment.findNavController(this).navigate(R.id.navigation_chosenEntrantsFragment, b);
+        });
         binding.rowCancelledList.setOnClickListener(view -> openList("CANCELLED"));
         binding.rowEnrolledList.setOnClickListener(view -> openList("ENROLLED"));
 
