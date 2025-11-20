@@ -144,7 +144,7 @@ public class NewEventFragment extends Fragment {
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
             String filtersListString = binding.filtersInput.getText().toString().trim();
-            String qrCode = QR.generateCode();
+            //String qrCode = QR.generateCode(); deprecated, use eventId instead
 
             // Required field check
             if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||
@@ -253,7 +253,7 @@ public class NewEventFragment extends Fragment {
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, qrCode, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList);
+                    totalSpots, description, entrantsLimit, null, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
@@ -272,6 +272,12 @@ public class NewEventFragment extends Fragment {
 
                 // Get event id
                 documentReference.update("eventId", eventId)
+                        .addOnSuccessListener(unused ->
+                                Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
+                        );
+
+                // make qrCode same as eventId
+                documentReference.update("qrCode", eventId)
                         .addOnSuccessListener(unused ->
                                 Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
                         );

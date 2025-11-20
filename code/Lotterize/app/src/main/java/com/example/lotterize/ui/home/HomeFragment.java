@@ -17,6 +17,7 @@ import android.widget.Toast;
 import com.example.lotterize.EventScheduler;
 
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -24,15 +25,20 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.R;
+import com.example.lotterize.UserActivity;
 import com.example.lotterize.databinding.FragmentHomeBinding;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +61,16 @@ public class HomeFragment extends Fragment {
     private ArrayAdapter<DocumentSnapshot> eventsArray;
     private TextView info_text;
     private EventScheduler scheduler;
+    private ImageButton qrButton;
+    private final ActivityResultLauncher<ScanOptions> qrLauncher =
+            registerForActivityResult(new ScanContract(), result -> {
+                if (result.getContents() != null) {
+                    String qrValue = result.getContents();
+                    Toast.makeText(getContext(), "QR: " + qrValue, Toast.LENGTH_SHORT).show();
+                    openEventFromQR(qrValue);
+                }
+            });
+
 
     /**
      * Creates the home view
@@ -118,6 +134,7 @@ public class HomeFragment extends Fragment {
                 });
 
         info = binding.infoButton;
+        qrButton = binding.QRScanButton;
         eventsListView = binding.eventsList;
         TextInputEditText searchBar = binding.searchBar;
 
@@ -183,6 +200,32 @@ public class HomeFragment extends Fragment {
             }
         });
         scheduler.monitorEvents();
+
+        qrButton.setOnClickListener(v -> {
+            ScanOptions options = new ScanOptions();
+            options.setPrompt("Scan the event QR code");
+            options.setDesiredBarcodeFormats(ScanOptions.QR_CODE);
+            options.setCameraId(0);  // back camera
+            options.setBeepEnabled(true);
+            options.setOrientationLocked(true);
+
+            qrLauncher.launch(options);
+        });
+
+    }
+
+    private void openEventFromQR(String eventId){
+        DocumentReference ref = db.collection("events").document(eventId);
+        ref.get().addOnSuccessListener(doc -> {
+            boolean qrIsValid = doc.exists(); // modify to add more rules
+            if(qrIsValid){
+                Intent intent = new Intent(requireContext(), EventDetailsActivity.class);
+                intent.putExtra("eventId", eventId);
+                startActivity(intent);
+            }else{
+                // Handle invalid QR code
+            }
+        });
     }
 
     /**
