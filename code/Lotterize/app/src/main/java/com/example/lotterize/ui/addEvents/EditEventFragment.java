@@ -1,15 +1,16 @@
 package com.example.lotterize.ui.addEvents;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +19,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.Event;
+import com.example.lotterize.ImageHandler;
 import com.example.lotterize.QR;
 import com.example.lotterize.R;
 import com.example.lotterize.databinding.FragmentEditEventBinding;
@@ -25,8 +27,10 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
-import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -35,6 +39,7 @@ import java.util.Locale;
  * This is a fragment that displays and edits details for a single {@link Event}.
  * It loads an event by {@code eventId} argument from Firestore, binds fields to the UI,
  * allows navigation to the entrants screen, and toggles geolocation for the event.
+ * It supports functionality for saving the event QR code to local storage and changing/removing the event poster.
  */
 public class EditEventFragment extends Fragment {
 
@@ -44,16 +49,28 @@ public class EditEventFragment extends Fragment {
 
     /** Reference to the current event document for in-place updates (e.g., toggles). */
     private DocumentReference eventDocRef;
-    private String currentQrCode;
 
     /** Date formatter for the event date label. */
     private final DateFormat dateFmt = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
 
     /** Time formatter for the event time label. */
     private final DateFormat timeFmt = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-
+    private String currentQrCode;
     private ActivityResultLauncher<String> saveQrLauncher;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
+    private ImageHandler imageHandler;
+    private TextView posterTextView;
 
+    /**
+     * Initializes the fragment by setting up:
+     * <ul>
+     *     <li>QR code save launcher</li>
+     *     <li>Firebase Storage references</li>
+     *     <li>Photo picker launcher for selecting and uploading event posters</li>
+     * </ul>
+     *
+     * @param savedInstanceState Bundle containing previous state, or null if fresh.
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +90,23 @@ public class EditEventFragment extends Fragment {
                     }
                 }
         );
+
+        pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+            if (uri != null) {
+                binding.posterTextView.setText(uri.toString());
+                binding.posterTextView.setVisibility(View.VISIBLE);
+                imageHandler.addImage(getContext(), uri,
+                        () -> {
+                            // Immediately update event document
+                            eventDocRef.update("imageUrl", imageHandler.getUploadedImageUrl(),
+                                    "imagePath", imageHandler.getUploadedImagePath());
+                        },
+                        () -> {
+                            // Handle failure if needed
+                        }
+                );
+            }
+        });
     }
 
     /**
@@ -103,6 +137,8 @@ public class EditEventFragment extends Fragment {
      * - Sets navigation for the back button and entrants row
      * - Listens to Firestore for the event snapshot and binds it to the UI
      * - Updates the {@code geolocationEnabled} field when the switch toggles
+     * - Handles poster image selection, upload, and removal
+     * - Sets up QR code save button
      *
      * @param view
      *      The root view returned by {@link #onCreateView}
@@ -113,7 +149,7 @@ public class EditEventFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         db = FirebaseFirestore.getInstance();
-
+        imageHandler = new ImageHandler();
         final String eventIdArg = getEventIdArg();
 
         //Go back to previous page if eventId is missing
@@ -151,20 +187,33 @@ public class EditEventFragment extends Fragment {
             }
         });
 
+        posterTextView = binding.posterTextView;
+        // change/add poster button
+        binding.buttonChangePoster.setOnClickListener(v -> pickMedia.launch(
+                new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build()
+        ));
+
+        // remove poster button
+        binding.buttonRemovePoster.setOnClickListener(v -> {
+            imageHandler.removeImage(getContext(), ()->{
+                eventDocRef.update("imageUrl", null, "imagePath", null);
+            });
+            posterTextView.setVisibility(View.GONE);
+        });
+
         db.collection("events")
-                .whereEqualTo("eventId", eventIdArg)
-                .limit(1)
-                .addSnapshotListener((snap, err) -> {
+                .document(eventIdArg)
+                .addSnapshotListener((doc, err) -> {
                     if (err != null) {
                         Toast.makeText(requireContext(), "Failed to load event", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (snap == null || snap.isEmpty()) {
+                    if (doc == null || !doc.exists()) {
                         Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    DocumentSnapshot doc = snap.getDocuments().get(0);
-                    eventDocRef = doc.getReference();
 
                     Event e = Event.addEventDetailsFromSnapShot(doc);
                     currentQrCode = e.getQrCode();
@@ -174,7 +223,7 @@ public class EditEventFragment extends Fragment {
 
     /**
      * This binds a loaded {@link Event} and its backing document to the UI fields.
-     * It formats date/time, fills textual fields, and applies the geolocation toggle state.
+     * It formats date/time, fills textual fields, displays poster image path if available, and applies the geolocation toggle state.
      *
      * @param e
      *      The event model built from the Firestore document
@@ -202,6 +251,15 @@ public class EditEventFragment extends Fragment {
 
         Boolean geo = doc.getBoolean("geolocationEnabled");
         if (geo != null) binding.switchGeolocation.setChecked(geo);
+
+        String imagePath = doc.getString("imagePath");
+        if (imagePath != null && !imagePath.isEmpty()) {
+            posterTextView.setText(imagePath);
+            posterTextView.setVisibility(View.VISIBLE);
+
+        } else {
+            posterTextView.setVisibility(View.GONE);
+        }
     }
 
     /**

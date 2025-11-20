@@ -261,6 +261,7 @@
             </LinearLayout>
 
             <!-- Poster row -->
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -275,15 +276,41 @@
                     android:text="Poster:"
                     android:textSize="12sp"
                     android:layout_marginEnd="40dp" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <Button
-                    android:id="@+id/button_poster"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:text="+ Upload/Delete Poster"
-                    android:textColor="@color/white"
-                    android:textAllCaps="false"
-                    android:backgroundTint="@color/colorButtonBackground"/>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/button_change_poster"
+                            android:layout_width="wrap_content"
+                            android:layout_height="44dp"
+                            android:backgroundTint="@color/colorButtonBackground"
+                            android:text="Change Poster"
+                            android:textAllCaps="false"
+                            android:textColor="@color/white" />
+                        <Button
+                            android:id="@+id/button_remove_poster"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:text="Remove Poster"
+                            android:textColor="@color/white"
+                            android:textAllCaps="false"
+                            android:backgroundTint="@color/colorButtonBackground"/>
+                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/posterTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="TextView"/>
+                </LinearLayout>
             </LinearLayout>
 
             <!-- QR Code row -->

@@ -83,18 +83,27 @@ public class ShowWaitingListActivity extends AppCompatActivity {
                 if (interact.getText().equals(leaveList)) {
                     usersId.remove(userId);
                     adapter.notifyDataSetChanged();
-                    events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot-> {
-                        DocumentReference event = snapshot.getDocuments().get(0).getReference();
+                    assert eventId != null;
+                    events.document(eventId).get().addOnSuccessListener(doc-> {
+                        if (!doc.exists()) {
+                            Toast.makeText(ShowWaitingListActivity.this, "Event not found", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        DocumentReference event = events.document(eventId);
                         event.update("waitList", FieldValue.arrayRemove(userId));
                         interact.setText(joinList);
                     });
                 } else {
                     usersId.add(userId);
                     adapter.notifyDataSetChanged();
-                    events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot -> {
-                        DocumentReference event = snapshot.getDocuments().get(0).getReference();
-
-                        Long entrantsLimit = snapshot.getDocuments().get(0).getLong("entrantsLimit");
+                    assert eventId != null;
+                    events.document(eventId).get().addOnSuccessListener(doc -> {
+                        if (!doc.exists()) {
+                            Toast.makeText(ShowWaitingListActivity.this, "Event not found", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        DocumentReference event = events.document(eventId);
+                        Long entrantsLimit = doc.getLong("entrantsLimit");
                         if (entrantsLimit != null && (entrantsLimit >= usersId.size() || entrantsLimit == 0)){
                             event.update("waitList", FieldValue.arrayUnion(userId));
                             interact.setText(leaveList);
@@ -113,8 +122,13 @@ public class ShowWaitingListActivity extends AppCompatActivity {
 
         list.setAdapter(adapter);
 
-        events.whereEqualTo("eventId", eventId).limit(1).get().addOnSuccessListener(snapshot-> {
-            List<String> obtainedUserIds = (List<String>) snapshot.getDocuments().get(0).get("waitList");
+        assert eventId != null;
+        events.document(eventId).get().addOnSuccessListener(doc-> {
+            if (!doc.exists()) {
+                Toast.makeText(ShowWaitingListActivity.this, "Event not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            List<String> obtainedUserIds = (List<String>) doc.get("waitList");
             if (obtainedUserIds != null && !obtainedUserIds.isEmpty()){
                 if(obtainedUserIds.contains(userId)){
                     interact.setText(leaveList);
