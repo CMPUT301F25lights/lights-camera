@@ -215,17 +215,44 @@ public class HomeFragment extends Fragment {
     }
 
     private void openEventFromQR(String eventId){
-        DocumentReference ref = db.collection("events").document(eventId);
-        ref.get().addOnSuccessListener(doc -> {
-            boolean qrIsValid = doc.exists(); // modify to add more rules
-            if(qrIsValid){
-                Intent intent = new Intent(requireContext(), EventDetailsActivity.class);
-                intent.putExtra("eventId", eventId);
-                startActivity(intent);
-            }else{
-                // Handle invalid QR code
-            }
-        });
+        try{
+            DocumentReference ref = db.collection("events").document(eventId);
+            ref.get().addOnSuccessListener(doc -> {
+                if (!doc.exists()) {
+                    Toast.makeText(getContext(), "Event does not exist.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                Timestamp registrationStart = doc.getTimestamp("registrationStart");
+                Timestamp registrationDeadline = doc.getTimestamp("registrationDeadline");
+                String ownerId = doc.getString("ownerId");
+                Timestamp now = Timestamp.now();
+                boolean qrIsValid = true;
+                String validationMessage = "";
+
+                if (registrationStart == null || registrationStart.compareTo(now) > 0) {
+                    qrIsValid = false;
+                    validationMessage = "Registration has not started yet.";
+                } else if (registrationDeadline == null || registrationDeadline.compareTo(now) < 0) {
+                    qrIsValid = false;
+                    validationMessage = "Registration for this event has closed.";
+                }else if (ownerId != null && ownerId.equals(CurrentUser.get().getUserId())) {
+                    qrIsValid = false;
+                    validationMessage = "You cannot join the waitlist for your own event.";
+                }
+
+                if(qrIsValid){
+                    Intent intent = new Intent(requireContext(), EventDetailsActivity.class);
+                    intent.putExtra("eventId", eventId);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getContext(), validationMessage, Toast.LENGTH_LONG).show();
+                }
+            });
+        }catch (Exception e) {
+            Toast.makeText(getContext(), "Event does not exist", Toast.LENGTH_LONG).show();
+        }
+
     }
 
     /**

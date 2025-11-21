@@ -24,13 +24,13 @@ import java.util.UUID;
  * Utility class for generating and saving QR codes.
  */
 public class QR {
-    /**
-     * Generates a random UUID string to be encoded to a QR code.
-     * @return The generated code string.
-     */
-    public static String generateCode(){
-        return UUID.randomUUID().toString();
-    }
+//    /**
+//     * Generates a random UUID string to be encoded to a QR code.
+//     * @return The generated code string.
+//     */
+//    public static String generateCode(){
+//        return UUID.randomUUID().toString();
+//    }
 
     /**
      * Generates a QR code bitmap from a given string.
