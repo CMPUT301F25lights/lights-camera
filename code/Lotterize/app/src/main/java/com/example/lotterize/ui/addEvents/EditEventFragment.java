@@ -125,7 +125,7 @@ public class EditEventFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-        // MUST match fragment_edit_event.xml
+
         binding = FragmentEditEventBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }

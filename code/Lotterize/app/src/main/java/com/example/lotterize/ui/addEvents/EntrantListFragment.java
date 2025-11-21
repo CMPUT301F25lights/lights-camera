@@ -21,6 +21,7 @@ import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
@@ -46,6 +47,8 @@ public class EntrantListFragment extends Fragment {
 
     /** Cache mapping user document id -> display name (fallback to id). */
     private final Map<String, String> idToNameMap = new HashMap<>();
+
+    ListenerRegistration registration;
 
     /**
      * This inflates the fragment layout.
@@ -105,7 +108,7 @@ public class EntrantListFragment extends Fragment {
         adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, rows);
         listView.setAdapter(adapter);
 
-        loadEntrants();
+        startEntrantsListener();
     }
 
     /**
@@ -145,9 +148,10 @@ public class EntrantListFragment extends Fragment {
     }
 
     /**
-     * This loads the entrant ids for the requested list from the event document.
+     * This starts a real-time listener on the event document and refreshes the
+     * entrant list whenever the document changes in Firestore.
      */
-    private void loadEntrants() {
+    private void startEntrantsListener() {
         final String field = listField(status);
         if (field == null) {
             toast("Unknown list type");
@@ -156,18 +160,43 @@ public class EntrantListFragment extends Fragment {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        db.collection("events").document(eventId).get()
-                .addOnSuccessListener(doc -> {
-                    if (doc.exists()) {
-                        bindFromDoc(doc, field);
-                    } else {
-                        toast("Failed to look up the list");
-                        return;
-                    }
-                })
-                .addOnFailureListener(e -> toast("Lookup failed: " + e.getMessage()));
+        //Clean up existing listener in case we called it twice
+        if (registration != null){
+            registration.remove();
+            registration = null;
+        }
+        registration =
+                db.collection("events").document(eventId)
+                        .addSnapshotListener((doc, e)->{
+                            if (e != null) {
+                                toast("Listen failed: " + e.getMessage());
+                                return;
+                            }
+                            if(doc != null && doc.exists()){
+                                bindFromDoc(doc, field);
+                            }
+                            else{
+                                toast("Failed to load event");
+                                rows.clear();
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
     }
 
+    /**
+     * This is called when the view hierarchy associated with the fragment is being removed.
+     * We remove the Firestore snapshot listener here to avoid memory leaks and
+     * unnecessary network usage once the user leaves this screen.
+     */
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (registration != null) {
+            registration.remove();
+            registration = null;
+        }
+    }
+    
     /**
      * This extracts entrant ids from the event document and triggers name resolution.
      *

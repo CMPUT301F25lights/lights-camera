@@ -139,6 +139,7 @@ public class NotificationsViewModel extends ViewModel {
                                 Notification notification = new Notification(notificationId, senderId, senderName, message, time, receiversId);
                                 notifList.add(notification);
                             }
+
                             notifList.sort((notif1, notif2) ->{
                                 if (notif1.getTime() == null && notif2.getTime() == null) return 0;
                                 if (notif1.getTime() == null) return 1;
@@ -147,6 +148,7 @@ public class NotificationsViewModel extends ViewModel {
                                     return notif2.getTime().compareTo(notif1.getTime());
                                 }
                             });
+
                             notificationsLiveData.setValue(notifList);
                         }
 
