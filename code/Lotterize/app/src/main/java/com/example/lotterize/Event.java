@@ -8,7 +8,7 @@ import java.util.ArrayList;
 /**
  * Represents an event.
  * Contains all metadata about an event including owner, timing,
- * registration status lists, participant limits, and QR reference.
+ * registration status lists, participant limits, event poster, and QR reference.
  *
  * Firestore requires a public no-argument constructor and public
  * getters/setters to properly deserialize objects.
@@ -31,6 +31,8 @@ public class Event {
     private long entrantsLimit;
     private String qrCode;
     private String imageUrl;
+    private String imagePath;
+    private ArrayList<String> filtersList;
 
     /**
      * Required empty constructor for Firestore.
@@ -57,6 +59,7 @@ public class Event {
      * @param entrantsLimit Limit on entries before selection/lottery
      * @param qrCode Reference string to QR image/data
      * @param imageUrl URL of event image
+     * @param imagePath Path of event image
      */
     public Event(String eventId, String ownerId,
                  ArrayList<String> waitList, ArrayList<String> selectedList,
@@ -64,7 +67,7 @@ public class Event {
                  String eventName, Timestamp date, Timestamp registrationStart,
                  Timestamp registrationDeadline, String location,
                  long totalSpots, String description,
-                 long entrantsLimit, String qrCode, String imageUrl) {
+                 long entrantsLimit, String qrCode, String imageUrl, String imagePath, ArrayList<String> filtersList) {
 
         this.eventId = eventId;
         this.ownerId = ownerId;
@@ -82,6 +85,8 @@ public class Event {
         this.entrantsLimit = entrantsLimit;
         this.qrCode = qrCode;
         this.imageUrl = imageUrl;
+        this.imagePath = imagePath;
+        this.filtersList = filtersList;
     }
 
     /** @return Firestore ID of the event */
@@ -123,6 +128,13 @@ public class Event {
     public Timestamp getDate() { return date; }
     /** @param date New timestamp for event date */
     public void setDate(Timestamp date) { this.date = date; }
+
+    public void setFiltersList(ArrayList<String> filtersList) {
+        this.filtersList = filtersList;
+    }
+    public ArrayList<String> getFiltersList() {
+        return filtersList;
+    }
 
     /** @return Sign-up opening time */
     public Timestamp getRegistrationStart() { return registrationStart; }
@@ -168,6 +180,11 @@ public class Event {
     /** @param imageUrl URL of event image */
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
+    /** @return Firebase storage path of event image */
+    public String getImagePath() { return imagePath; }
+    /** @param imagePath Firebase storage path of event image */
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+
 
     /**
      * This builds an Event object from a Firestore DocumentSnapshot.
@@ -202,10 +219,14 @@ public class Event {
         Long entrantsLimit = doc.getLong("entrantsLimit");
         String qrCode = doc.getString("qrCode");
         String imageUrl = doc.getString("imageUrl");
+        String imagePath = doc.getString("imagePath");
+
+        @SuppressWarnings("unchecked")
+        ArrayList<String> filtersList = (ArrayList<String>) (doc.get("filtersList") != null ? doc.get("filtersList") : new ArrayList<String>());
 
         return new Event(eventId, ownerId, waitList,  selectedList, cancelledList,
                 finalList, eventName, date, registrationStart, registrationDeadline, location,
-                totalSpots,  description,  entrantsLimit,  qrCode, imageUrl);
+                totalSpots,  description,  entrantsLimit,  qrCode, imageUrl, imagePath, filtersList);
 
     }
 }

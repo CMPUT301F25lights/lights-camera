@@ -27,7 +27,7 @@ public class EventScheduler {
 
                 if (event == null) continue; // skip if event is null
 
-                //event.setEventId(doc.getId()); // make sure we have the Firestore ID
+                event.setEventId(doc.getId()); // make sure we have the Firestore ID
 
                 if (event.getRegistrationDeadline() != null &&
                         Timestamp.now().compareTo(event.getRegistrationDeadline()) >= 0) {

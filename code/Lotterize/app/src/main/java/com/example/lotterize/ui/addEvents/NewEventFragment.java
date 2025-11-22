@@ -14,6 +14,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
+import com.example.lotterize.ImageHandler;
 import com.example.lotterize.QR;
 import com.example.lotterize.R;
 import com.example.lotterize.User;
@@ -24,7 +25,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 
 import android.net.Uri;
 import android.util.Log;
@@ -47,65 +50,41 @@ import com.google.firebase.storage.UploadTask;
  */
 public class NewEventFragment extends Fragment {
     private FirebaseFirestore db;
-    private FirebaseStorage storage;
-    private StorageReference storageRef;
-
+    private ImageHandler imageHandler;
     private CollectionReference events;
     private FragmentNewEventBinding binding;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
-    private Uri ImageUri;
-    private String imageUrl = null;
     private TextView imageSelectedTextView;
 
+    /**
+     * Initializes the fragment and sets up the photo picker for event images.
+     * Handles image selection, uploading to Firebase Storage, and storing the download URL.
+     *
+     * @param savedInstanceState If non-null, this fragment is being re-created from a previous state.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference().child("event_posters");
-
-        // Initialize photo picker
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
-            if (uri != null) {// image selected
-                Log.d("PhotoPicker", "Selected URI: " + uri);
-                // store selected image uri
-                ImageUri = uri;
-                // update textview to show image selected
-                imageSelectedTextView.setText(uri.toString());
-                imageSelectedTextView.setVisibility(View.VISIBLE);
-                Log.d("Upload", "=== STARTING UPLOAD ===");
-                Log.d("Upload", "URI: " + ImageUri);
+            if (uri != null) {
+                binding.imageSelectedTextView.setText(uri.toString());
+                binding.imageSelectedTextView.setVisibility(View.VISIBLE);
+                imageHandler.addImage(getContext(), uri,
+                        () -> {
+                            // onSuccess
+                        },
+                        () -> {
+                            // onFailure
+                        }
+                );
 
-                StorageReference imageRef = storageRef.child( "TestImage_" + System.currentTimeMillis() + ".jpg");
-                Log.d("Upload", "Storage path: " + imageRef.getPath());
-
-                UploadTask uploadTask = imageRef.putFile(ImageUri);
-
-                uploadTask.addOnSuccessListener(taskSnapshot -> {
-                    Log.d("Upload", "=== UPLOAD SUCCESS ===");
-                    imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
-                        this.imageUrl = downloadUri.toString();
-                        Log.d("Upload", "Got download URL: " + this.imageUrl);
-                        Toast.makeText(getContext(), "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
-                    }).addOnFailureListener(e -> {
-                        Log.e("Upload", "Failed to get download URL", e);
-                        this.imageUrl = null;
-                    });
-                }).addOnFailureListener(e -> {
-                    Log.e("Upload", "=== UPLOAD FAILED ===", e);
-                    Toast.makeText(getContext(), "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-
-            } else {
-                // no image selected
-                Log.d("PhotoPicker", "No media selected");
             }
         });
     }
 
     /**
      * Called when the fragment is first created.
-     * Initializes the photo picker to allow users to select an event image from their device.
      *
      * @param savedInstanceState If non-null, this fragment is being re-created from a previous state.
      */
@@ -120,6 +99,8 @@ public class NewEventFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
 
+        imageHandler = new ImageHandler();
+
         // selected image textview
         imageSelectedTextView = binding.imageSelectedTextView;
         imageSelectedTextView.setVisibility(View.GONE);
@@ -132,7 +113,22 @@ public class NewEventFragment extends Fragment {
                     .build());
         });
 
+        // remove image button
+        binding.buttonRemoveImage.setOnClickListener(v -> {
+            imageHandler.removeImage(getContext(),null);
+            // Reset UI
+            imageSelectedTextView.setText("");
+            imageSelectedTextView.setVisibility(View.GONE);
+        });
+
+
         binding.buttonCreateEvent.setOnClickListener(v -> {
+
+            // wait until image is uploaded
+            if (imageHandler.isUploading()) {
+                Toast.makeText(getContext(), "Please wait: image is uploading", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             // Collect user inputs
             String eventName = binding.eventNameInput.getText().toString().trim();
@@ -145,12 +141,10 @@ public class NewEventFragment extends Fragment {
             Timestamp registrationEndDate; //-------------------------------
             String location = binding.locationInput.getText().toString().trim(); //-------------------------------
             String totalSpotsString = binding.totalSpotsInput.getText().toString().trim();
-            Long totalSpots = Long.parseLong(totalSpotsString); //-------------------------------
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
-
-            Long entrantsLimit = !entrantsLimitString.equals("") ? Long.parseLong(entrantsLimitString) : 0; //-------------------------------
-            String qrCode = QR.generateCode();
+            String filtersListString = binding.filtersInput.getText().toString().trim();
+            //String qrCode = QR.generateCode(); deprecated, use eventId instead
 
             // Required field check
             if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||
@@ -159,7 +153,8 @@ public class NewEventFragment extends Fragment {
                 Toast.makeText(getContext(), "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
                 return;
             }
-
+            Long totalSpots = Long.parseLong(totalSpotsString); //-------------------------------
+            Long entrantsLimit = !entrantsLimitString.equals("") ? Long.parseLong(entrantsLimitString) : 0; //-------------------------------
 
             // Validate number inputs
             try {
@@ -223,12 +218,42 @@ public class NewEventFragment extends Fragment {
             ArrayList<String> cancelledList = new ArrayList<>();
             ArrayList<String> finalList = new ArrayList<>();
 
+            // Parse filters
+            ArrayList<String> filtersList = new ArrayList<>();
+            if (filtersListString != null && !filtersListString.trim().isEmpty()) {
+                String[] parts = filtersListString.split(", ");  // split on comma + space
+                Collections.addAll(filtersList, parts);          // add to ArrayList
+            }
 
+            for (String filterName : filtersList) {
+
+                if (filterName == null || filterName.trim().isEmpty()) continue;
+
+                String cleanName = filterName.trim();
+
+                // Query for existing documents with the same name
+                db.collection("filters")
+                        .whereEqualTo("name", cleanName)
+                        .get()
+                        .addOnSuccessListener(querySnapshot -> {
+                            if (querySnapshot.isEmpty()) {
+                                // No doc exists, add a new one
+                                HashMap<String, Object> data = new HashMap<>();
+                                data.put("name", cleanName);
+
+                                db.collection("filters")
+                                        .add(data)
+                                        .addOnSuccessListener(docRef -> {
+                                            // success
+                                        });
+                            }
+                        });
+            }
 
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, qrCode, imageUrl);
+                    totalSpots, description, entrantsLimit, null, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
@@ -251,6 +276,12 @@ public class NewEventFragment extends Fragment {
                                 Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
                         );
 
+                // make qrCode same as eventId
+                documentReference.update("qrCode", eventId)
+                        .addOnSuccessListener(unused ->
+                                Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
+                        );
+
                 NavHostFragment.findNavController(NewEventFragment.this)
                         .navigate(R.id.navigation_addEvents);
 
@@ -259,19 +290,19 @@ public class NewEventFragment extends Fragment {
             );
         });
 
-        binding.buttonCancelCreateEvent.setOnClickListener(v ->
-                NavHostFragment.findNavController(NewEventFragment.this)
-                        .navigate(R.id.navigation_addEvents)
-        );
+        binding.buttonCancelCreateEvent.setOnClickListener(v ->{
+            imageHandler.removeImage(getContext(),null);
+            NavHostFragment.findNavController(NewEventFragment.this)
+                    .navigate(R.id.navigation_addEvents);
+        });
 
         return root;
     }
-
-
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
+
 }

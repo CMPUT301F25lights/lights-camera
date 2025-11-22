@@ -1,32 +1,44 @@
 package com.example.lotterize.ui.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.lotterize.EventScheduler;
 
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.lotterize.CurrentUser;
+import com.example.lotterize.R;
+import com.example.lotterize.UserActivity;
 import com.example.lotterize.databinding.FragmentHomeBinding;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -52,8 +64,17 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
     private ImageButton info;
     private ListView eventsListView;
     private ArrayAdapter<DocumentSnapshot> shownListAdapter;
-    private ImageButton qrCodeButton;
     private EventScheduler scheduler;
+    private ImageButton qrButton;
+    private final ActivityResultLauncher<ScanOptions> qrLauncher =
+            registerForActivityResult(new ScanContract(), result -> {
+                if (result.getContents() != null) {
+                    String qrValue = result.getContents();
+                    Toast.makeText(getContext(), "QR: " + qrValue, Toast.LENGTH_SHORT).show();
+                    openEventFromQR(qrValue);
+                }
+            });
+
 
     /**
      * Creates the home view
@@ -72,7 +93,6 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-
 
         return root;
     }
@@ -122,8 +142,8 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
                 });
 
         info = binding.infoButton;
+        qrButton = binding.QRScanButton;
         eventsListView = binding.eventsList;
-        qrCodeButton = binding.QRScanButton;
         TextInputEditText searchBar = binding.searchBar;
 
         eventsListView.setAdapter(shownListAdapter);
@@ -190,15 +210,6 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
         });
 
 
-        qrCodeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getContext(), "FORNITE BATTLEPASS", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
-
         info.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -207,6 +218,59 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
             }
         });
         scheduler.monitorEvents();
+
+        qrButton.setOnClickListener(v -> {
+            ScanOptions options = new ScanOptions();
+            options.setPrompt("Scan the event QR code");
+            options.setDesiredBarcodeFormats(ScanOptions.QR_CODE);
+            options.setCameraId(0);  // back camera
+            options.setBeepEnabled(true);
+            options.setOrientationLocked(true);
+
+            qrLauncher.launch(options);
+        });
+
+    }
+
+    private void openEventFromQR(String eventId){
+        try{
+            DocumentReference ref = db.collection("events").document(eventId);
+            ref.get().addOnSuccessListener(doc -> {
+                if (!doc.exists()) {
+                    Toast.makeText(getContext(), "Event does not exist.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                Timestamp registrationStart = doc.getTimestamp("registrationStart");
+                Timestamp registrationDeadline = doc.getTimestamp("registrationDeadline");
+                String ownerId = doc.getString("ownerId");
+                Timestamp now = Timestamp.now();
+                boolean qrIsValid = true;
+                String validationMessage = "";
+
+                if (registrationStart == null || registrationStart.compareTo(now) > 0) {
+                    qrIsValid = false;
+                    validationMessage = "Registration has not started yet.";
+                } else if (registrationDeadline == null || registrationDeadline.compareTo(now) < 0) {
+                    qrIsValid = false;
+                    validationMessage = "Registration for this event has closed.";
+                }else if (ownerId != null && ownerId.equals(CurrentUser.get().getUserId())) {
+                    qrIsValid = false;
+                    validationMessage = "You cannot join the waitlist for your own event.";
+                }
+
+                if(qrIsValid){
+                    Intent intent = new Intent(requireContext(), EventDetailsActivity.class);
+                    intent.putExtra("eventId", eventId);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getContext(), validationMessage, Toast.LENGTH_LONG).show();
+                }
+            });
+        }catch (Exception e) {
+            Toast.makeText(getContext(), "Event does not exist", Toast.LENGTH_LONG).show();
+        }
+
     }
 
     @Override

@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +24,9 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.ArrayList;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import kotlinx.serialization.descriptors.PrimitiveKind;
 
@@ -78,6 +82,16 @@ public class EventListArrayAdapter extends ArrayAdapter<DocumentSnapshot> {
             desc += "...";
         }
         eventDescription.setText(desc);
+
+        // Event image
+        ImageView eventImg = view.findViewById(R.id.event_img);
+        String imageUrl = event.getString("imageUrl");
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(getContext()).load(imageUrl).into(eventImg);
+        }else {
+            // set default image when missing
+            eventImg.setImageResource(R.drawable.ic_info_black_24dp);
+        }
 
         Button eventDetails = view.findViewById(R.id.event_details_button);
         eventDetails.setOnClickListener(new View.OnClickListener() {
