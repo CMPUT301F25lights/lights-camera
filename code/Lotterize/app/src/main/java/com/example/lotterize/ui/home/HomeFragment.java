@@ -304,20 +304,20 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
     private void updateShownList(){
         shownList.clear();
         for (DocumentSnapshot d : eventList){
-            boolean containsAll = true;
+            boolean containsAny = false;
             boolean sameDay = false;
             if (!filtersList.isEmpty()) {
                 if (d.get("filtersList") != null) {
                     List<String> eventsFilters = (List<String>) d.get("filtersList");
                     for (String filter : filtersList) {
-                        if (!eventsFilters.contains(filter)) {
-                            containsAll = false;
+                        if (eventsFilters.contains(filter)) {
+                            containsAny = true;
                             break;
                         }
                     }
-                } else {
-                    containsAll = false;
                 }
+            } else {
+                containsAny = true;
             }
 
             if (shownDate != null) {
@@ -335,7 +335,7 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
                 sameDay = true;
             }
 
-            if (containsAll && sameDay) {
+            if (containsAny && sameDay) {
                 shownList.add(d);
             }
         }
