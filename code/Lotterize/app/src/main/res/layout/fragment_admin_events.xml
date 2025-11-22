@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".admin.AdminEventsFragment"
     android:background="@color/white"
     android:fitsSystemWindows="true">
 
@@ -44,13 +43,6 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- QR Scan button (top right) -->
-        <ImageButton
-            android:id="@+id/QR_scan_button"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:contentDescription="QR Scan"
-            android:background="@color/white"
-            android:src="@drawable/ic_qr_black_24dp" />
     </LinearLayout>
 
     <!-- Filter layout centered -->
