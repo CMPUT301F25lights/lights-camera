@@ -1,6 +1,8 @@
 package com.example.lotterize.ui.home;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -149,6 +151,8 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
         eventsListView.setAdapter(shownListAdapter);
 
         MaterialButton waitListedEvents = binding.waitlistedEventsButton;
+        waitListedEvents.setBackgroundTintList(new ColorStateList( new int[][]{new int[]{android.R.attr.state_checked},
+                new int[]{}}, new int[]{Color.GRAY, Color.WHITE}));
         MaterialButton filterEvents = binding.filterEventsButton;
         String currUserId = CurrentUser.get().getUserId();
         waitListedEvents.setOnClickListener(new View.OnClickListener() {
