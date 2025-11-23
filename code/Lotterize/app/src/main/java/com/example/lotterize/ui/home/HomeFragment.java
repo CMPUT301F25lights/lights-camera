@@ -1,6 +1,8 @@
 package com.example.lotterize.ui.home;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -41,7 +43,11 @@ import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+
+import kotlin._Assertions;
 
 
 /**
@@ -49,17 +55,17 @@ import java.util.List;
  * that user can join waitlist for along with text search, QR search (not implemented yet),
  * and info about the lottery.
  */
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements FilterFragment.FilterFragmentsDialogListener {
     private FirebaseFirestore db;
     private CollectionReference events;
     private FragmentHomeBinding binding;
     private ArrayList<DocumentSnapshot> eventList;
-
+    private ArrayList<String> filtersList;
+    private Calendar shownDate;
     private ArrayList<DocumentSnapshot> shownList;
     private ImageButton info;
     private ListView eventsListView;
-    private ArrayAdapter<DocumentSnapshot> eventsArray;
-    private TextView info_text;
+    private ArrayAdapter<DocumentSnapshot> shownListAdapter;
     private EventScheduler scheduler;
     private ImageButton qrButton;
     private final ActivityResultLauncher<ScanOptions> qrLauncher =
@@ -105,9 +111,11 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         eventList = new ArrayList<>();
         shownList = new ArrayList<>();
-        eventsArray = new EventListArrayAdapter(requireContext(), shownList);
+        shownListAdapter = new EventListArrayAdapter(requireContext(), shownList);
         db = FirebaseFirestore.getInstance();
         events = db.collection("events");
+        filtersList = new ArrayList<>();
+        shownDate = null;
 
         scheduler = new EventScheduler();
 
@@ -118,6 +126,8 @@ public class HomeFragment extends Fragment {
                         Toast.makeText(getContext(), "couldn't update data - HomeFragment", Toast.LENGTH_SHORT).show();
                     } else {
                         if (snapshot != null){
+                            filtersList = new ArrayList<>();
+                            shownDate = null;
                             eventList.clear();
                             shownList.clear();
                             for (DocumentSnapshot d : snapshot) {
@@ -128,7 +138,7 @@ public class HomeFragment extends Fragment {
                                     shownList.add(d);
                                 }
                             }
-                            eventsArray.notifyDataSetChanged();
+                            shownListAdapter.notifyDataSetChanged();
                         }
                     }
                 });
@@ -138,9 +148,12 @@ public class HomeFragment extends Fragment {
         eventsListView = binding.eventsList;
         TextInputEditText searchBar = binding.searchBar;
 
-        eventsListView.setAdapter(eventsArray);
+        eventsListView.setAdapter(shownListAdapter);
 
         MaterialButton waitListedEvents = binding.waitlistedEventsButton;
+        waitListedEvents.setBackgroundTintList(new ColorStateList( new int[][]{new int[]{android.R.attr.state_checked},
+                new int[]{}}, new int[]{Color.GRAY, Color.WHITE}));
+        MaterialButton filterEvents = binding.filterEventsButton;
         String currUserId = CurrentUser.get().getUserId();
         waitListedEvents.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,8 +161,7 @@ public class HomeFragment extends Fragment {
                 v.setSelected(!v.isSelected());
                 if (!v.isSelected()) {
                     shownList.clear();
-                    shownList.addAll(eventList);
-                    eventsArray.notifyDataSetChanged();
+                    updateShownList();
                 } else {
                     shownList.clear();
                     for (DocumentSnapshot d : eventList){
@@ -158,39 +170,49 @@ public class HomeFragment extends Fragment {
                             shownList.add(d);
                         }
                     }
-                    eventsArray.notifyDataSetChanged();
+                    shownListAdapter.notifyDataSetChanged();
                 }
+            }
+        });
+
+        filterEvents.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FilterFragment filterFragment = new FilterFragment();
+                Bundle args = new Bundle();
+                args.putSerializable("Current Filters", filtersList);
+                args.putSerializable("date", shownDate);
+                filterFragment.setArguments(args);
+                filterFragment.setListener(HomeFragment.this);
+                filterFragment.show(getActivity().getSupportFragmentManager(), "Filter");
             }
         });
 
         searchBar.addTextChangedListener(new TextWatcher() {
             @Override
-            public void afterTextChanged(Editable s) {
-
-            }
+            public void afterTextChanged(Editable s) {}
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 shownList.clear();
-                eventsArray.notifyDataSetChanged();
+                shownListAdapter.notifyDataSetChanged();
                 String search = s.toString().toLowerCase();
                 if (search.isEmpty()){
-                    shownList.addAll(eventList);
+                    updateShownList();
                 } else {
                     for (DocumentSnapshot d : eventList){
                         if (d.getString("eventName") != null && d.getString("eventName").toLowerCase().contains(search)){
                             shownList.add(d);
-                            eventsArray.notifyDataSetChanged();
+                            shownListAdapter.notifyDataSetChanged();
                         }
                     }
                 }
             }
         });
+
 
         info.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -254,6 +276,77 @@ public class HomeFragment extends Fragment {
         }
 
     }
+
+    @Override
+    public void addFilter(String f) {
+        filtersList.add(f);
+        updateShownList();
+    }
+
+    @Override
+    public void removeFilter(String f) {
+        filtersList.remove(f);
+        updateShownList();
+    }
+
+    @Override
+    public void filterDate(int year, int month, int dayOfMonth) {
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.YEAR, year);
+        c.set(Calendar.MONTH, month);
+        c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+        shownDate = c;
+        updateShownList();
+    }
+
+    @Override
+    public void resetDate() {
+        shownDate = null;
+        updateShownList();
+    }
+
+    private void updateShownList(){
+        shownList.clear();
+        for (DocumentSnapshot d : eventList){
+            boolean containsAny = false;
+            boolean sameDay = false;
+            if (!filtersList.isEmpty()) {
+                if (d.get("filtersList") != null) {
+                    List<String> eventsFilters = (List<String>) d.get("filtersList");
+                    for (String filter : filtersList) {
+                        if (eventsFilters.contains(filter)) {
+                            containsAny = true;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                containsAny = true;
+            }
+
+            if (shownDate != null) {
+                Timestamp eventDate = d.getTimestamp("date");
+                if (eventDate != null) {
+                    Calendar c = Calendar.getInstance();
+                    c.setTime(eventDate.toDate());
+                    if (c.get(Calendar.YEAR) == shownDate.get(Calendar.YEAR) &&
+                            c.get(Calendar.MONTH) == shownDate.get(Calendar.MONTH) &&
+                            c.get(Calendar.DAY_OF_MONTH) == shownDate.get(Calendar.DAY_OF_MONTH)) {
+                        sameDay = true;
+                    }
+                }
+            } else {
+                sameDay = true;
+            }
+
+            if (containsAny && sameDay) {
+                shownList.add(d);
+            }
+        }
+        shownListAdapter.notifyDataSetChanged();
+    }
+
+
 
     /**
      * Destroys the view

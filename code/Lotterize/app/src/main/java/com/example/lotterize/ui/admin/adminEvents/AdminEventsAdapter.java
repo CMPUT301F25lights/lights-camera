@@ -2,6 +2,7 @@ package com.example.lotterize.ui.admin.adminEvents;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.lotterize.R;
+import com.example.lotterize.ui.home.EventDetailsActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -59,7 +61,12 @@ public class AdminEventsAdapter extends RecyclerView.Adapter<AdminEventsAdapter.
         holder.textTitle.setText(name != null ? name : "Untitled Event");
         holder.textDate.setText(deadline.isEmpty() ? "No deadline" : deadline);
 
-        holder.buttonViewDetails.setOnClickListener(v -> showEventDetailsDialog(event));
+        holder.buttonViewDetails.setOnClickListener(v -> {
+            Intent intent = new Intent(context, EventDetailsActivity.class);
+            intent.putExtra("eventId", eventId);
+            intent.putExtra("context", "admin");
+            context.startActivity(intent);
+        });
 
         holder.buttonDelete.setOnClickListener(v -> {
             if (eventId == null) {
