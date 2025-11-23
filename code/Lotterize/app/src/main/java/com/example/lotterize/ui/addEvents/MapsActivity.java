@@ -22,8 +22,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("MapsAPI", "API key: ${BuildConfig.MAPS_API_KEY}");
-
+        //Log.d("MapsAPI", "API key: ${BuildConfig.MAPS_API_KEY}");
 
         binding = ActivityMapsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -32,6 +31,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        // Back button
+        findViewById(R.id.back).setOnClickListener(v -> finish());
     }
 
     /**
