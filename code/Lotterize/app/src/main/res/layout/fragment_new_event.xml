@@ -49,16 +49,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Event Name:"
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="12dp" />
 
                 <EditText
                     android:id="@+id/eventNameInput"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:text=""
                     android:background="@drawable/background_rounded"
-                    android:hint="Enter event name"/>
+                    android:hint="Enter Event Name"
+                    android:textSize="15sp"/>
             </LinearLayout>
 
             <LinearLayout
@@ -71,16 +76,26 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Date: "
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="50dp"/>
 
                 <EditText
-                    android:id="@+id/dateInput"
+                    android:id="@+id/dateText"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:hint="Enter Date"
                     android:background="@drawable/background_rounded"
-                    android:hint="yyyy-MM-dd"/>
+                    android:textSize="15sp"/>
+                <Button
+                    android:id="@+id/dateInputButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select Date"
+                    android:backgroundTint="@color/black"/>
             </LinearLayout>
 
             <LinearLayout
@@ -93,16 +108,28 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Time: "
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="50dp" />
 
                 <EditText
-                    android:id="@+id/timeInput"
+                    android:id="@+id/timeText"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:hint="Enter Time"
                     android:background="@drawable/background_rounded"
-                    android:hint="HH:mm"/>
+                    android:textSize="15sp"/>
+
+                <Button
+                    android:id="@+id/timeInputButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select Time"
+                    android:backgroundTint="@color/black"/>
+
             </LinearLayout>
 
             <LinearLayout
@@ -115,16 +142,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Location: "
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="30dp"/>
 
                 <EditText
                     android:id="@+id/locationInput"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:hint="Enter Location"
                     android:background="@drawable/background_rounded"
-                    android:hint="Enter location"/>
+                    android:textSize="15sp"/>
             </LinearLayout>
 
             <LinearLayout
@@ -136,18 +167,21 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Total spots: "
+                    android:text="Total Spots: "
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="15dp"/>
 
                 <EditText
                     android:id="@+id/totalSpotsInput"
-                    android:inputType="number"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:hint="i.e 50"
                     android:background="@drawable/background_rounded"
-                    android:hint="Enter total spots: 50"/>
+                    android:textSize="15sp"/>
             </LinearLayout>
 
             <LinearLayout
@@ -159,18 +193,21 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Entrants limit: "
+                    android:text="Limit entrants on waitlist:"
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="10dp" />
 
                 <EditText
                     android:id="@+id/entrantsLimitInput"
-                    android:inputType="number"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:hint="opitonal (i.e 50)"
                     android:background="@drawable/background_rounded"
-                    android:hint="Enter entrants: 100"/>
+                    android:textSize="15sp"/>
             </LinearLayout>
 
             <LinearLayout
@@ -183,61 +220,94 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Description: "
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="10dp"/>
 
                 <EditText
                     android:id="@+id/descriptionInput"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="100dp"
                     android:layout_weight="1"
+                    android:focusable="true"
+                    android:padding="12dp"
+                    android:hint="Enter Description"
+                    android:textSize="15sp"
+                    android:gravity="top|start"
+                    android:scrollbars="vertical"
+                    android:overScrollMode="always"
                     android:background="@drawable/background_rounded"
-                    android:hint="Enter description"/>
+                    android:fillViewport="true"
+                    android:clipToPadding="false"
+                    android:clickable="true"
+                    android:focusedByDefault="true"/>
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Registration Start: "
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="10dp"/>
 
                 <EditText
-                    android:id="@+id/registrationStartInput"
+                    android:id="@+id/registrationStartDateText"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:hint="Enter Date"
                     android:background="@drawable/background_rounded"
-                    android:hint="yyyy-MM-dd HH:mm"/>
+                    android:textSize="15sp"/>
+                <Button
+                    android:id="@+id/registrationStartDateButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select Date"
+                    android:backgroundTint="@color/black"
+                    android:layout_marginEnd="5dp"/>
+
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Registration End: "
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="15dp"/>
 
                 <EditText
-                    android:id="@+id/registrationEndInput"
+                    android:id="@+id/registrationEndDateText"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:hint="Enter Date"
                     android:background="@drawable/background_rounded"
-                    android:hint="yyyy-MM-dd HH:mm"/>
+                    android:textSize="15sp"/>
+                <Button
+                    android:id="@+id/registrationEndDateButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select Date"
+                    android:backgroundTint="@color/black"
+                    android:layout_marginEnd="5dp"/>
+
             </LinearLayout>
 
             <LinearLayout
@@ -249,17 +319,17 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Filters:"
+                    android:text="Filters: "
+                    android:textSize="12sp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="30dp"/>
 
-                <EditText
-                    android:id="@+id/filtersInput"
-                    android:layout_width="0dp"
+                <Button
+                    android:id="@+id/addEventFiltersButton"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/background_rounded"
-                    android:hint="filter1, filter2, ..., filterN"/>
+                    android:text="Select Filters"
+                    android:backgroundTint="@color/black"/>
             </LinearLayout>
 
             <LinearLayout
@@ -314,7 +384,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="TextView"/>
+                        android:text=""/>
                 </LinearLayout>
             </LinearLayout>
 
