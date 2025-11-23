@@ -1,5 +1,6 @@
 package com.example.lotterize.ui.addEvents;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -83,9 +84,18 @@ public class AllEntrantsFragment extends Fragment {
         binding.rowEnrolledList.setOnClickListener(view -> openList("ENROLLED"));
 
         // Placeholder for map UI
-        binding.rowWaitlistMap.setOnClickListener(view ->
-                Toast.makeText(requireContext(), "Map coming soon", Toast.LENGTH_SHORT).show()
-        );
+        binding.rowWaitlistMap.setOnClickListener(view -> {
+
+            if (eventId == null) {
+                Toast.makeText(requireContext(), "Missing eventId", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Intent intent = new Intent(requireContext(), MapsActivity.class);
+            // Pass eventId if needed
+            intent.putExtra("eventId", eventId);
+            startActivity(intent);
+        });
 
         // TODOs for the bottom buttons
         binding.btnExportCsv.setOnClickListener(v1 -> {/* export */});
