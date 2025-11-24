@@ -11,12 +11,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.MainActivity;
 import com.example.lotterize.Notification;
 import com.example.lotterize.NotificationSender;
+import com.example.lotterize.R;
 import com.example.lotterize.databinding.FragmentNotificationsBinding;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -52,7 +56,7 @@ public class NotificationsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        viewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(NotificationsViewModel.class);
         binding = FragmentNotificationsBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
@@ -73,6 +77,7 @@ public class NotificationsFragment extends Fragment {
         return root;
 
     }
+
 
     /**
      * This is a helper method used for testing; it creates a sample {@link Notification}
