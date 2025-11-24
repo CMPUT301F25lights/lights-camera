@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel;
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.MainActivity;
 import com.example.lotterize.Notification;
+import com.example.lotterize.NotificationSender;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -21,6 +22,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import kotlin.contracts.Returns;
@@ -36,11 +38,22 @@ public class NotificationsViewModel extends ViewModel {
     private final MutableLiveData<ArrayList<Notification>> notificationsLiveData =
             new MutableLiveData<>(new ArrayList<>());
 
+    /** LiveData for one-shot snack bar messages when a new notification arrives in-app. */
+    private final MutableLiveData<String> snackMessage = new MutableLiveData<>();
+
+    private final NotificationSender sender = new NotificationSender();
 
     /** Firestore listener registration used to remove the listener when cleared. */
     private ListenerRegistration registration;
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    private final MutableLiveData<String> toast = new MutableLiveData<>();
     private final String currentUserId = CurrentUser.get().getUserId();
+
+    /** Track which notifications we've already seen. */
+    private final HashSet<String> loadedNotificationIds = new HashSet<>();
+
+    private Timestamp lastSeenTime = null;
 
     /**
      * This is the constructor for the ViewModel.
@@ -50,6 +63,52 @@ public class NotificationsViewModel extends ViewModel {
         startListening();
     }
 
+    /**
+     * This fetches the event’s recipient list (by {@code listStatus}) from Firestore
+     * and sends {@code message} to those user IDs via {@code NotificationSender}.
+     * Posts a short status to {@code toast} (not found / empty / sent / failure).
+     *
+     * @param eventId   Event document ID
+     * @param listStatus Field name holding recipients
+     * @param message   The message of Notification
+     * @param senderId  ID of the user sending the notification
+     */
+    public void sendToStatus(String eventId, String listStatus, String message, String senderId) {
+        db.collection("events").document(eventId)
+                .get()
+                .addOnSuccessListener(snap -> {
+                    if (snap == null || !snap.exists()) {
+                        toast.postValue("Event not found");
+                        return;
+                    }
+
+                    // Read the array field (e.g., "WAITLIST", "CHOSEN", etc.)
+                    Object raw = snap.get(listStatus);
+
+                    ArrayList<String> ids = new ArrayList<>();
+                    if (raw instanceof List) {
+                        for (Object o : (List<?>) raw) {
+                            if (o != null) ids.add(String.valueOf(o));
+                        }
+                    }
+
+                    if (ids.isEmpty()) {
+                        toast.postValue("No recipients for " + listStatus.toLowerCase());
+                        return;
+                    }
+
+                    sender.sendNotification(senderId, message, ids);
+                    if (sender.getNumOfReceivers() == 0){
+                        toast.postValue("No entrants want to receive notifications!!");
+                    }
+                    else{
+                        toast.postValue("Sent to " + sender.getNumOfReceivers() + " " + listStatus.toLowerCase() + " entrant(s)");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    toast.postValue("Failed to load recipients: " + e.getMessage());
+                });
+    }
 
     /**
      * This starts a Firestore snapshot listener that loads notifications where
@@ -58,11 +117,8 @@ public class NotificationsViewModel extends ViewModel {
      * Note: The query can be ordered by time.
      */
     private void startListening() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
         registration = db.collection("notifications")
                 .whereArrayContains("receiversId", currentUserId)
-                //.orderBy("time", Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error)->{
 
                         if (error != null) {
@@ -71,6 +127,7 @@ public class NotificationsViewModel extends ViewModel {
                         }
 
                         ArrayList<Notification> notifList = new ArrayList<>();
+
 
                         if (value != null && !value.isEmpty()) {
                             for (QueryDocumentSnapshot snapshot : value){
@@ -90,7 +147,9 @@ public class NotificationsViewModel extends ViewModel {
 
                                 Notification notification = new Notification(notificationId, senderId, senderName, message, time, receiversId);
                                 notifList.add(notification);
+
                             }
+
                             notifList.sort((notif1, notif2) ->{
                                 if (notif1.getTime() == null && notif2.getTime() == null) return 0;
                                 if (notif1.getTime() == null) return 1;
@@ -99,10 +158,35 @@ public class NotificationsViewModel extends ViewModel {
                                     return notif2.getTime().compareTo(notif1.getTime());
                                 }
                             });
-                            notificationsLiveData.setValue(notifList);
-                        }
 
-                });
+
+                            notificationsLiveData.setValue(notifList);
+
+                            //Returns if there is no notifications
+                            if(notifList.isEmpty())
+                                return;
+
+                            Notification newestNotif = notifList.get(0);
+                            Timestamp snapshotMaxTime = newestNotif.getTime();
+
+                            if (snapshotMaxTime == null) return;
+
+                            //Ignore the first load
+                            if (lastSeenTime == null) {
+                                lastSeenTime = snapshotMaxTime;
+                                return;
+                            }
+
+
+                            if (snapshotMaxTime.compareTo(lastSeenTime) > 0 && CurrentUser.get().getWantNotification()) {
+
+                                lastSeenTime = snapshotMaxTime;
+
+                                String text = (newestNotif.getSenderName() != null && !newestNotif.getSenderName().isEmpty()) ? "Message from " + newestNotif.getSenderName() : "New notification";
+                                snackMessage.setValue(text);
+                            }
+
+                }});
     }
 
     /**
@@ -117,6 +201,17 @@ public class NotificationsViewModel extends ViewModel {
 
 
     /**
+     * This exposes one-shot snackbar messages for new notifications while the user is in the app.
+     * Each time a new notification arrives (after the initial load) and the user has
+     * {@code wantNotification == true}, this LiveData emits a short text.
+     *
+     * @return a {@link LiveData} of snack bar text messages
+     */
+    public LiveData<String> snack() {
+        return this.snackMessage;
+    }
+
+    /**
      * This removes the Firestore snapshot listener when the ViewModel is about to be destroyed
      * to prevent memory leaks.
      */
@@ -129,4 +224,11 @@ public class NotificationsViewModel extends ViewModel {
             registration = null;
         }
     }
+
+    /**
+     * This shows a short toast message.
+     *
+     * @return toast - show whether we successfully send notifications or not
+     */
+    public LiveData<String> toast() { return this.toast; }
 }

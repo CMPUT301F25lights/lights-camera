@@ -18,6 +18,12 @@
         tools:layout="@layout/fragment_admin_images" />
 
     <fragment
+        android:id="@+id/navigation_admin_Notifications"
+        android:name="com.example.lotterize.ui.admin.adminNotifications.AdminNotificationsFragment"
+        android:label="Notification Log"
+        tools:layout="@layout/fragment_admin_notification" />
+
+    <fragment
         android:id="@+id/navigation_admin_profile"
         android:name="com.example.lotterize.ui.admin.AdminProfileFragment"
         android:label="Profile"
