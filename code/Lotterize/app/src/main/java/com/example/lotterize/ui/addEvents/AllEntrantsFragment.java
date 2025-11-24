@@ -116,7 +116,7 @@ public class AllEntrantsFragment extends Fragment {
         );
 
 
-        viewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(NotificationsViewModel.class);
 
 
         // Open reusable list screen with a status flag
@@ -169,8 +169,8 @@ public class AllEntrantsFragment extends Fragment {
                 Toast.makeText(requireContext(), "Missing eventId", Toast.LENGTH_SHORT).show();
                 return;
             }
-            String fileName = "Enrolled List _ " + "EventId: "+ eventId + new SimpleDateFormat("yyyyMMdd", Locale.CANADA).format(new Date()) + ".csv";
-            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/csv").putExtra(Intent.EXTRA_TITLE, fileName);
+            String fileName = "Enrolled List_" + "EventId: "+ eventId + "_" + new SimpleDateFormat("yyyyMMdd", Locale.CANADA).format(new Date()) + ".csv";
+            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain").putExtra(Intent.EXTRA_TITLE, fileName);
 
             createCsvLauncher.launch(i);
 

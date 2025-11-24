@@ -131,8 +131,8 @@ public class ChosenEntrantsListFragment extends Fragment {
                     if (finalList != null) {
                         finalEntrantsList.addAll(finalList);
                     }
-
                     adapter.notifyDataSetChanged();
+
                 });
     }
 
@@ -169,6 +169,9 @@ public class ChosenEntrantsListFragment extends Fragment {
                     }
 
                     adapter.notifyDataSetChanged();
+                    if(chosenEntrants.isEmpty()){
+                        Toast.makeText(requireContext(), "No entrants in the list",Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .addOnFailureListener(err -> {
                     Toast.makeText(requireContext(), "Failed to load user info: " + err.getMessage(), Toast.LENGTH_SHORT).show();
@@ -197,6 +200,7 @@ public class ChosenEntrantsListFragment extends Fragment {
                             );
                 })
                 .show();
+
     }
 
     @Override

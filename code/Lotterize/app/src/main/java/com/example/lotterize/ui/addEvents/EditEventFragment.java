@@ -27,6 +27,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -44,6 +45,7 @@ import java.util.Locale;
 public class EditEventFragment extends Fragment {
 
     private FragmentEditEventBinding binding;
+    private ListenerRegistration eventRegistration;
 
     private FirebaseFirestore db;
 
@@ -203,7 +205,7 @@ public class EditEventFragment extends Fragment {
             posterTextView.setVisibility(View.GONE);
         });
 
-        db.collection("events")
+        eventRegistration = db.collection("events")
                 .document(eventIdArg)
                 .addSnapshotListener((doc, err) -> {
                     if (err != null) {
@@ -231,6 +233,7 @@ public class EditEventFragment extends Fragment {
      *      The raw document snapshot (used for fields not in the model)
      */
     private void bindEventToUi(@NonNull Event e, @NonNull DocumentSnapshot doc) {
+        if (binding == null) return;
         binding.tvEventNameValue.setText(e.getEventName());
 
         Timestamp ts = e.getDate();
@@ -282,6 +285,10 @@ public class EditEventFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (eventRegistration != null) {
+            eventRegistration.remove();
+            eventRegistration = null;
+        }
         binding = null;
     }
 }
