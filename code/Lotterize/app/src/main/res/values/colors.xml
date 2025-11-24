@@ -12,4 +12,5 @@
     <color name="colorButtonBackground">#70A0BF</color>
     <color name="colorSenderText">#2F3C7E</color>
     <color name="dark_red_for_blue_bg">#C0392B</color>
+    <color name="gray">#CCCCCC</color>
 </resources>

@@ -105,6 +105,7 @@ public class AllEntrantsFragment extends Fragment {
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(v, savedInstanceState);
         db = FirebaseFirestore.getInstance();
+        viewModel = new ViewModelProvider(requireActivity()).get(NotificationsViewModel.class);
 
         eventId = getEventIdArg();
         if (eventId == null || eventId.isEmpty()) {
@@ -114,10 +115,6 @@ public class AllEntrantsFragment extends Fragment {
         binding.backButton.setOnClickListener(view ->
                 NavHostFragment.findNavController(this).popBackStack()
         );
-
-
-        viewModel = new ViewModelProvider(requireActivity()).get(NotificationsViewModel.class);
-
 
         // Open reusable list screen with a status flag
         binding.rowWaitlistList.setOnClickListener(view -> openList("WAITLIST"));
@@ -135,9 +132,18 @@ public class AllEntrantsFragment extends Fragment {
         binding.rowEnrolledList.setOnClickListener(view -> openList("ENROLLED"));
 
         // Placeholder for map UI
-        binding.rowWaitlistMap.setOnClickListener(view ->
-                Toast.makeText(requireContext(), "Map coming soon", Toast.LENGTH_SHORT).show()
-        );
+        binding.rowWaitlistMap.setOnClickListener(view -> {
+
+            if (eventId == null) {
+                Toast.makeText(requireContext(), "Missing eventId", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Intent intent = new Intent(requireContext(), MapsActivity.class);
+            // Pass eventId if needed
+            intent.putExtra("eventId", eventId);
+            startActivity(intent);
+        });
 
         //Notify buttons -> open dialog
         binding.btnNotifyCancelled.setOnClickListener(v12 -> openNotifyDialog("cancelledList"));
@@ -250,6 +256,4 @@ public class AllEntrantsFragment extends Fragment {
         String v = args.getString("eventId");
         return (v == null || v.isEmpty()) ? null : v;
     }
-
-
 }

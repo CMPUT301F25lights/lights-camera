@@ -76,6 +76,7 @@
         app:layout_constraintRight_toRightOf="parent">
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/filter_events_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:icon="@drawable/ic_filter_black_24x20dp"
@@ -85,6 +86,9 @@
             android:text="Filter Events"
             android:layout_marginEnd="10dp"
             android:textColor="@color/black"
+            android:focusable="true"
+            app:strokeColor="@color/gray"
+            app:strokeWidth="1dp"
             android:backgroundTint="@color/white"/>
 
         <com.google.android.material.button.MaterialButton
@@ -95,6 +99,9 @@
             android:textSize="11sp"
             app:icon="@drawable/ic_clock_black_24x20dp"
             app:iconTint="@color/black"
+            android:focusable="true"
+            app:strokeColor="@color/gray"
+            app:strokeWidth="1dp"
             android:text="Waitlist Events"
             android:textColor="@color/black"
             android:backgroundTint="@color/white"/>

@@ -32,26 +32,26 @@ public class ImageHandler {
         removeImage(context, null); // remove previous image if any
 
         StorageReference imageRef = storageRef.child("EventImage_" + System.currentTimeMillis() + ".jpg");
-        Toast.makeText(context,"Uploading image ...",Toast.LENGTH_SHORT).show();
+        if (context != null)Toast.makeText(context,"Uploading image ...",Toast.LENGTH_SHORT).show();
         currentUploadTask = imageRef.putFile(uri);
         currentUploadTask.addOnSuccessListener(taskSnapshot -> {
             uploadedImagePath = imageRef.getPath();
             imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
                 uploadedImageUrl = downloadUri.toString();
                 if (onSuccess != null) onSuccess.run();
-                Toast.makeText(context, "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
+                if (context != null)Toast.makeText(context, "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
             }).addOnFailureListener(e -> {
                 uploadedImageUrl = null;
                 uploadedImagePath = null;
                 if (onFailure != null) onFailure.run();
-                Toast.makeText(context, "Failed to get download URL", Toast.LENGTH_SHORT).show();
+                if (context != null)Toast.makeText(context, "Failed to get download URL", Toast.LENGTH_SHORT).show();
                 removeImage(context, null);
             });
         }).addOnFailureListener(e -> {
             uploadedImageUrl = null;
             uploadedImagePath = null;
             if (onFailure != null) onFailure.run();
-            Toast.makeText(context, "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            if (context != null)Toast.makeText(context, "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -64,9 +64,9 @@ public class ImageHandler {
             StorageReference imgRef = storage.getReference().child(uploadedImagePath);
             imgRef.delete().addOnSuccessListener(unused -> {
                 if (onSuccess != null) onSuccess.run();
-                Toast.makeText(context, "Image removed from Firebase", Toast.LENGTH_SHORT).show();
+                if (context != null)Toast.makeText(context, "Image removed from Firebase", Toast.LENGTH_SHORT).show();
             }).addOnFailureListener(e -> {
-                Toast.makeText(context, "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                if (context != null)Toast.makeText(context, "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
         }
 
@@ -79,7 +79,7 @@ public class ImageHandler {
     public void cancelUpload(Context context) {
         if (currentUploadTask != null && !currentUploadTask.isComplete()) {
             currentUploadTask.cancel();
-            Toast.makeText(context, "Upload cancelled", Toast.LENGTH_SHORT).show();
+            if (context != null)Toast.makeText(context, "Upload cancelled", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -91,4 +91,11 @@ public class ImageHandler {
     /** Getters */
     public String getUploadedImageUrl() { return uploadedImageUrl; }
     public String getUploadedImagePath() { return uploadedImagePath; }
+
+    /** Setters */
+    public void setExistingImage(String imageUrl, String imagePath) {
+        this.uploadedImageUrl = imageUrl;
+        this.uploadedImagePath = imagePath;
+        this.currentUploadTask = null; // Clear any old task references
+    }
 }
