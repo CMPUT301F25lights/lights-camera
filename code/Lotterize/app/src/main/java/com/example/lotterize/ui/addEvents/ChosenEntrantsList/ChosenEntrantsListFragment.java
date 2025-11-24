@@ -35,16 +35,41 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * {@code ChosenEntrantsListFragment} displays the list of chosen entrants for a given event.
+ * <p>
+ * It listens to changes on the corresponding {@code events/{eventId}} document and:
+ * <ul>
+ *     <li>Shows all entrants in the {@code selectedList} field of the event.</li>
+ *     <li>Marks entrants in {@code finalList} as enrolled and non-removable.</li>
+ *     <li>Allows the organizer to move a chosen entrant to {@code cancelledList} via
+ *         a "Remove" action.</li>
+ * </ul>
+ * The fragment uses {@link ChosenEntrantsArrayAdapter} to render each entrant row.
+ */
 public class ChosenEntrantsListFragment extends Fragment {
     private String eventId;
 
     private ChosenEntrantsArrayAdapter adapter;
+
+    /**
+     * List of {@link User} objects representing chosen entrants (selectedList).
+     */
     private final ArrayList<User> chosenEntrants = new ArrayList<>();
 
+    /**
+     * List of user IDs representing final/enrolled entrants (finalList).
+     * These IDs are passed into the adapter so enrolled entrants can be marked non-removable.
+     */
     private final ArrayList<String> finalEntrantsList = new ArrayList<>();
     FragmentChosenEntrantsBinding binding;
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    /**
+     * Registration handle for the Firestore snapshot listener on the event document.
+     * It is removed in {@link #onDestroyView()} to avoid leaks.
+     */
     private ListenerRegistration registration;
 
     /**
@@ -66,16 +91,16 @@ public class ChosenEntrantsListFragment extends Fragment {
     }
 
     /**
-     * This configures the UI and triggers data loading:
-     *   - Reads {@code eventId} and {@code status} from arguments
-     *   - Sets the toolbar back button
-     *   - Initializes the ListView and its adapter
-     *   - Loads entrants for the requested list
+     * Configures the UI and starts loading data:
+     * <ul>
+     *     <li>Sets up the back button to pop the back stack.</li>
+     *     <li>Reads the {@code eventId} from fragment arguments.</li>
+     *     <li>Initializes the {@link ChosenEntrantsArrayAdapter} and attaches it to the ListView.</li>
+     *     <li>Begins listening to the event document for chosen / final entrant updates.</li>
+     * </ul>
      *
-     * @param v
-     *      The root view returned by {@link #onCreateView}
-     * @param savedInstanceState
-     *      Previous state if the fragment is being re-created
+     * @param v                  the root view returned by {@link #onCreateView}
+     * @param savedInstanceState previous state if the fragment is being re-created
      */
     @Override
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
@@ -106,6 +131,18 @@ public class ChosenEntrantsListFragment extends Fragment {
         startListeningToEvent();
     }
 
+    /**
+     * Starts a Firestore snapshot listener on the current event document.
+     * <p>
+     * Whenever the event document changes:
+     * <ul>
+     *     <li>Reads {@code selectedList} to determine which users are chosen.</li>
+     *     <li>Reads {@code finalList} to determine which chosen entrants are enrolled.</li>
+     *     <li>Fetches details for all chosen entrants from the {@code users} collection.</li>
+     *     <li>Updates the adapter so the UI reflects the latest state.</li>
+     * </ul>
+     * Any existing in-memory lists are cleared and repopulated based on the snapshot.
+     */
     private void startListeningToEvent() {
         registration = db.collection("events")
                 .document(eventId)
@@ -136,6 +173,19 @@ public class ChosenEntrantsListFragment extends Fragment {
                 });
     }
 
+    /**
+     * This fetches {@link User} documents for the given list of user IDs from the {@code users} collection.
+     * <p>
+     * Because {@code whereIn} is limited to 10 values per query, the list of IDs is split into
+     * chunks of size 10 or less, and multiple queries are performed. Once all queries succeed:
+     * <ul>
+     *     <li>{@link #chosenEntrants} is repopulated with the fetched user data.</li>
+     *     <li>The adapter is notified to refresh the UI.</li>
+     *     <li>If no users are found, a toast is shown.</li>
+     * </ul>
+     *
+     * @param chosenIds list of user IDs in the event's {@code selectedList}
+     */
     private void fetchChosenUsers(ArrayList<String> chosenIds) {
 
         ArrayList<Task<QuerySnapshot>> tasks = new ArrayList<>();
@@ -178,6 +228,13 @@ public class ChosenEntrantsListFragment extends Fragment {
                 });
     }
 
+
+    /**
+     * Moves a chosen entrant from the event's {@code selectedList} to {@code cancelledList}
+     * after the organizer confirms through a dialog.
+     *
+     * @param userId the ID of the entrant to cancel
+     */
     private void cancelChosenEntrant(@NonNull String userId) {
         // Show confirmation dialog first
         new AlertDialog.Builder(requireContext())
@@ -203,6 +260,13 @@ public class ChosenEntrantsListFragment extends Fragment {
 
     }
 
+    /**
+     * This cleans up resources when the view is destroyed:
+     * <ul>
+     *     <li>Removes the Firestore snapshot listener (if any) to avoid memory leaks.</li>
+     *     <li>Clears the view binding reference.</li>
+     * </ul>
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

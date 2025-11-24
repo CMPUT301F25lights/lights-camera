@@ -30,9 +30,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This is a reusable fragment that displays entrants for a single list of an {@code Event}
- * (e.g., WAITLIST, CHOSEN, CANCELLED, ENROLLED). It shows each entrant's display name if
- * found in the {@code users} collection, otherwise falls back to their id.
+ * {@code EntrantListFragment} is a reusable fragment that displays entrants for
+ * a single list of an {@code Event}
+ * <p>
+ * It:
+ * <ul>
+ *     <li>Reads {@code eventId} and {@code status} from arguments.</li>
+ *     <li>Listens in real time to the corresponding list field on the event document.</li>
+ *     <li>Resolves user IDs to their display names from the {@code users} collection.</li>
+ *     <li>Falls back to the raw user ID when a display name is missing.</li>
+ * </ul>
  */
 public class EntrantListFragment extends Fragment {
 
@@ -115,7 +122,7 @@ public class EntrantListFragment extends Fragment {
      * This returns a title for the list based on status.
      *
      * @param s
-     *      The entrant list status (WAITLIST/CHOSEN/CANCELLED/ENROLLED)
+     *      The entrant list status (WAITLIST/CANCELLED/ENROLLED)
      * @return
      *      Returns the page title to display
      */
@@ -133,7 +140,7 @@ public class EntrantListFragment extends Fragment {
      * This maps a status to its Firestore field name in the event document.
      *
      * @param s
-     *      The entrant list status (WAITLIST/CHOSEN/CANCELLED/ENROLLED)
+     *      The entrant list status (WAITLIST/CANCELLED/ENROLLED)
      * @return
      *      Returns the field name on the event document, or {@code null} if unknown
      */    @Nullable

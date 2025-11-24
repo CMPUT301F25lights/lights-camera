@@ -99,8 +99,7 @@ public class AdminNotificationsViewModel extends ViewModel {
     }
 
     /**
-     * This returns the LiveData that provides the list of all notifications
-     * for the current user.
+     * This returns the LiveData that provides the list of all notifications.
      * @return
      *      Returns a {@link LiveData} of {@code ArrayList<Notification>} that the UI can observe
      */

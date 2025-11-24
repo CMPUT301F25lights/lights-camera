@@ -25,6 +25,17 @@ import com.example.lotterize.databinding.FragmentAdminNotificationBinding;
 
 import java.util.ArrayList;
 
+/**
+ * {@code AdminNotificationsFragment} displays a log of all notifications
+ * visible to admins.
+ * <p>
+ * It:
+ * <ul>
+ *     <li>Uses {@link AdminNotificationArrayAdapter} to show notifications in a {@link ListView}.</li>
+ *     <li>Observes {@link AdminNotificationsViewModel} for changes to the notifications list.</li>
+ *     <li>Opens {@link AdminNotificationDetailsDialog} when a notification row is tapped.</li>
+ * </ul>
+ */
 public class AdminNotificationsFragment extends Fragment {
     /** View binding for the notifications fragment layout. */
     private FragmentAdminNotificationBinding binding;

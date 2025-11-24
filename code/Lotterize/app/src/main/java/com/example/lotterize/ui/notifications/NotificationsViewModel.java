@@ -151,14 +151,14 @@ public class NotificationsViewModel extends ViewModel {
                             }
 
                             notifList.sort((notif1, notif2) ->{
-                                Timestamp time1 = notif1.getTime();
-                                Timestamp time2 = notif2.getTime();
-
-                                if (time1 == null && time2 == null) return 0;
-                                if (time1 == null) return 1;
-                                if (time2 == null) return -1;
-                                return time2.compareTo(time1);
+                                if (notif1.getTime() == null && notif2.getTime() == null) return 0;
+                                if (notif1.getTime() == null) return 1;
+                                else if (notif2.getTime() == null){ return -1; }
+                                else{
+                                    return notif2.getTime().compareTo(notif1.getTime());
+                                }
                             });
+
 
                             notificationsLiveData.setValue(notifList);
 

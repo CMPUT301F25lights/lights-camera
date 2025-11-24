@@ -37,11 +37,14 @@ public class UserActivity extends AppCompatActivity {
         notificationsViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
         BottomNavigationView navView = findViewById(R.id.nav_view);
 
+        // Observe the snack LiveData to show in-app snackbars for new notifications
         notificationsViewModel.snack().observe(this, message -> {
             if (message == null || message.isEmpty()) return;
 
+            // Create a Snackbar that appears at the bottom of the screen
+            // android.R.id.content is the root view of the Activity
             Snackbar bar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_INDEFINITE);
-            bar.setDuration(5000);
+            bar.setDuration(5000); //show the snackbar for 5s
             bar.setAction("View", v -> {
                 navView.setSelectedItemId(R.id.navigation_notifications);
             });

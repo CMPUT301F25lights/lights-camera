@@ -33,20 +33,40 @@ import java.util.Locale;
 
 
 /**
- * This is a fragment that shows entrant categories for a given event
- * (e.g., waitlist, chosen, cancelled, enrolled) and routes to detailed lists.
- * It reads the {@code eventId} from arguments, sets up click handlers for
- * each row, and exposes utility actions (export, notify, draw).
+ * {@code AllEntrantsFragment} shows the entrant categories for a given event and routes to detailed lists
+ * or actions based on the organizer's selection.
+ * <p>
+ * Responsibilities:
+ * <ul>
+ *     <li>Read the {@code eventId} from fragment arguments.</li>
+ *     <li>Navigate to {@link com.example.lotterize.ui.addEvents.EntrantListFragment}
+ *         or {@link com.example.lotterize.ui.addEvents.ChosenEntrantsList.ChosenEntrantsListFragment}
+ *         for each entrant category.</li>
+ *     <li>Open a map activity for waitlist locations.</li>
+ *     <li>Open a notification dialog to send messages to specific entrant groups.</li>
+ *     <li>Export the enrolled list as a CSV file using {@link EventCsvExporter}.</li>
+ * </ul>
  */
 public class AllEntrantsFragment extends Fragment {
 
     private FragmentAllEntrantsBinding binding;
     private FirebaseFirestore db;
     private String eventId;
+
+    /**
+     * Shared {@link NotificationsViewModel} used to send in-app notifications
+     * to groups of entrants based on their status.
+     */
     private NotificationsViewModel viewModel;
 
-    // SAF launcher that asks the user where to save the CSV, then builds and writes it.
-    private final ActivityResultLauncher<Intent> createCsvLauncher =
+    /**
+     * Activity Result API launcher which:
+     * <ol>
+     *     <li>Prompts the user to choose where to create a CSV file via SAF.</li>
+     *     <li>Builds the enrolled CSV using {@link EventCsvExporter}.</li>
+     *     <li>Writes the CSV content to the user-chosen URI.</li>
+     * </ol>
+     */    private final ActivityResultLauncher<Intent> createCsvLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
                     Toast.makeText(requireContext(),"Export cancelled",Toast.LENGTH_SHORT).show();
@@ -60,7 +80,7 @@ public class AllEntrantsFragment extends Fragment {
                     return;
                 }
 
-                // Build CSV
+                // Build CSV for enrolled entrants and write it to the chosen URI
                 EventCsvExporter.buildEnrolledCsv(db, eventId,
                         new EventCsvExporter.Callback() {
                             @Override public void onSuccess(@NonNull String csv) {
@@ -92,14 +112,17 @@ public class AllEntrantsFragment extends Fragment {
 
     /**
      * This configures UI interactions after the view is created:
-     * - Initializes Firestore
-     * - Retrieves and validates the {@code eventId} argument
-     * - Wires up click handlers for each entrant category row and toolbar back button
-     * - Adds placeholder handlers for the bottom action buttons     *
-     * @param v
-     *      The root view returned by {@link #onCreateView}
-     * @param savedInstanceState
-     *      If non-null, this fragment is being re-created from a previous state
+     * <ul>
+     *     <li>Initializes Firestore and {@link NotificationsViewModel}.</li>
+     *     <li>Retrieves and validates the {@code eventId} argument.</li>
+     *     <li>Wires up click handlers for each entrant category row</li>
+     *     <li>Wires up click handlers for map row and notifications buttons.</li>
+     *     <li>Registers a fragment result listener for notification results.</li>
+     *     <li>Configures CSV export button to trigger the SAF launcher.</li>
+     * </ul>
+     *
+     * @param v                  the root view returned by {@link #onCreateView}
+     * @param savedInstanceState if non-null, this fragment is being re-created from a previous state
      */
     @Override
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
@@ -150,8 +173,8 @@ public class AllEntrantsFragment extends Fragment {
         binding.btnNotifyChosen.setOnClickListener(v13 -> openNotifyDialog("selectedList"));
         binding.btnNotifyWaitlist.setOnClickListener(v14 -> openNotifyDialog("waitList"));
 
-        // Listen for a result sent by a child fragment. We register the listener against this fragment's
-        // view lifecycle so it automatically stops listening when the view is destroyed.
+        // Listen for a result sent by a child fragment (SendNotificationDialogFragment).
+        // The listener is bound to this fragment's view lifecycle.
         getChildFragmentManager().setFragmentResultListener(
                 SendNotificationDialogFragment.RESULT_KEY //the channel identifier
                 ,getViewLifecycleOwner(),
@@ -170,6 +193,7 @@ public class AllEntrantsFragment extends Fragment {
                 }
         );
 
+        // Export enrolled entrants to CSV
         binding.btnExportCsv.setOnClickListener(v1 -> {
             if (eventId == null) {
                 Toast.makeText(requireContext(), "Missing eventId", Toast.LENGTH_SHORT).show();
@@ -225,7 +249,7 @@ public class AllEntrantsFragment extends Fragment {
     }
 
     /**
-     * Writes CSV text to the given SAF {@link Uri} in UTF-8.
+     * Writes CSV text to the given SAF {@link Uri} in UTF-8 encoding.
      *
      * @param uri     Writable document Uri (e.g., from ACTION_CREATE_DOCUMENT).
      * @param csvText CSV content to save.

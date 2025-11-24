@@ -37,10 +37,17 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 /**
- * This is a fragment that displays and edits details for a single {@link Event}.
- * It loads an event by {@code eventId} argument from Firestore, binds fields to the UI,
- * allows navigation to the entrants screen, and toggles geolocation for the event.
- * It supports functionality for saving the event QR code to local storage and changing/removing the event poster.
+ * {@code EditEventFragment} displays and edits details for a single {@link Event}.
+ * <p>
+ * It:
+ * <ul>
+ *     <li>Loads an event from Firestore using an {@code eventId} argument.</li>
+ *     <li>Binds event fields (name, date, time, location, description, etc.) to the UI.</li>
+ *     <li>Allows navigation to the entrants management screen.</li>
+ *     <li>Toggles geolocation for the event.</li>
+ *     <li>Supports saving the event QR code as a PNG using the system file picker.</li>
+ *     <li>Supports selecting, uploading, and removing the event poster image.</li>
+ * </ul>
  */
 public class EditEventFragment extends Fragment {
 
@@ -212,6 +219,7 @@ public class EditEventFragment extends Fragment {
             posterTextView.setVisibility(View.GONE);
         });
 
+        // Listen for event document changes and bind to UI
         eventRegistration = db.collection("events")
                 .document(eventIdArg)
                 .addSnapshotListener((doc, err) -> {
@@ -230,13 +238,18 @@ public class EditEventFragment extends Fragment {
     }
 
     /**
-     * This binds a loaded {@link Event} and its backing document to the UI fields.
-     * It formats date/time, fills textual fields, displays poster image path if available, and applies the geolocation toggle state.
+     * Binds a loaded {@link Event} and its backing document to the UI fields.
+     * <p>
+     * This method:
+     * <ul>
+     *     <li>Formats and displays the event date and time.</li>
+     *     <li>Sets text fields such as name, location, description, total spots, waitlist size, and enrolled count.</li>
+     *     <li>Applies the {@code geolocationEnabled} state to the switch.</li>
+     *     <li>Configures the poster text view and {@link ImageHandler} with existing image info.</li>
+     * </ul>
      *
-     * @param e
-     *      The event model built from the Firestore document
-     * @param doc
-     *      The raw document snapshot (used for fields not in the model)
+     * @param e   the event model built from the Firestore document
+     * @param doc the raw document snapshot (used for fields not in the model)
      */
     private void bindEventToUi(@NonNull Event e, @NonNull DocumentSnapshot doc) {
         if (binding == null) return;
@@ -288,7 +301,12 @@ public class EditEventFragment extends Fragment {
     }
 
     /**
-     * This clears the binding reference when the view is destroyed to avoid memory leaks.
+     * This cleans up resources when the view is destroyed:
+     * <ul>
+     *     <li>Removes the Firestore snapshot listener, if any.</li>
+     *     <li>Cancels any in-flight image upload via {@link ImageHandler}.</li>
+     *     <li>Clears the view binding reference to avoid memory leaks.</li>
+     * </ul>
      */
     @Override
     public void onDestroyView() {
