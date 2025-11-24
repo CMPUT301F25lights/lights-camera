@@ -21,7 +21,7 @@ public class User {
     private String password;
     private ArrayList<String> registeredEventIds;
     private ArrayList<String> ownedEventIds;
-
+    private Boolean wantNotification;
     /**
      * Full constructor for creating a complete User in memory.
      */
@@ -36,6 +36,7 @@ public class User {
         this.password = password;
         this.registeredEventIds = new ArrayList<>();
         this.ownedEventIds = new ArrayList<>();
+        this.wantNotification = true;
     }
 
     /**
@@ -44,6 +45,7 @@ public class User {
     public User() {
         this.registeredEventIds = new ArrayList<>();
         this.ownedEventIds = new ArrayList<>();
+        this.wantNotification = true;
     }
 
     /**
@@ -54,6 +56,7 @@ public class User {
         this.password = password;
         this.registeredEventIds = new ArrayList<>();
         this.ownedEventIds = new ArrayList<>();
+        this.wantNotification = true;
     }
 
     /** @return name of user */
@@ -105,6 +108,17 @@ public class User {
         this.ownedEventIds = ownedEventIds;
     }
 
+    /** This set the state of whether the user wants to receive notifications or not
+     *  @param wantNotification
+     *  current state of the notification switch
+     */
+    public void setWantNotification(boolean wantNotification) { this.wantNotification = wantNotification; }
+
+    /** @return a boolean value of wantNotification */
+    public Boolean getWantNotification(){
+        return this.wantNotification;
+    }
+
     /**
      * Adds an event ID to the list of events that this user owns.
      * Automatically creates list if missing (first-time user).
@@ -126,4 +140,6 @@ public class User {
         if (this.registeredEventIds == null) this.registeredEventIds = new ArrayList<>();
         this.registeredEventIds.add(eventId);
     }
+
+
 }

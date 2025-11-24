@@ -98,6 +98,9 @@ public class MainActivity extends AppCompatActivity {
                                         successDoc[0].getString("username"),
                                         successDoc[0].getString("password")
                                 );
+
+                                user.setWantNotification(successDoc[0].getBoolean("wantNotification") == null || Boolean.TRUE.equals(successDoc[0].getBoolean("wantNotification")));
+
                                 // Get Owned Event list from Firestore
                                 ArrayList<String> ownedEvents =
                                         (ArrayList<String>) successDoc[0].get("ownedEventIds");
