@@ -15,44 +15,79 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This is a helper class that sends {@link Notification} objects to Firestore.
- * It creates a document under the {@code notifications} collection.
+ * This is a helper class responsible for sending {@link Notification} objects to Firestore.
+ * <p>
+ * It supports:
+ * <ul>
+ *     <li>Sending notifications from primitive fields
+ *         (sender id, message, list of candidate receiver ids),</li>
+ *     <li>Filtering candidate receivers based on each user's {@code wantNotification} flag
+ *         in the {@code users} collection,</li>
+ *     <li>Writing a new document into the {@code notifications} collection,</li>
+ *     <li>Optionally reporting the number of recipients via a callback.</li>
+ * </ul>
  */
+
 public class NotificationSender {
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
-    private Integer numOfReceivers;
-
-
 
     /**
-     * Creates and sends a new {@link Notification} using primitive fields.
-     *
-     * Candidate receiver IDs are resolved against the "users" collection and
-     * filtered based on each user's wantNotification flag. If at least one
-     * recipient remains, a notification document is written to Firestore.
-     *
-     * @param senderId
-     *         user id of the sender
-     * @param message
-     *         body or content of the notification
-     * @param receiversIds
-     *         list of candidate user ids who should receive the notification
+     * Callback interface for callers that want to be notified when a notification send
+     * operation finishes.
      */
-    public void sendNotification(String senderId, String message, ArrayList<String> receiversIds) {
-        DocumentReference docRef = db.collection("notifications").document();
-        numOfReceivers = 0;
+    public interface NotificationCallback {
 
+        /**
+         * This is called when the send operation finishes successfully.
+         *
+         * @param count the number of recipients that actually received the notification
+         *              after filtering by {@code wantNotification}
+         */
+        void onComplete(int count);
+
+        /**
+         * This is called when the send operation fails due to an error (e.g., Firestore failure).
+         *
+         * @param e the exception describing the failure
+         */
+        void onError(Exception e);
+    }
+
+    /**
+     * This sends a notification to the given list of candidate receivers, with an optional callback
+     * to report the result.
+     * <p>
+     * This method:
+     * <ol>
+     *     <li>Chunks {@code receiversIds} into groups of at most 10 ids (due to Firestore
+     *         {@code whereIn} limits),</li>
+     *     <li>Queries the {@code users} collection for each chunk to check the
+     *         {@code wantNotification} flag,</li>
+     *     <li>Builds a final list of recipients that have not opted out,</li>
+     *     <li>If at least one recipient remains, writes a new document into the
+     *         {@code notifications} collection,</li>
+     *     <li>Invokes {@link NotificationCallback#onComplete(int)} with the number of
+     *         recipients, or {@link NotificationCallback#onError(Exception)} on failure.</li>
+     * </ol>
+     *
+     * @param senderId     user id of the sender
+     * @param message      body or content of the notification
+     * @param receiversIds list of candidate user ids who should receive the notification
+     * @param callback     optional callback invoked when the operation completes or fails;
+     *                     may be {@code null} if the caller does not care about the result
+     */
+    public void sendNotification(String senderId, String message, ArrayList<String> receiversIds, NotificationCallback callback) {
         if (receiversIds == null || receiversIds.isEmpty()) {
             Log.d("SendNotification", "sendNotification: no candidate receivers.");
+            if (callback != null) callback.onComplete(0);
             return;
         }
 
         List<Task<QuerySnapshot>> tasks = new ArrayList<>();
         for (int i = 0; i < receiversIds.size(); i += 10) {
             List<String> chunk = receiversIds.subList(i, Math.min(i + 10, receiversIds.size()));
-            tasks.add(db.collection("users").whereIn(FieldPath.documentId(), chunk).get()
-            );
+            tasks.add(db.collection("users").whereIn(FieldPath.documentId(), chunk).get());
         }
 
         Tasks.whenAllSuccess(tasks)
@@ -69,16 +104,37 @@ public class NotificationSender {
                         }
                     }
 
-                    if (finalRecipients.isEmpty()) {
+                    int count = finalRecipients.size();
+
+                    if (count == 0) {
                         Log.d("SendNotification", "sendNotification: no recipients after wantNotification filter.");
+                        if (callback != null) callback.onComplete(0);
                         return;
                     }
-                    setNumOfReceivers(finalRecipients.size());
+
                     SendNotificationWithFilterReceivers(senderId, message, finalRecipients);
+
+                    if (callback != null) callback.onComplete(count);
                 })
                 .addOnFailureListener(e -> {
                     Log.e("SendNotification", "sendNotification: failed to resolve wantNotification flags.", e);
+                    if (callback != null) callback.onError(e);
                 });
+    }
+
+    /**
+     * This method is an overload of {@link #sendNotification(String, String, ArrayList, NotificationCallback)}
+     * that ignores the result and does not use a callback.
+     * <p>
+     * This is useful for callers that only care about triggering the send and do not need to
+     * know how many recipients actually received the notification or whether it failed.
+     *
+     * @param senderId     user id of the sender
+     * @param message      body or content of the notification
+     * @param receiversIds list of candidate user ids who should receive the notification
+     */
+    public void sendNotification(String senderId, String message, ArrayList<String> receiversIds) {
+        sendNotification(senderId, message, receiversIds, null);
     }
 
     /**
@@ -129,8 +185,6 @@ public class NotificationSender {
      *         notification object to send.
      */
     public void sendNotification(Notification notification) {
-        numOfReceivers = 0;
-
         if (notification.getSenderId() == null || notification.getSenderId().isEmpty()) {
             notification.setSenderId(CurrentUser.get().getUserId());
         }
@@ -174,7 +228,6 @@ public class NotificationSender {
                         return;
                     }
 
-                    setNumOfReceivers(finalRecipients.size());
                     notification.setReceiversId(finalRecipients);
 
                     DocumentReference docRef;
@@ -197,25 +250,6 @@ public class NotificationSender {
                     Log.e("NotificationSender",
                             "sendNotification(Notification): failed to resolve wantNotification flags.", e);
                 });
-    }
-
-    /**
-     * This sets the number of recipients for the most recently sent notification.
-     *
-     * @param num
-     *         number of recipients
-     */
-    private void setNumOfReceivers(int num){
-        this.numOfReceivers = num;
-    }
-
-    /**
-     * This returns the number of recipients for the most recently sent notification.
-     *
-     * @return number of recipients for the last sent notification
-     */
-    public int getNumOfReceivers(){
-        return numOfReceivers;
     }
 
 }

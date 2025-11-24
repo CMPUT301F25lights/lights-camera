@@ -97,13 +97,22 @@ public class NotificationsViewModel extends ViewModel {
                         return;
                     }
 
-                    sender.sendNotification(senderId, message, ids);
-                    if (sender.getNumOfReceivers() == 0){
-                        toast.postValue("No entrants want to receive notifications!!");
-                    }
-                    else{
-                        toast.postValue("Sent to " + sender.getNumOfReceivers() + " " + listStatus.toLowerCase() + " entrant(s)");
-                    }
+
+                    sender.sendNotification(senderId, message, ids, new NotificationSender.NotificationCallback() {
+                        @Override
+                        public void onComplete(int count) {
+                            if (count == 0) {
+                                toast.postValue("No entrants in this list want to receive notifications!!");
+                            } else {
+                                toast.postValue("Sent to " + count + " entrant(s)");
+                            }
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            toast.postValue("Failed to send notifications: " + e.getMessage());
+                        }
+                    });
                 })
                 .addOnFailureListener(e -> {
                     toast.postValue("Failed to load recipients: " + e.getMessage());
