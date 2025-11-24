@@ -18,14 +18,20 @@
         tools:layout="@layout/fragment_admin_images" />
 
     <fragment
-        android:id="@+id/navigation_admin_users"
-        android:name="com.example.lotterize.ui.admin.adminUsers.AdminUsersFragment"
-        android:label="Users"
-        tools:layout="@layout/fragment_admin_users" />
-
-    <fragment
         android:id="@+id/navigation_admin_profile"
         android:name="com.example.lotterize.ui.admin.AdminProfileFragment"
         android:label="Profile"
-        tools:layout="@layout/fragment_admin_profile" />
+        tools:layout="@layout/fragment_admin_profile">
+
+        <action
+            android:id="@+id/action_navigation_admin_profile_to_navigation_admin_user_details"
+            app:destination="@id/navigation_admin_user_details" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_admin_user_details"
+        android:name="com.example.lotterize.ui.admin.AdminUserDetailsFragment"
+        android:label="User Details"
+        tools:layout="@layout/fragment_admin_user_details" />
+
 </navigation>

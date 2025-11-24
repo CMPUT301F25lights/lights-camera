@@ -1,55 +1,289 @@
 package com.example.lotterize.ui.admin;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
-import com.example.lotterize.AdminSignInActivity;
-import com.example.lotterize.MainActivity;
 import com.example.lotterize.R;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.lotterize.databinding.FragmentAdminProfileBinding;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Fragment that displays a list of all user profiles to the admin.
+ * Allows searching for users and deleting user accounts.
+ */
 public class AdminProfileFragment extends Fragment {
 
-    private TextView textGreetingAdmin;
-    private Button buttonLogoutAdmin;
+    private static final String TAG = "AdminProfilesFragment";
+    private FragmentAdminProfileBinding binding;
+    private FirebaseFirestore db;
+    private List<UserProfile> allUsers = new ArrayList<>();
 
-    @Nullable
+    /**
+     * Simple class to hold user profile data.
+     */
+    private static class UserProfile {
+        String userId;
+        String username;
+
+        UserProfile(String userId, String username) {
+            this.userId = userId;
+            this.username = username;
+        }
+    }
+
+    /**
+     * Called when the fragment should create its view hierarchy.
+     */
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_admin_profile, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
 
-        textGreetingAdmin = view.findViewById(R.id.text_greeting_admin);
-        buttonLogoutAdmin = view.findViewById(R.id.button_logout_admin);
+        binding = FragmentAdminProfileBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
 
-        // Optional: dynamically show admin's name
-        String adminName = getActivity().getIntent().getStringExtra("adminUsername");
-        textGreetingAdmin.setText("Hello, " + adminName + "!");
+        // Initialize Firestore
+        db = FirebaseFirestore.getInstance();
 
-        buttonLogoutAdmin.setOnClickListener(v -> {
-            // So login isn't saved to device when we implement
-            FirebaseAuth.getInstance().signOut();
+        // Set up search functionality
+        setupSearch();
 
-            // Redirect to MainActivity and clear everything
-            Intent intent = new Intent(getActivity(), MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+        // Load all user profiles
+        loadUserProfiles();
 
-            // Close AdminActivity so user can’t go back with Back button
-            requireActivity().finish();
+        return root;
+    }
 
+    /**
+     * Sets up the search bar to filter users by username.
+     */
+    private void setupSearch() {
+        binding.searchProfiles.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterUsers(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    /**
+     * Filters the user list based on search query.
+     *
+     * @param query The search query entered by the admin
+     */
+    private void filterUsers(String query) {
+        binding.profilesContainer.removeAllViews();
+
+        if (query.isEmpty()) {
+            // Show all users if search is empty
+            for (UserProfile user : allUsers) {
+                addUserToView(user.userId, user.username);
+            }
+        } else {
+            // Filter users by username
+            int count = 0;
+            for (UserProfile user : allUsers) {
+                if (user.username.toLowerCase().contains(query.toLowerCase())) {
+                    addUserToView(user.userId, user.username);
+                    count++;
+                }
+            }
+
+            // Show empty state if no matches
+            if (count == 0) {
+                binding.textEmptyState.setVisibility(View.VISIBLE);
+            } else {
+                binding.textEmptyState.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    /**
+     * Retrieves all users from Firestore and displays their usernames.
+     */
+    private void loadUserProfiles() {
+        Log.d(TAG, "Loading user profiles from Firestore...");
+
+        db.collection("users")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    binding.profilesContainer.removeAllViews();
+                    allUsers.clear();
+
+                    // Loop through all user documents
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        String userId = doc.getId();
+                        String username = doc.getString("username");
+
+                        if (username != null && !username.isEmpty()) {
+                            allUsers.add(new UserProfile(userId, username));
+                            addUserToView(userId, username);
+                            Log.d(TAG, "Loaded user: " + username);
+                        }
+                    }
+
+                    // Show empty state if no users found
+                    if (allUsers.isEmpty()) {
+                        binding.textEmptyState.setVisibility(View.VISIBLE);
+                        Log.d(TAG, "No users found");
+                    } else {
+                        binding.textEmptyState.setVisibility(View.GONE);
+                    }
+
+                    Log.d(TAG, "Total users loaded: " + allUsers.size());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading users: " + e.getMessage(), e);
+                    Toast.makeText(getContext(), "Error loading users", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    /**
+     * Dynamically adds a single user profile to the scrollable view.
+     *
+     * @param userId   The user's document ID in Firestore
+     * @param username The user's username
+     */
+    private void addUserToView(String userId, String username) {
+        // Create a horizontal layout for each user row
+        LinearLayout userItem = new LinearLayout(getContext());
+        userItem.setOrientation(LinearLayout.HORIZONTAL);
+        userItem.setPadding(0, 16, 0, 16);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        userItem.setLayoutParams(params);
+
+        // Username (left side)
+        TextView usernameView = new TextView(getContext());
+        usernameView.setText(username);
+        usernameView.setTextColor(0xFF000000);
+        usernameView.setTextSize(18);
+        usernameView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1f
+        );
+        usernameView.setLayoutParams(nameParams);
+
+        // Delete button (right side)
+        Button deleteButton = new Button(getContext());
+        deleteButton.setText("Delete");
+        deleteButton.setTextColor(0xFFFFFFFF);
+        deleteButton.setBackgroundColor(0xFFDC143C);
+        deleteButton.setTextSize(14);
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        deleteButton.setLayoutParams(buttonParams);
+
+        // Delete button click listener
+        deleteButton.setOnClickListener(v -> showDeleteConfirmation(userId, username));
+
+        userItem.addView(usernameView);
+        userItem.addView(deleteButton);
+
+        // Divider line between users
+        View divider = new View(getContext());
+        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 1
+        );
+        divider.setLayoutParams(dividerParams);
+        divider.setBackgroundColor(0xFFE0E0E0);
+
+        binding.profilesContainer.addView(userItem);
+        binding.profilesContainer.addView(divider);
+
+        usernameView.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            Bundle bundle = new Bundle();
+            bundle.putString("userId", userId); // pass user ID
+            navController.navigate(R.id.action_navigation_admin_profile_to_navigation_admin_user_details, bundle);
         });
 
-        return view;
     }
+
+    /**
+     * Shows a confirmation dialog before deleting a user.
+     *
+     * @param userId   The user's document ID
+     * @param username The user's username
+     */
+    private void showDeleteConfirmation(String userId, String username) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete User")
+                .setMessage("Are you sure you want to delete user '" + username + "'? This action cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> deleteUser(userId, username))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    /**
+     * Deletes a user from Firestore.
+     *
+     * @param userId   The user's document ID
+     * @param username The user's username (for logging)
+     */
+    private void deleteUser(String userId, String username) {
+        db.collection("users")
+                .document(userId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "User deleted: " + username);
+                    Toast.makeText(getContext(), "User " + username + " deleted successfully", Toast.LENGTH_SHORT).show();
+
+                    // Remove from list and refresh view
+                    allUsers.removeIf(user -> user.userId.equals(userId));
+                    filterUsers(binding.searchProfiles.getText().toString());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error deleting user: " + e.getMessage(), e);
+                    Toast.makeText(getContext(), "Error deleting user", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    /**
+     * Called when the fragment's view is destroyed.
+     */
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        BottomNavigationView navView = getActivity().findViewById(R.id.nav_view_admin);
+        if (navView != null) navView.setVisibility(View.VISIBLE);
+    }
+
 }
