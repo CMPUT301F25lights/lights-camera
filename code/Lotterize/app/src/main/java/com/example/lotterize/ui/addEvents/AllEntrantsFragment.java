@@ -83,7 +83,7 @@ public class AllEntrantsFragment extends Fragment {
         binding.rowCancelledList.setOnClickListener(view -> openList("CANCELLED"));
         binding.rowEnrolledList.setOnClickListener(view -> openList("ENROLLED"));
 
-        // Placeholder for map UI
+        // map activity
         binding.rowWaitlistMap.setOnClickListener(view -> {
 
             if (eventId == null) {
