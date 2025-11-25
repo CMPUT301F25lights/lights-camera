@@ -50,9 +50,6 @@ public class NotificationsViewModel extends ViewModel {
     private final MutableLiveData<String> toast = new MutableLiveData<>();
     private final String currentUserId = CurrentUser.get().getUserId();
 
-    /** Track which notifications we've already seen. */
-    private final HashSet<String> loadedNotificationIds = new HashSet<>();
-
     private Timestamp lastSeenTime = null;
 
     /**
