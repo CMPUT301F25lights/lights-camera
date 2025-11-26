@@ -13,6 +13,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * {@code EventsRegisteredViewModel} manages and provides the list of events
@@ -61,7 +62,9 @@ public class EventsRegisteredViewModel extends ViewModel {
                 "ABC123",
                 null,
                 null,
-                new ArrayList<>()
+                new ArrayList<>(),
+                false,
+                new HashMap<>()
         ));
 
         registeredEventsLiveData.setValue(testList);

@@ -155,7 +155,7 @@ public class AllEntrantsFragment extends Fragment {
         binding.rowCancelledList.setOnClickListener(view -> openList("CANCELLED"));
         binding.rowEnrolledList.setOnClickListener(view -> openList("ENROLLED"));
 
-        // Placeholder for map UI
+        // map activity
         binding.rowWaitlistMap.setOnClickListener(view -> {
 
             if (eventId == null) {
@@ -163,10 +163,27 @@ public class AllEntrantsFragment extends Fragment {
                 return;
             }
 
-            Intent intent = new Intent(requireContext(), MapsActivity.class);
-            // Pass eventId if needed
-            intent.putExtra("eventId", eventId);
-            startActivity(intent);
+            // Fetch the event document to check geolocationEnabled
+            db.collection("events").document(eventId).get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Boolean geolocationEnabled = documentSnapshot.getBoolean("geolocationEnabled");
+                            if (geolocationEnabled != null && geolocationEnabled) {
+                                // Geolocation is enabled, open the map
+                                Intent intent = new Intent(requireContext(), MapsActivity.class);
+                                intent.putExtra("eventId", eventId);
+                                startActivity(intent);
+                            } else {
+                                // Geolocation disabled -> show toast
+                                Toast.makeText(requireContext(), "Geolocation is not enabled for this event", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(requireContext(), "Error fetching event: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
         });
 
         //Notify buttons -> open dialog

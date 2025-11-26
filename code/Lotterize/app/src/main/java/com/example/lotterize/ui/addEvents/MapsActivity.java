@@ -11,8 +11,15 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.lotterize.databinding.ActivityMapsBinding;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -48,10 +55,57 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
 
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        String eventId = getIntent().getStringExtra("eventId");
+        if (eventId == null) return;
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("events").document(eventId).get().addOnSuccessListener(doc -> {
+            if (!doc.exists()) return;
+
+            List<String> waitList = (List<String>) doc.get("waitList");
+            Map<String, GeoPoint> userLocations = (Map<String, GeoPoint>) doc.get("userLocations");
+
+            if (waitList == null || waitList.isEmpty() || userLocations == null || userLocations.isEmpty()) {
+                // No users to display; map will stay blank
+                return;
+            }
+
+            LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
+            List<LatLng> points = new ArrayList<>();
+
+            for (String userId : waitList) {
+                GeoPoint geo = userLocations.get(userId);
+                if (geo == null) continue; // skip users without a location
+
+                LatLng latLng = new LatLng(geo.getLatitude(), geo.getLongitude());
+                points.add(latLng);
+
+                // Fetch the user's name
+                db.collection("users").document(userId).get().addOnSuccessListener(userDoc -> {
+                    String name = "Unknown";
+                    if (userDoc.exists()) {
+                        String fetchedName = userDoc.getString("name");
+                        if (fetchedName != null) name = fetchedName;
+                    }
+
+                    // Add marker for this user
+                    mMap.addMarker(new MarkerOptions().position(latLng).title(name));
+
+                    // Only animate camera after adding the last marker
+                    if (points.size() == waitList.size()) {
+                        if (!points.isEmpty()) {
+                            for (LatLng point : points) {
+                                boundsBuilder.include(point);
+                            }
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+                        }
+                    }
+                });
+            }
+        }).addOnFailureListener(e -> Log.e("MapsActivity", "Failed to get event", e));
+
     }
 }
