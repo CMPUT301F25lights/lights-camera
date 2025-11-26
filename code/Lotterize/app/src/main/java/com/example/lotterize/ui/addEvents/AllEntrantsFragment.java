@@ -162,12 +162,12 @@ public class AllEntrantsFragment extends Fragment {
                 return;
             }
 
-            // Fetch the event document to check isGeolocationEnabled
+            // Fetch the event document to check geolocationEnabled
             db.collection("events").document(eventId).get()
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists()) {
-                            Boolean isGeolocationEnabled = documentSnapshot.getBoolean("isGeolocationEnabled");
-                            if (isGeolocationEnabled != null && isGeolocationEnabled) {
+                            Boolean geolocationEnabled = documentSnapshot.getBoolean("geolocationEnabled");
+                            if (geolocationEnabled != null && geolocationEnabled) {
                                 // Geolocation is enabled, open the map
                                 Intent intent = new Intent(requireContext(), MapsActivity.class);
                                 intent.putExtra("eventId", eventId);

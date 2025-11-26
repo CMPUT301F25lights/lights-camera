@@ -134,14 +134,14 @@ public class ShowWaitingListActivity extends AppCompatActivity {
                         DocumentReference event = events.document(eventId);
                         Long entrantsLimit = doc.getLong("entrantsLimit");
 
-                        Boolean isGeolocationEnabled = doc.getBoolean("isGeolocationEnabled");
-                        if (isGeolocationEnabled == null) isGeolocationEnabled = false;
-                        Log.d("ShowWaitingList", "Joining waiting list. Geolocation enabled: " + isGeolocationEnabled);
+                        Boolean geolocationEnabled = doc.getBoolean("geolocationEnabled");
+                        if (geolocationEnabled == null) geolocationEnabled = false;
+                        Log.d("ShowWaitingList", "Joining waiting list. Geolocation enabled: " + geolocationEnabled);
 
                         if (entrantsLimit != null && entrantsLimit <= usersId.size() && entrantsLimit != 0){
                             Toast.makeText(ShowWaitingListActivity.this, "Waiting List is Full!!!", Toast.LENGTH_SHORT).show();
                         } else{
-                            if (isGeolocationEnabled) {
+                            if (geolocationEnabled) {
                                 Log.d("ShowWaitingList", "Geolocation enabled");
                                 if (checkPermissions()) {
                                     Log.d("ShowWaitingList", "Location permissions granted, requesting location");

@@ -245,7 +245,7 @@ public class NewEventFragment extends Fragment implements ChooseEventFiltersFrag
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
             //String qrCode = QR.generateCode(); deprecated, use eventId instead
-            Boolean isGeolocationEnabled = binding.switchGeolocation.isChecked();
+            Boolean geolocationEnabled = binding.switchGeolocation.isChecked();
 
             // Required field check
             if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||
@@ -351,7 +351,7 @@ public class NewEventFragment extends Fragment implements ChooseEventFiltersFrag
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
                     totalSpots, description, entrantsLimit, null, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList,
-                    isGeolocationEnabled, userLocations);
+                    geolocationEnabled, userLocations);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {

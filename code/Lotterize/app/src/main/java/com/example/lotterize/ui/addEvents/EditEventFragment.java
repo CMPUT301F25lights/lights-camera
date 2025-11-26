@@ -148,7 +148,7 @@ public class EditEventFragment extends Fragment {
      * - Reads the {@code eventId} argument
      * - Sets navigation for the back button and entrants row
      * - Listens to Firestore for the event snapshot and binds it to the UI
-     * - Updates the {@code isGeolocationEnabled} field when the switch toggles
+     * - Updates the {@code geolocationEnabled} field when the switch toggles
      * - Handles poster image selection, upload, and removal
      * - Sets up QR code save button
      *
@@ -187,7 +187,7 @@ public class EditEventFragment extends Fragment {
         });
 
         binding.switchGeolocation.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (eventDocRef != null) eventDocRef.update("isGeolocationEnabled", isChecked);
+            if (eventDocRef != null) eventDocRef.update("geolocationEnabled", isChecked);
         });
 
         // save qr code png button
@@ -244,7 +244,7 @@ public class EditEventFragment extends Fragment {
      * <ul>
      *     <li>Formats and displays the event date and time.</li>
      *     <li>Sets text fields such as name, location, description, total spots, waitlist size, and enrolled count.</li>
-     *     <li>Applies the {@code isGeolocationEnabled} state to the switch.</li>
+     *     <li>Applies the {@code geolocationEnabled} state to the switch.</li>
      *     <li>Configures the poster text view and {@link ImageHandler} with existing image info.</li>
      * </ul>
      *
@@ -271,7 +271,7 @@ public class EditEventFragment extends Fragment {
         binding.tvSampleAttendeesValue.setText(String.valueOf(
                 e.getFinalList() != null ? e.getFinalList().size() : 0));
 
-        Boolean geo = doc.getBoolean("isGeolocationEnabled");
+        Boolean geo = doc.getBoolean("geolocationEnabled");
         if (geo != null) binding.switchGeolocation.setChecked(geo);
 
         String imageUrl = doc.getString("imageUrl");
