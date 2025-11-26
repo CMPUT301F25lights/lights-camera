@@ -2,7 +2,6 @@ package com.example.lotterize.ui.home;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
@@ -19,7 +18,10 @@ import com.example.lotterize.CurrentUser;
 import com.example.lotterize.R;
 import com.example.lotterize.databinding.ActivityShowListBinding;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
@@ -27,10 +29,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
 import android.location.Location;
 import android.util.Log;
-import com.google.android.gms.tasks.OnSuccessListener;
+
+import com.google.firebase.firestore.GeoPoint;
 
 
 
@@ -53,6 +56,11 @@ public class ShowWaitingListActivity extends AppCompatActivity {
 
     private FusedLocationProviderClient fusedLocationClient;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
+    private interface LocationCallback {
+        void onLocationObtained(Location location);
+        void onLocationFailed();
+    }
+
 
     /**
      * Displays the waiting list, along with an option to
@@ -96,7 +104,7 @@ public class ShowWaitingListActivity extends AppCompatActivity {
         interact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (interact.getText().equals(leaveList)) {
+                if (interact.getText().equals(leaveList)) { // leave waiting list
                     usersId.remove(userId);
                     adapter.notifyDataSetChanged();
                     assert eventId != null;
@@ -106,26 +114,17 @@ public class ShowWaitingListActivity extends AppCompatActivity {
                             return;
                         }
                         DocumentReference event = events.document(eventId);
-                        event.update("waitList", FieldValue.arrayRemove(userId));
+                        event.update("waitList", FieldValue.arrayRemove(userId))
+                                .addOnSuccessListener(aVoid -> {
+                                // Also remove location
+                                String locationPath = "userLocations." + userId;
+                                event.update(locationPath, FieldValue.delete());
+                            });
                         interact.setText(joinList);
                     });
                 } else { // join waiting list
 
                     assert eventId != null;
-
-                    // geolocation logic
-                    boolean isGeolocationEnabled =true; // placeholder
-                    //boolean isGeolocationEnabled = CurrentUser.get().isGeolocationEnabled();
-
-                    if (isGeolocationEnabled) {
-                        if (checkPermissions()) {
-                            logUserLocation(); // for testing
-                        } else {
-                            requestPermissions(); // join will happen in onRequestPermissionsResult
-                            Toast.makeText(ShowWaitingListActivity.this, "This event requires geolocation collection", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                    }
 
                     events.document(eventId).get().addOnSuccessListener(doc -> {
                         if (!doc.exists()) {
@@ -135,9 +134,47 @@ public class ShowWaitingListActivity extends AppCompatActivity {
                         DocumentReference event = events.document(eventId);
                         Long entrantsLimit = doc.getLong("entrantsLimit");
 
+                        Boolean isGeolocationEnabled = doc.getBoolean("isGeolocationEnabled");
+                        if (isGeolocationEnabled == null) isGeolocationEnabled = false;
+                        Log.d("ShowWaitingList", "Joining waiting list. Geolocation enabled: " + isGeolocationEnabled);
+
                         if (entrantsLimit != null && entrantsLimit <= usersId.size() && entrantsLimit != 0){
                             Toast.makeText(ShowWaitingListActivity.this, "Waiting List is Full!!!", Toast.LENGTH_SHORT).show();
-                        } else{ // all conditions met, add user to waiting list
+                        } else{
+                            if (isGeolocationEnabled) {
+                                Log.d("ShowWaitingList", "Geolocation enabled");
+                                if (checkPermissions()) {
+                                    Log.d("ShowWaitingList", "Location permissions granted, requesting location");
+                                    getUserLocation(new LocationCallback() {
+                                        @Override
+                                        public void onLocationObtained(Location location) {
+                                            GeoPoint geo = new GeoPoint(
+                                                    location.getLatitude(),
+                                                    location.getLongitude()
+                                            );
+                                            String updatePath = "userLocations." + userId;
+                                            // Add location to Firestore
+                                            events.document(eventId)
+                                                    .update(updatePath, geo)
+                                                    .addOnSuccessListener(aVoid -> Log.d("UserLocation", "Updated location for " + userId))
+                                                    .addOnFailureListener(e -> Log.e("UserLocation", "Failed to update location for " + userId, e));
+
+                                            Log.d("UserLocation", "Latitude: " + location.getLatitude() + ", Longitude: " + location.getLongitude());
+                                        }
+                                        @Override
+                                        public void onLocationFailed() {
+                                            Log.d("UserLocation", "Failed to obtain location");
+                                        }
+                                    });
+                                } else {
+                                    requestPermissions(); // join will happen in onRequestPermissionsResult
+                                    Toast.makeText(ShowWaitingListActivity.this, "This event requires geolocation collection", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ShowWaitingListActivity.this, "Please try again after enabling geolocation", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                            }
+
+                            // add user to waiting list
                             event.update("waitList", FieldValue.arrayUnion(userId));
                             interact.setText(leaveList);
                             usersId.add(userId);
@@ -188,18 +225,52 @@ public class ShowWaitingListActivity extends AppCompatActivity {
     }
 
     @SuppressLint("MissingPermission")
-    private void logUserLocation() {
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, location -> {
-                    if (location != null) {
-                        double latitude = location.getLatitude();
-                        double longitude = location.getLongitude();
-                        Log.d("UserLocation", "Latitude: " + latitude + ", Longitude: " + longitude);
-                    } else {
-                        Log.d("UserLocation", "Location is null");
+    private void getUserLocation(LocationCallback callback) {
+//        fusedLocationClient.getLastLocation()
+//                .addOnSuccessListener(location -> {
+//                    if (location != null) {
+//                        callback.onLocationObtained(location);
+//                    } else {
+//                        Log.d("UserLocation", "Location is null");
+//                        callback.onLocationFailed();
+//                    }
+//                })
+//                .addOnFailureListener(e -> {
+//                    Log.e("UserLocation", "Failed to get location", e);
+//                    callback.onLocationFailed();
+//                });
+        LocationRequest locationRequest =
+                new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 0)
+                        .setMinUpdateIntervalMillis(0)
+                        .setMaxUpdateDelayMillis(0)
+                        .setWaitForAccurateLocation(true)
+                        .setMaxUpdates(1)
+                        .build();
+
+        fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                new com.google.android.gms.location.LocationCallback() {
+                    @Override
+                    public void onLocationResult(LocationResult locationResult) {
+                        fusedLocationClient.removeLocationUpdates(this);
+
+                        if (locationResult == null) {
+                            callback.onLocationFailed();
+                            return;
+                        }
+
+                        Location location = locationResult.getLastLocation();
+                        if (location != null) {
+                            callback.onLocationObtained(location);
+                        } else {
+                            callback.onLocationFailed();
+                        }
                     }
-                });
+                },
+                getMainLooper()
+        );
     }
+
 
 
 

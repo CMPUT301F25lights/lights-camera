@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,7 +20,6 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
 import com.example.lotterize.ImageHandler;
-import com.example.lotterize.QR;
 import com.example.lotterize.R;
 import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentNewEventBinding;
@@ -30,19 +30,14 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 
-import android.net.Uri;
-import android.util.Log;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
+import com.google.firebase.firestore.GeoPoint;
 
 
 /**
@@ -128,6 +123,9 @@ public class NewEventFragment extends Fragment implements ChooseEventFiltersFrag
             imageSelectedTextView.setText("");
             imageSelectedTextView.setVisibility(View.GONE);
         });
+
+        // Geolocation switch
+        Switch geoSwitch = binding.switchGeolocation;
 
         // Dates and times
         Calendar now = Calendar.getInstance();
@@ -247,6 +245,7 @@ public class NewEventFragment extends Fragment implements ChooseEventFiltersFrag
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
             //String qrCode = QR.generateCode(); deprecated, use eventId instead
+            Boolean isGeolocationEnabled = binding.switchGeolocation.isChecked();
 
             // Required field check
             if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||
@@ -319,7 +318,9 @@ public class NewEventFragment extends Fragment implements ChooseEventFiltersFrag
             ArrayList<String> selectedList = new ArrayList<>();
             ArrayList<String> cancelledList = new ArrayList<>();
             ArrayList<String> finalList = new ArrayList<>();
+            HashMap<String, GeoPoint> userLocations = new HashMap<>();
 
+            // Add filters to Firestore
 
             for (String filterName : filtersList) {
 
@@ -349,7 +350,8 @@ public class NewEventFragment extends Fragment implements ChooseEventFiltersFrag
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, null, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList);
+                    totalSpots, description, entrantsLimit, null, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList,
+                    isGeolocationEnabled, userLocations);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {

@@ -4,6 +4,10 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Map;
+
+import com.google.firebase.firestore.GeoPoint;
+
 
 /**
  * Represents an event.
@@ -33,6 +37,8 @@ public class Event {
     private String imageUrl;
     private String imagePath;
     private ArrayList<String> filtersList;
+    private Boolean isGeolocationEnabled=false;
+    private java.util.Map<String, GeoPoint> userLocations;
 
     /**
      * Required empty constructor for Firestore.
@@ -60,6 +66,9 @@ public class Event {
      * @param qrCode Reference string to QR image/data
      * @param imageUrl URL of event image
      * @param imagePath Path of event image
+     * @param filtersList List of filters associated with the event
+     * @param isGeolocationEnabled Whether geolocation is enabled for this event
+     * @param userLocations List of user locations
      */
     public Event(String eventId, String ownerId,
                  ArrayList<String> waitList, ArrayList<String> selectedList,
@@ -67,7 +76,8 @@ public class Event {
                  String eventName, Timestamp date, Timestamp registrationStart,
                  Timestamp registrationDeadline, String location,
                  long totalSpots, String description,
-                 long entrantsLimit, String qrCode, String imageUrl, String imagePath, ArrayList<String> filtersList) {
+                 long entrantsLimit, String qrCode, String imageUrl, String imagePath, ArrayList<String> filtersList,
+                 Boolean isGeolocationEnabled, java.util.Map<String, GeoPoint> userLocations) {
 
         this.eventId = eventId;
         this.ownerId = ownerId;
@@ -87,6 +97,8 @@ public class Event {
         this.imageUrl = imageUrl;
         this.imagePath = imagePath;
         this.filtersList = filtersList;
+        this.isGeolocationEnabled = isGeolocationEnabled;
+        this.userLocations = userLocations;
     }
 
     /** @return Firestore ID of the event */
@@ -185,6 +197,15 @@ public class Event {
     /** @param imagePath Firebase storage path of event image */
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
+    public Boolean isGeolocationEnabled() {
+        return isGeolocationEnabled != null ? isGeolocationEnabled : false;
+    }
+    public void setGeolocationEnabled(boolean isGeolocationEnabled) { this.isGeolocationEnabled = isGeolocationEnabled; }
+
+    public Map<String, GeoPoint> getUserLocations() { return userLocations; }
+    public void setUserLocations(Map<String, GeoPoint> userLocations) { this.userLocations = userLocations; }
+
+
 
     /**
      * This builds an Event object from a Firestore DocumentSnapshot.
@@ -223,10 +244,18 @@ public class Event {
 
         @SuppressWarnings("unchecked")
         ArrayList<String> filtersList = (ArrayList<String>) (doc.get("filtersList") != null ? doc.get("filtersList") : new ArrayList<String>());
-
+        Boolean isGeolocationEnabled = doc.getBoolean("isGeolocationEnabled");
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, GeoPoint> userLocations;
+        if (doc.get("userLocations") instanceof java.util.Map) {
+            userLocations = (java.util.Map<String, GeoPoint>) doc.get("userLocations");
+        } else {
+            userLocations = new java.util.HashMap<>();
+        }
         return new Event(eventId, ownerId, waitList,  selectedList, cancelledList,
                 finalList, eventName, date, registrationStart, registrationDeadline, location,
-                totalSpots,  description,  entrantsLimit,  qrCode, imageUrl, imagePath, filtersList);
+                totalSpots,  description,  entrantsLimit,  qrCode, imageUrl, imagePath, filtersList,
+                isGeolocationEnabled, userLocations);
 
     }
 }
