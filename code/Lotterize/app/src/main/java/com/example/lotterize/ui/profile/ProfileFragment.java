@@ -3,12 +3,15 @@ package com.example.lotterize.ui.profile;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -19,6 +22,7 @@ import com.example.lotterize.CurrentUser;
 import com.example.lotterize.R;
 import com.example.lotterize.databinding.FragmentProfileBinding;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 /**
  * The ProfileFragment class manages the user profile screen in the Lotterize app.
@@ -86,6 +90,7 @@ public class ProfileFragment extends Fragment {
             NavController navController = Navigation.findNavController(v);
             navController.navigate(R.id.navigation_account);
         };
+
         binding.iconAccount.setOnClickListener(accountClickListener);
         binding.textAccount.setOnClickListener(accountClickListener);
         binding.textAccountDesc.setOnClickListener(accountClickListener);
@@ -95,9 +100,36 @@ public class ProfileFragment extends Fragment {
             NavController navController = Navigation.findNavController(v);
             navController.navigate(R.id.navigation_event_history);
         };
+
         binding.iconEvent.setOnClickListener(eventHistoryClickListener);
         binding.textEvent.setOnClickListener(eventHistoryClickListener);
         binding.textEventDesc.setOnClickListener(eventHistoryClickListener);
+
+        binding.switchNotifications.setChecked(CurrentUser.get().getWantNotification());
+
+        binding.switchNotifications.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean enabled = binding.switchNotifications.isChecked();
+
+                // Update in-memory current user
+                CurrentUser.get().setWantNotification(enabled);
+
+                // Update Firestore
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                String userId = CurrentUser.get().getUserId();
+
+                db.collection("users")
+                        .document(userId)
+                        .update("wantNotification", enabled)
+                        .addOnSuccessListener(unused -> {
+                            Toast.makeText(requireContext(), enabled ? "Notifications turned on" : "Opted out of notifications", Toast.LENGTH_SHORT).show();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("Settings", "Failed to update notification preference", e);
+                        });
+            }
+        });
 
         return root;
     }

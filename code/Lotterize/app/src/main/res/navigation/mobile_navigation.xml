@@ -80,5 +80,13 @@
         <argument android:name="status"  app:argType="string" />
     </fragment>
 
+    <fragment
+        android:id="@+id/navigation_chosenEntrantsFragment"
+        android:name="com.example.lotterize.ui.addEvents.ChosenEntrantsList.ChosenEntrantsListFragment"
+        tools:layout="@layout/fragment_chosen_entrants">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
+    </fragment>
 
 </navigation>

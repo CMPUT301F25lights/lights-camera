@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".admin.AdminEventsFragment"
     android:background="@color/white"
     android:fitsSystemWindows="true">
 
@@ -36,7 +35,7 @@
             app:boxStrokeWidthFocused="0dp">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/search_bar"
+                android:id="@+id/admin_search_bar"
                 style="@style/Widget.MaterialComponents.TextInputEditText.FilledBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -44,13 +43,6 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- QR Scan button (top right) -->
-        <ImageButton
-            android:id="@+id/QR_scan_button"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:contentDescription="QR Scan"
-            android:background="@color/white"
-            android:src="@drawable/ic_qr_black_24dp" />
     </LinearLayout>
 
     <!-- Filter layout centered -->
@@ -63,19 +55,7 @@
         android:gravity="center"
         app:layout_constraintTop_toBottomOf="@id/search_layout"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/filter_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:icon="@drawable/ic_filter_black_24x20dp"
-            app:iconTint="@color/black"
-            android:textSize="11sp"
-            android:text="Filter Events"
-            android:textColor="@color/black"
-            android:backgroundTint="@color/white" />
-    </LinearLayout>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- RecyclerView for admin events -->
     <LinearLayout

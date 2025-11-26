@@ -1,9 +1,13 @@
 package com.example.lotterize.ui.addEvents;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +29,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -48,13 +53,15 @@ import com.google.firebase.storage.UploadTask;
  * The fragment uses the {@link FragmentNewEventBinding} class for view binding,
  * and integrates with {@link FirebaseFirestore} for persistent data storage.
  */
-public class NewEventFragment extends Fragment {
+public class NewEventFragment extends Fragment implements ChooseEventFiltersFragment.ChooseEventFiltersDialogListener {
     private FirebaseFirestore db;
     private ImageHandler imageHandler;
     private CollectionReference events;
     private FragmentNewEventBinding binding;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
     private TextView imageSelectedTextView;
+
+    private ArrayList<String> filtersList ;
 
     /**
      * Initializes the fragment and sets up the photo picker for event images.
@@ -65,6 +72,7 @@ public class NewEventFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        filtersList = new ArrayList<>();
 
         pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
             if (uri != null) {
@@ -121,6 +129,101 @@ public class NewEventFragment extends Fragment {
             imageSelectedTextView.setVisibility(View.GONE);
         });
 
+        // Dates and times
+        Calendar now = Calendar.getInstance();
+        int year = now.get(Calendar.YEAR);
+        int month = now.get(Calendar.MONTH);
+        int dayOfMonth = now.get(Calendar.DAY_OF_MONTH);
+
+        EditText dateText = binding.dateText;
+        Button dateButton = binding.dateInputButton;
+        dateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DatePickerDialog datePicker = new DatePickerDialog(
+                        getContext(),
+                        (view, y, m, d) -> {
+                            String dateString = String.format("%04d-%02d-%02d", y, (m + 1), d);
+                            dateText.setText(dateString);
+                        },
+                        year,
+                        month,
+                        dayOfMonth
+                );
+                datePicker.show();
+            }
+        });
+
+        EditText timeText = binding.timeText;
+        Button timeButton = binding.timeInputButton; // timeString
+        timeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TimePickerDialog timePicker = new TimePickerDialog(
+                        getContext(),
+                        (view, hourOfDay, minute) -> {
+                            String timeString = String.format("%02d:%02d", hourOfDay, minute);
+                            timeText.setText(timeString);
+                        },
+                        12,
+                        0,
+                        true    // 24-hour mode; set false for AM/PM
+                );
+                timePicker.show();
+            }
+        });
+
+        EditText regStartDateText = binding.registrationStartDateText;
+        Button regStartDateButton = binding.registrationStartDateButton;
+        regStartDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DatePickerDialog datePicker = new DatePickerDialog(
+                        getContext(),
+                        (view, y, m, d) -> {
+                            String dateString = String.format("%04d-%02d-%02d", y, (m + 1), d);
+                            regStartDateText.setText(dateString);
+                        },
+                        year,
+                        month,
+                        dayOfMonth
+                );
+                datePicker.show();
+            }
+        });
+
+        EditText regEndDateText = binding.registrationEndDateText;
+        Button regEndDateButton = binding.registrationEndDateButton;
+        regEndDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DatePickerDialog datePicker = new DatePickerDialog(
+                        getContext(),
+                        (view, y, m, d) -> {
+                            String dateString = String.format("%04d-%02d-%02d", y, (m + 1), d);
+                            regEndDateText.setText(dateString);
+                        },
+                        year,
+                        month,
+                        dayOfMonth
+                );
+                datePicker.show();
+            }
+        });
+
+        // Set Filters
+        Button filterButton = binding.addEventFiltersButton;
+        filterButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ChooseEventFiltersFragment frag = new ChooseEventFiltersFragment();
+                Bundle args = new Bundle();
+                args.putSerializable("Current Filters", filtersList);
+                frag.setArguments(args);
+                frag.setListener(NewEventFragment.this);
+                frag.show(getActivity().getSupportFragmentManager(), "Filters");
+            }
+        });
 
         binding.buttonCreateEvent.setOnClickListener(v -> {
 
@@ -132,10 +235,10 @@ public class NewEventFragment extends Fragment {
 
             // Collect user inputs
             String eventName = binding.eventNameInput.getText().toString().trim();
-            String dateString = binding.dateInput.getText().toString().trim();
-            String timeString = binding.timeInput.getText().toString().trim();
-            String registrationStartString = binding.registrationStartInput.getText().toString().trim();
-            String registrationEndString = binding.registrationEndInput.getText().toString().trim();
+            String dateString = binding.dateText.getText().toString().trim();
+            String timeString = binding.timeText.getText().toString().trim();
+            String registrationStartString = binding.registrationStartDateText.getText().toString().trim();
+            String registrationEndString = binding.registrationEndDateText.getText().toString().trim();
             Timestamp date; //-------------------------------
             Timestamp registrationStartDate; //-------------------------------
             Timestamp registrationEndDate; //-------------------------------
@@ -143,8 +246,7 @@ public class NewEventFragment extends Fragment {
             String totalSpotsString = binding.totalSpotsInput.getText().toString().trim();
             String description = binding.descriptionInput.getText().toString().trim(); //-------------------------------
             String entrantsLimitString = binding.entrantsLimitInput.getText().toString().trim();
-            String filtersListString = binding.filtersInput.getText().toString().trim();
-            String qrCode = QR.generateCode();
+            //String qrCode = QR.generateCode(); deprecated, use eventId instead
 
             // Required field check
             if (eventName.isEmpty() || dateString.isEmpty() || timeString.isEmpty() ||
@@ -218,12 +320,6 @@ public class NewEventFragment extends Fragment {
             ArrayList<String> cancelledList = new ArrayList<>();
             ArrayList<String> finalList = new ArrayList<>();
 
-            // Parse filters
-            ArrayList<String> filtersList = new ArrayList<>();
-            if (filtersListString != null && !filtersListString.trim().isEmpty()) {
-                String[] parts = filtersListString.split(", ");  // split on comma + space
-                Collections.addAll(filtersList, parts);          // add to ArrayList
-            }
 
             for (String filterName : filtersList) {
 
@@ -253,7 +349,7 @@ public class NewEventFragment extends Fragment {
             // Create Event object without ID
             Event event = new Event(null, ownerId, waitList, selectedList, cancelledList, finalList,
                     eventName, eventDate, regStartDate, regEndDate, location,
-                    totalSpots, description, entrantsLimit, qrCode, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList);
+                    totalSpots, description, entrantsLimit, null, imageHandler.getUploadedImageUrl(), imageHandler.getUploadedImagePath(), filtersList);
 
             // Save to Firestore
             events.add(event).addOnSuccessListener(documentReference -> {
@@ -276,6 +372,12 @@ public class NewEventFragment extends Fragment {
                                 Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
                         );
 
+                // make qrCode same as eventId
+                documentReference.update("qrCode", eventId)
+                        .addOnSuccessListener(unused ->
+                                Toast.makeText(getContext(), "Event created successfully!", Toast.LENGTH_SHORT).show()
+                        );
+
                 NavHostFragment.findNavController(NewEventFragment.this)
                         .navigate(R.id.navigation_addEvents);
 
@@ -291,6 +393,16 @@ public class NewEventFragment extends Fragment {
         });
 
         return root;
+    }
+
+    @Override
+    public void addFilter(String f) {
+        filtersList.add(f);
+    }
+
+    @Override
+    public void removeFilter(String f) {
+        filtersList.remove(f);
     }
 
     @Override

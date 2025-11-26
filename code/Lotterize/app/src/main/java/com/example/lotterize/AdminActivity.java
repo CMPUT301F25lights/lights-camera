@@ -31,6 +31,7 @@ public class AdminActivity extends AppCompatActivity {
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_admin_events,
                 R.id.navigation_admin_images,
+                R.id.navigation_admin_Notifications,
                 R.id.navigation_admin_users,
                 R.id.navigation_admin_profile
         ).build();
