@@ -1,6 +1,9 @@
 package com.example.lotterize.ui.home;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -10,10 +13,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.R;
 import com.example.lotterize.databinding.ActivityShowListBinding;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
@@ -22,6 +28,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import android.location.Location;
+import android.util.Log;
+import com.google.android.gms.tasks.OnSuccessListener;
+
+
 
 /**
  * Activity that shows the waiting list for an event
@@ -39,6 +50,9 @@ public class ShowWaitingListActivity extends AppCompatActivity {
 
     ArrayList<String> usersId;
     ShowListArrayAdapter adapter;
+
+    private FusedLocationProviderClient fusedLocationClient;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
 
     /**
      * Displays the waiting list, along with an option to
@@ -70,6 +84,8 @@ public class ShowWaitingListActivity extends AppCompatActivity {
 
         header.setText(R.string.waiting_list);
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -93,10 +109,24 @@ public class ShowWaitingListActivity extends AppCompatActivity {
                         event.update("waitList", FieldValue.arrayRemove(userId));
                         interact.setText(joinList);
                     });
-                } else {
-                    usersId.add(userId);
-                    adapter.notifyDataSetChanged();
+                } else { // join waiting list
+
                     assert eventId != null;
+
+                    // geolocation logic
+                    boolean isGeolocationEnabled =true; // placeholder
+                    //boolean isGeolocationEnabled = CurrentUser.get().isGeolocationEnabled();
+
+                    if (isGeolocationEnabled) {
+                        if (checkPermissions()) {
+                            logUserLocation(); // for testing
+                        } else {
+                            requestPermissions(); // join will happen in onRequestPermissionsResult
+                            Toast.makeText(ShowWaitingListActivity.this, "This event requires geolocation collection", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+
                     events.document(eventId).get().addOnSuccessListener(doc -> {
                         if (!doc.exists()) {
                             Toast.makeText(ShowWaitingListActivity.this, "Event not found", Toast.LENGTH_SHORT).show();
@@ -104,20 +134,20 @@ public class ShowWaitingListActivity extends AppCompatActivity {
                         }
                         DocumentReference event = events.document(eventId);
                         Long entrantsLimit = doc.getLong("entrantsLimit");
-                        if (entrantsLimit != null && (entrantsLimit >= usersId.size() || entrantsLimit == 0)){
+
+                        if (entrantsLimit != null && entrantsLimit <= usersId.size() && entrantsLimit != 0){
+                            Toast.makeText(ShowWaitingListActivity.this, "Waiting List is Full!!!", Toast.LENGTH_SHORT).show();
+                        } else{ // all conditions met, add user to waiting list
                             event.update("waitList", FieldValue.arrayUnion(userId));
                             interact.setText(leaveList);
-                        }
-                        else{
-                            Toast.makeText(ShowWaitingListActivity.this, "Waiting List is Full!!!", Toast.LENGTH_SHORT).show();
-                            usersId.remove(userId);
+                            usersId.add(userId);
                             adapter.notifyDataSetChanged();
                         }
 
                     });
-                    }
-
                 }
+
+            }
         });
 
         list.setAdapter(adapter);
@@ -143,6 +173,36 @@ public class ShowWaitingListActivity extends AppCompatActivity {
         });
 
     }
+    private boolean checkPermissions() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        return false;
+    }
+
+    private void requestPermissions() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                LOCATION_PERMISSION_REQUEST_CODE);
+    }
+
+    @SuppressLint("MissingPermission")
+    private void logUserLocation() {
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        double latitude = location.getLatitude();
+                        double longitude = location.getLongitude();
+                        Log.d("UserLocation", "Latitude: " + latitude + ", Longitude: " + longitude);
+                    } else {
+                        Log.d("UserLocation", "Location is null");
+                    }
+                });
+    }
+
+
+
 
 
 }
