@@ -34,19 +34,21 @@ public class LotteryTest {
                 "event1",
                 "owner1",
                 new ArrayList<>(Arrays.asList("u1", "u2", "u3", "u4", "u5")),
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new ArrayList<>(),
+                new ArrayList<>(),     // selectedList
+                new ArrayList<>(),     // cancelledList
+                new ArrayList<>(),     // finalList
                 "Music Festival",
-                null,
-                null,
-                null,
+                null,                  // date
+                null,                  // registrationStart
+                null,                  // registrationDeadline
                 "Campus Park",
-                2L,
+                2L,                    // totalSpots
                 "Outdoor event",
-                10L,
+                10L,                   // entrantsLimit
                 "qr123",
-                ""
+                "",                    // imageUrl
+                "",                    // imagePath
+                new ArrayList<>()      // filtersList
         );
 
         // Mock NotificationSender and Lottery
@@ -95,18 +97,22 @@ public class LotteryTest {
             Event emptyEvent = new Event(
                     "event2",
                     "owner2",
-                    new ArrayList<>(),
-                    new ArrayList<>(),
-                    new ArrayList<>(),
-                    new ArrayList<>(),
+                    new ArrayList<>(),   // waitList
+                    new ArrayList<>(),   // selectedList
+                    new ArrayList<>(),   // cancelledList
+                    new ArrayList<>(),   // finalList
                     "Empty Event",
-                    null, null, null,
+                    null,        // date
+                    null,        // registrationStart
+                    null,        // registrationDeadline
                     "Venue",
-                    3L,
+                    3L,          // totalSpots
                     "No participants",
-                    10L,
+                    10L,         // entrantsLimit
                     "qr456",
-                    ""
+                    "",          // imageUrl
+                    "",          // imagePath
+                    new ArrayList<>()   // filtersList
             );
 
             List<String> winners = lottery.drawWinners(emptyEvent);

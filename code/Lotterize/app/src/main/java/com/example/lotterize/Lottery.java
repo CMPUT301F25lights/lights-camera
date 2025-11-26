@@ -68,6 +68,7 @@ public class Lottery {
         return new ArrayList<>(winners);
     }
 
+
     /**
      * Draw a replacement winner if someone declines and notify them.
      *

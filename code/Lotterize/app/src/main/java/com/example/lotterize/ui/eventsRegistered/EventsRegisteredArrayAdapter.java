@@ -6,13 +6,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
+import com.example.lotterize.LotteryController;
 import com.example.lotterize.R;
 import com.google.firebase.Timestamp;
 
@@ -84,6 +87,21 @@ public class EventsRegisteredArrayAdapter extends ArrayAdapter<Event> {
         } else {
             date.setText("Date TBD");
         }
+
+        // buttons to accept or decline an event
+        Button acceptButton = view.findViewById(R.id.accept_button);
+        Button declineButton = view.findViewById(R.id.decline_button);
+
+        LotteryController controller = new LotteryController();
+        String currentUserId = CurrentUser.get().getUserId();
+
+        acceptButton.setOnClickListener(v -> {
+            controller.acceptInvitation(event, currentUserId);
+        });
+
+        declineButton.setOnClickListener(v -> {
+            controller.declineInvitation(event, currentUserId);
+        });
 
         // Optional (click on each item)
         view.setOnClickListener(v -> {
