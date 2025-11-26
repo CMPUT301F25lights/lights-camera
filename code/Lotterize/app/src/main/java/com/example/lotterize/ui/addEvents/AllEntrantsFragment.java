@@ -162,10 +162,27 @@ public class AllEntrantsFragment extends Fragment {
                 return;
             }
 
-            Intent intent = new Intent(requireContext(), MapsActivity.class);
-            // Pass eventId if needed
-            intent.putExtra("eventId", eventId);
-            startActivity(intent);
+            // Fetch the event document to check isGeolocationEnabled
+            db.collection("events").document(eventId).get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Boolean isGeolocationEnabled = documentSnapshot.getBoolean("isGeolocationEnabled");
+                            if (isGeolocationEnabled != null && isGeolocationEnabled) {
+                                // Geolocation is enabled, open the map
+                                Intent intent = new Intent(requireContext(), MapsActivity.class);
+                                intent.putExtra("eventId", eventId);
+                                startActivity(intent);
+                            } else {
+                                // Geolocation disabled -> show toast
+                                Toast.makeText(requireContext(), "Geolocation is not enabled for this event", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(requireContext(), "Error fetching event: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
         });
 
         //Notify buttons -> open dialog
