@@ -66,7 +66,8 @@ public class AllEntrantsFragment extends Fragment {
      *     <li>Builds the enrolled CSV using {@link EventCsvExporter}.</li>
      *     <li>Writes the CSV content to the user-chosen URI.</li>
      * </ol>
-     */    private final ActivityResultLauncher<Intent> createCsvLauncher =
+     */
+    private final ActivityResultLauncher<Intent> createCsvLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
                     Toast.makeText(requireContext(),"Export cancelled",Toast.LENGTH_SHORT).show();
