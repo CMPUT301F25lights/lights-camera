@@ -246,19 +246,120 @@ public class AdminProfileFragment extends Fragment {
                 .show();
     }
 
+    /** Deletes a user from Firestore and cascades the deletion to remove them from all events
+    * and delete any events they created.
+    *
+    * @param userId   The user's document ID
+    * @param username The user's username (for logging)
+    */
+    private void deleteUser(String userId, String username) {
+        Log.d(TAG, "Starting cascade delete for user: " + username);
+
+        // Step 1: Delete user from all events (waitList, selectedList, etc.)
+        db.collection("events")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    for (QueryDocumentSnapshot eventDoc : querySnapshot) {
+                        // Get all user lists from the event
+                        List<String> waitList = (List<String>) eventDoc.get("waitList");
+                        List<String> selectedList = (List<String>) eventDoc.get("selectedList");
+                        List<String> finalList = (List<String>) eventDoc.get("finalList");
+                        List<String> cancelledList = (List<String>) eventDoc.get("cancelledList");
+
+                        boolean needsUpdate = false;
+
+                        // Remove user from all lists
+                        if (waitList != null && waitList.remove(userId)) {
+                            needsUpdate = true;
+                        }
+                        if (selectedList != null && selectedList.remove(userId)) {
+                            needsUpdate = true;
+                        }
+                        if (finalList != null && finalList.remove(userId)) {
+                            needsUpdate = true;
+                        }
+                        if (cancelledList != null && cancelledList.remove(userId)) {
+                            needsUpdate = true;
+                        }
+
+                        // Update the event if user was found in any list
+                        if (needsUpdate) {
+                            eventDoc.getReference()
+                                    .update(
+                                            "waitList", waitList,
+                                            "selectedList", selectedList,
+                                            "finalList", finalList,
+                                            "cancelledList", cancelledList
+                                    )
+                                    .addOnSuccessListener(aVoid ->
+                                            Log.d(TAG, "Removed user from event: " + eventDoc.getString("eventName")))
+                                    .addOnFailureListener(e ->
+                                            Log.e(TAG, "Error removing user from event", e));
+                        }
+                    }
+
+                    // Step 2: Delete events owned by this user
+                    deleteEventsOwnedByUser(userId, username);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error removing user from events: " + e.getMessage(), e);
+                    Toast.makeText(getContext(), "Error during cascade delete", Toast.LENGTH_SHORT).show();
+                });
+    }
+
     /**
-     * Deletes a user from Firestore.
+     * Deletes all events created by the specified user.
      *
      * @param userId   The user's document ID
      * @param username The user's username (for logging)
      */
-    private void deleteUser(String userId, String username) {
+    private void deleteEventsOwnedByUser(String userId, String username) {
+        db.collection("events")
+                .whereEqualTo("ownerId", userId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int eventCount = querySnapshot.size();
+                    Log.d(TAG, "Found " + eventCount + " events owned by user: " + username);
+
+                    // Delete each event owned by the user
+                    for (QueryDocumentSnapshot eventDoc : querySnapshot) {
+                        eventDoc.getReference()
+                                .delete()
+                                .addOnSuccessListener(aVoid ->
+                                        Log.d(TAG, "Deleted event: " + eventDoc.getString("eventName")))
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Error deleting event", e));
+                    }
+
+                    // Step 3: Finally delete the user document
+                    deleteUserDocument(userId, username, eventCount);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error finding user's events: " + e.getMessage(), e);
+                    // Still try to delete the user even if this fails
+                    deleteUserDocument(userId, username, 0);
+                });
+    }
+
+    /**
+     * Deletes the user's document from Firestore.
+     *
+     * @param userId     The user's document ID
+     * @param username   The user's username (for logging)
+     * @param eventCount Number of events deleted (for user feedback)
+     */
+    private void deleteUserDocument(String userId, String username, int eventCount) {
         db.collection("users")
                 .document(userId)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User deleted: " + username);
-                    Toast.makeText(getContext(), "User " + username + " deleted successfully", Toast.LENGTH_SHORT).show();
+
+                    String message = "User " + username + " deleted successfully";
+                    if (eventCount > 0) {
+                        message += " (" + eventCount + " events also deleted)";
+                    }
+                    Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
 
                     // Remove from list and refresh view
                     allUsers.removeIf(user -> user.userId.equals(userId));
