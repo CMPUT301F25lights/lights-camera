@@ -1,79 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@android:color/white">
+    android:layout_height="56dp"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="12dp"
+    android:gravity="center_vertical"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="false"
+    android:focusable="false"
+    android:descendantFocusability="blocksDescendants">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Title (expands) -->
+    <TextView
+        android:id="@+id/text_title"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:layout_weight="1"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="16sp"
+        android:focusable="false"
+        android:clickable="false"/>
 
-        <!-- Title & Date -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+    <!-- Date (compact) -->
+    <TextView
+        android:id="@+id/text_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        android:alpha="0.75"
+        android:focusable="false"
+        android:clickable="false"/>
 
-            <TextView
-                android:id="@+id/text_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Event Title"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/text_date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Event Date"
-                android:textSize="14sp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginTop="4dp" />
-
-        </LinearLayout>
-
-        <!-- Buttons -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/accept_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Yes"
-                android:backgroundTint="@android:color/holo_green_dark"
-                android:textColor="@android:color/white"
-                android:layout_marginEnd="6dp"
-                android:padding="6dp" />
-
-            <Button
-                android:id="@+id/decline_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="No"
-                android:backgroundTint="@android:color/holo_red_dark"
-                android:textColor="@android:color/white"
-                android:padding="6dp" />
-
-        </LinearLayout>
-
-        <!-- Chevron icon -->
-        <ImageView
-            android:id="@+id/icon_chevron"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_media_play"
-            android:rotation="90"
-            android:layout_marginStart="8dp" />
-
-    </LinearLayout>
-
+    <!-- Chevron (just an icon, not focusable) -->
+    <ImageView
+        android:id="@+id/icon_chevron"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_back_arrow"
+        android:rotation="180"
+        android:alpha="0.7"
+        android:focusable="false"
+        android:clickable="false"/>
 </LinearLayout>

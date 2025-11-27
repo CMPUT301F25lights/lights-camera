@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel;
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -79,37 +80,40 @@ public class EventsRegisteredViewModel extends ViewModel {
      * objects, and updates the LiveData for observation by the UI.
      */
     private void loadRegisteredEvents() {
+        // Listen continuously — always reflect Firestore state
+        db.collection("events").addSnapshotListener((querySnapshot, error) -> {
+            if (error != null) {
+                Log.e("EventsRegisteredVM", "Snapshot listener error", error);
+                return;
+            }
+            if (querySnapshot == null) {
+                registeredEventsLiveData.postValue(new ArrayList<>());
+                return;
+            }
 
-        ArrayList<String> registeredIds = CurrentUser.get().getRegisteredEventIds();
-        if (registeredIds == null || registeredIds.isEmpty()) {
-            registeredEventsLiveData.setValue(new ArrayList<>());
-            return;
-        }
+            ArrayList<Event> tempList = new ArrayList<>();
+            String currentUserId = CurrentUser.get().getUserId();
 
-        ArrayList<Event> tempList = new ArrayList<>();
+            for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                Event event = doc.toObject(Event.class);
+                if (event == null) continue;
+                // Ensure the event has id set so updates map to same doc
+                event.setEventId(doc.getId());
 
-        for (String eventId : registeredIds) {
-            db.collection("events")
-                    .document(eventId)
-                    .get()
-                    .addOnSuccessListener(snapshot -> {
-                        if (snapshot.exists()) {
-                            Event event = snapshot.toObject(Event.class);
+                // Guard against null lists coming from older docs
+                if (event.getSelectedList() == null) event.setSelectedList(new ArrayList<>());
+                if (event.getFinalList() == null) event.setFinalList(new ArrayList<>());
 
-                            if (event != null) {
-                                event.setEventId(snapshot.getId());
-                                tempList.add(event);
+                if (event.getSelectedList().contains(currentUserId) ||
+                        event.getFinalList().contains(currentUserId)) {
+                    tempList.add(event);
+                }
+            }
 
-                                registeredEventsLiveData.setValue(new ArrayList<>(tempList));
-                            }
-                        }
-                    })
-                    .addOnFailureListener(e ->
-                            Log.e("EventFetch", "Failed to load: " + eventId, e)
-                    );
-        }
+            // Use postValue since listener might be on background thread
+            registeredEventsLiveData.postValue(tempList);
+        });
     }
-
 
     /**
      * Returns the LiveData object containing the list of registered events.
