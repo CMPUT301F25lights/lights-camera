@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.lotterize.R;
 import com.example.lotterize.ui.home.EventDetailsActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -60,6 +61,16 @@ public class AdminEventsAdapter extends RecyclerView.Adapter<AdminEventsAdapter.
 
         holder.textTitle.setText(name != null ? name : "Untitled Event");
         holder.textDate.setText(deadline.isEmpty() ? "No deadline" : deadline);
+
+        // Event image
+        ImageView eventImg = holder.itemView.findViewById(R.id.event_img);
+        String imageUrl = (String) event.get("imageUrl");
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(context).load(imageUrl).into(eventImg);
+        }else {
+            // set default image when missing
+            eventImg.setImageResource(R.drawable.ic_info_black_24dp);
+        }
 
         holder.buttonViewDetails.setOnClickListener(v -> {
             Intent intent = new Intent(context, EventDetailsActivity.class);
