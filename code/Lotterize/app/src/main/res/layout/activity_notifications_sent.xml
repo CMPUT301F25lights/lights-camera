@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    tools:context=".ui.admin.NotificationsSentActivity">
 
     <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
@@ -19,7 +21,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
-            android:id="@+id/button_back"
+            android:id="@+id/buttonBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -31,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Notifications Received"
+            android:text="Notifications Sent"
             android:textColor="#000000"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -52,7 +54,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp" />
+            android:padding="16dp">
+
+        </LinearLayout>
 
     </ScrollView>
 
@@ -61,7 +65,7 @@
         android:id="@+id/text_empty_state"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No notifications received"
+        android:text="No notifications sent"
         android:textColor="#999999"
         android:textSize="16sp"
         android:visibility="gone"

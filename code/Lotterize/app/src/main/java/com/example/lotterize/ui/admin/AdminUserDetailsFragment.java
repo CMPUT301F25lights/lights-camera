@@ -1,5 +1,6 @@
 package com.example.lotterize.ui.admin;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -54,16 +55,16 @@ public class AdminUserDetailsFragment extends Fragment {
             loadUserData(userId);
         }
 
-        // Received Notifications button
-        root.findViewById(R.id.btn_received_notifications).setOnClickListener(v -> {
-            NavController navController = Navigation.findNavController(v);
-            navController.navigate(R.id.navigation_notifications_received);
+        binding.btnReceivedNotifications.setOnClickListener(v -> {
+            Intent i = new Intent(requireContext(), NotificationsReceivedActivity.class);
+            i.putExtra("userId", userId); // Pass the userId
+            startActivity(i);
         });
 
-        // Sent Notifications button
-        root.findViewById(R.id.btn_sent_notifications).setOnClickListener(v -> {
-            NavController navController = Navigation.findNavController(v);
-            navController.navigate(R.id.navigation_notifications_sent);
+        binding.btnSentNotifications.setOnClickListener(v -> {
+            Intent i = new Intent(requireContext(), NotificationsSentActivity.class);
+            i.putExtra("userId", userId); // Pass the userId
+            startActivity(i);
         });
 
         // Back button click

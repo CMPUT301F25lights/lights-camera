@@ -38,18 +38,6 @@
         android:id="@+id/navigation_admin_user_details"
         android:name="com.example.lotterize.ui.admin.AdminUserDetailsFragment"
         android:label="User Details"
-        tools:layout="@layout/fragment_admin_user_details" />
-
-    <fragment
-        android:id="@+id/navigation_notifications_received"
-        android:name="com.example.lotterize.ui.admin.NotificationsReceivedFragment"
-        android:label="Notifications Received"
-        tools:layout="@layout/fragment_notifications_received" />
-
-    <fragment
-        android:id="@+id/navigation_notifications_sent"
-        android:name="com.example.lotterize.ui.admin.NotificationsSentFragment"
-        android:label="Notifications Sent"
-        tools:layout="@layout/fragment_notifications_sent" />
+        tools:layout="@layout/fragment_admin_user_details"/>
 
 </navigation>
