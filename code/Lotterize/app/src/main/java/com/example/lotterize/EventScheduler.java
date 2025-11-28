@@ -13,6 +13,16 @@ import java.util.List;
 public class EventScheduler {
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    private final LotteryController lotteryController;
+
+    public EventScheduler() {
+        this.lotteryController = new LotteryController();
+    }
+
+    public EventScheduler(LotteryController lotteryController) {
+        this.lotteryController = lotteryController;
+    }
+
     /**
      * Monitors registration deadline to trigger the lottery
      */
@@ -31,7 +41,7 @@ public class EventScheduler {
 
                 if (event.getRegistrationDeadline() != null &&
                         Timestamp.now().compareTo(event.getRegistrationDeadline()) >= 0) {
-                    runLottery(event);
+                        lotteryController.runLottery(event); // delegate logic
                 }
             }
         });
@@ -41,12 +51,13 @@ public class EventScheduler {
      * runs the lottery
      * @param event
      */
+    /*
     private void runLottery(Event event) {
         Lottery lottery = new Lottery();
         List<String> winners = lottery.drawWinners(event);
 
         // Update event in Firestore (not going to change anything in db rn)
         db.collection("events").document(event.getEventId()).set(event);
-    }
+    }*/
 }
 
