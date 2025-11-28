@@ -266,7 +266,7 @@ public class ChosenEntrantsListFragment extends Fragment {
                                             Toast.makeText(requireContext(),
                                                     "Entrant cancelled", Toast.LENGTH_SHORT).show();
 
-                                            String message = "You have been cancelled from the " + (eventName != null ? eventName : "") + "event";
+                                            String message = "You have been cancelled from the " + (eventName != null ? eventName : "") + " event";
 
                                             NotificationSender sender = new NotificationSender();
                                             sender.sendNotification(CurrentUser.get().getUserId(), message, new ArrayList<>(Collections.singletonList(userId))
