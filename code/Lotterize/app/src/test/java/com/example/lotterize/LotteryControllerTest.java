@@ -4,14 +4,13 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class LotteryControllerTest {
@@ -22,31 +21,24 @@ public class LotteryControllerTest {
     private LotteryController controller;
     private Event event;
 
-    @BeforeEach
+    @Before
     public void setUp() {
-        // Mock Firestore
+        // Mocks
         mockDb = mock(FirebaseFirestore.class);
         mockCollection = mock(CollectionReference.class);
         mockDocument = mock(DocumentReference.class);
 
         when(mockDb.collection("events")).thenReturn(mockCollection);
         when(mockCollection.document(anyString())).thenReturn(mockDocument);
-        when(mockDocument.set(any(Event.class))).thenReturn(null);
 
-        // Inject mock Firestore using reflection since it's final
-        controller = new LotteryController() {
-            {
-                try {
-                    java.lang.reflect.Field dbField = LotteryController.class.getDeclaredField("db");
-                    dbField.setAccessible(true);
-                    dbField.set(this, mockDb);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
+        // ✅ Mock Lottery — no real Firebase/Android code runs
+        Lottery mockLottery = mock(Lottery.class);
+        when(mockLottery.drawWinners(any())).thenReturn(List.of("u1")); // optional
 
-        // Mock Event
+        // Controller under test
+        controller = new LotteryController(mockDb, mockLottery);
+
+        // Test event setup
         event = new Event();
         event.setEventId("E1");
         event.setSelectedList(new ArrayList<>(List.of("u1", "u2")));
@@ -62,20 +54,22 @@ public class LotteryControllerTest {
         assertFalse(event.getSelectedList().contains("u1"));
         assertTrue(event.getFinalList().contains("u1"));
 
-        verify(mockDb.collection("events")).document("E1");
+        verify(mockCollection).document("E1");
+        // Optionally verify DB set/update call if implemented
+        // verify(mockDocument).set(any());
     }
 
     @Test
     public void testDeclineInvitationMovesUserToCancelledAndAddsFromWaitlist() {
         controller.declineInvitation(event, "u2");
 
-        // u2 should be removed and added to cancelled
         assertFalse(event.getSelectedList().contains("u2"));
         assertTrue(event.getCancelledList().contains("u2"));
 
-        // first waitlist user (w1) should move into selected list
-        assertTrue(event.getSelectedList().contains("w1"));
-        assertFalse(event.getWaitList().contains("w1"));
+        // One replacement should be drawn from waitList
+        assertTrue(event.getSelectedList().contains("w1") || event.getSelectedList().contains("w2"));
+        assertEquals(2, event.getSelectedList().size()); // only one replacement added (u1 + w1)
+        assertEquals(1, event.getWaitList().size()); // one removed from waitlist (just w2)
 
         verify(mockCollection).document("E1");
     }
@@ -86,7 +80,9 @@ public class LotteryControllerTest {
         controller.declineInvitation(event, "u1");
 
         assertTrue(event.getCancelledList().contains("u1"));
-        assertTrue(event.getSelectedList().isEmpty());
+        assertFalse(event.getSelectedList().contains("u1"));
+        assertTrue(event.getSelectedList().contains("u2")); // still there
+        assertEquals(1, event.getSelectedList().size());
     }
 
     @Test

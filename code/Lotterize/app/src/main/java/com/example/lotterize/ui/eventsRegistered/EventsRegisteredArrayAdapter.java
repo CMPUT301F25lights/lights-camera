@@ -2,18 +2,23 @@ package com.example.lotterize.ui.eventsRegistered;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.lotterize.CurrentUser;
 import com.example.lotterize.Event;
+import com.example.lotterize.LotteryController;
 import com.example.lotterize.R;
+import com.example.lotterize.ui.home.EventDetailsActivity;
 import com.google.firebase.Timestamp;
 
 import java.text.SimpleDateFormat;
@@ -67,7 +72,7 @@ public class EventsRegisteredArrayAdapter extends ArrayAdapter<Event> {
         View view = convertView;
         if (view == null) {
             view = LayoutInflater.from(context)
-                    .inflate(R.layout.item_event, parent, false);
+                    .inflate(R.layout.item_event_in_reg, parent, false);
         }
 
         Event event = eventList.get(position);
@@ -85,9 +90,65 @@ public class EventsRegisteredArrayAdapter extends ArrayAdapter<Event> {
             date.setText("Date TBD");
         }
 
-        // Optional (click on each item)
+        // buttons to accept or decline an event
+        Button acceptButton = view.findViewById(R.id.accept_button);
+        Button declineButton = view.findViewById(R.id.decline_button);
+        //the convertView was causing a crash.
+        TextView statusText = view.findViewById(R.id.status_text);
+
+        LotteryController controller = new LotteryController();
+        String currentUserId = CurrentUser.get().getUserId();
+
+        boolean isSelected = event.getSelectedList().contains(currentUserId);
+        boolean isFinal = event.getFinalList().contains(currentUserId);
+
+
+        // ---- UI Logic ----
+        if (isFinal) {
+            // Accepted
+            acceptButton.setVisibility(View.GONE);
+            declineButton.setVisibility(View.GONE);
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText("Accepted ✔️");
+
+        } else if (isSelected) {
+            // Pending → show buttons
+            acceptButton.setVisibility(View.VISIBLE);
+            declineButton.setVisibility(View.VISIBLE);
+            statusText.setVisibility(View.GONE);
+
+        } else {
+            // Declined or removed
+            acceptButton.setVisibility(View.GONE);
+            declineButton.setVisibility(View.GONE);
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText("Declined ❌");
+        }
+
+        acceptButton.setOnClickListener(v -> {
+            controller.acceptInvitation(event, currentUserId);
+
+            // Update UI locally
+            event.getSelectedList().remove(currentUserId);
+            event.getFinalList().add(currentUserId);
+
+            notifyDataSetChanged();
+        });
+
+        declineButton.setOnClickListener(v -> {
+            controller.declineInvitation(event, currentUserId);
+
+            // Update UI locally
+            event.getSelectedList().remove(currentUserId);
+
+            notifyDataSetChanged();
+        });
+
+
         view.setOnClickListener(v -> {
-            // TODO: Navigate to event details when you create that screen
+            Intent intent = new Intent(context, EventDetailsActivity.class);
+            intent.putExtra("eventId", event.getEventId());
+            context.startActivity(intent);
         });
 
         return view;
