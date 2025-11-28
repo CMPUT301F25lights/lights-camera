@@ -15,6 +15,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.lotterize.CurrentUser;
+import com.example.lotterize.Notification;
+import com.example.lotterize.NotificationSender;
 import com.example.lotterize.R;
 import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentAllEntrantsBinding;
@@ -30,6 +33,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -244,20 +248,36 @@ public class ChosenEntrantsListFragment extends Fragment {
                     dialog.dismiss();
                 })
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    db.collection("events").document(eventId)
-                            .update(
-                                    "selectedList", FieldValue.arrayRemove(userId),
-                                    "cancelledList", FieldValue.arrayUnion(userId)
-                            )
-                            .addOnSuccessListener(unused ->
-                                    Toast.makeText(requireContext(),"Entrant cancelled", Toast.LENGTH_SHORT).show()
-                            )
-                            .addOnFailureListener(e ->
-                                            Toast.makeText(requireContext(),"Failed to cancel entrant: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                            );
+                    db.collection("events").document(eventId).get()
+                            .addOnSuccessListener(doc -> {
+                                if (!doc.exists()){
+                                    Toast.makeText(requireContext(),
+                                            "Event not found", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+
+                                String eventName = doc.getString("eventName");
+                                db.collection("events").document(eventId)
+                                        .update(
+                                                "selectedList", FieldValue.arrayRemove(userId),
+                                                "cancelledList", FieldValue.arrayUnion(userId)
+                                        )
+                                        .addOnSuccessListener(unused -> {
+                                            Toast.makeText(requireContext(),
+                                                    "Entrant cancelled", Toast.LENGTH_SHORT).show();
+
+                                            String message = "You have been cancelled from the " + (eventName != null ? eventName : "") + "event";
+
+                                            NotificationSender sender = new NotificationSender();
+                                            sender.sendNotification(CurrentUser.get().getUserId(), message, new ArrayList<>(Collections.singletonList(userId))
+                                            );
+                                        })
+                                        .addOnFailureListener(e ->
+                                                Toast.makeText(requireContext(), "Failed to cancel entrant: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                                        );
+                            });
                 })
                 .show();
-
     }
 
     /**
