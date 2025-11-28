@@ -57,13 +57,13 @@ public class AdminUserDetailsFragment extends Fragment {
 
         binding.btnReceivedNotifications.setOnClickListener(v -> {
             Intent i = new Intent(requireContext(), NotificationsReceivedActivity.class);
-            i.putExtra("userId", userId); // Pass the userId
+            i.putExtra("userId", userId);
             startActivity(i);
         });
 
         binding.btnSentNotifications.setOnClickListener(v -> {
             Intent i = new Intent(requireContext(), NotificationsSentActivity.class);
-            i.putExtra("userId", userId); // Pass the userId
+            i.putExtra("userId", userId);
             startActivity(i);
         });
 
@@ -130,6 +130,7 @@ public class AdminUserDetailsFragment extends Fragment {
                         "This will:\n" +
                         "• Remove them from all events\n" +
                         "• Delete all events they created\n" +
+                        "• Delete all notifications they sent/received\n" +
                         "• Permanently delete their account\n\n" +
                         "This action cannot be undone.")
                 .setPositiveButton("Remove", (dialog, which) -> performCascadeDelete())
@@ -138,8 +139,12 @@ public class AdminUserDetailsFragment extends Fragment {
     }
 
     /**
-     * Performs a cascade delete that removes the user from all events and deletes
-     * all events they created before deleting their account.
+     * Performs a cascade delete that removes:
+     * - User from all events (waitList, selectedList, finalList, cancelledList)
+     * - All events created by the user
+     * - All notifications sent by the user
+     * - All notifications received by the user
+     * - The user's account document
      */
     private void performCascadeDelete() {
         if (userId == null) {
@@ -222,13 +227,76 @@ public class AdminUserDetailsFragment extends Fragment {
                                         Log.e(TAG, "Error deleting event", e));
                     }
 
-                    // Step 3: Finally delete the user document
-                    finalizeAccountDeletion(eventCount);
+                    // Step 3: Delete notifications sent by this user
+                    deleteNotificationsSentByUser(eventCount);
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error finding user's events: " + e.getMessage(), e);
+                    // Continue with notification deletion even if this fails
+                    deleteNotificationsSentByUser(0);
+                });
+    }
+
+    /**
+     * Deletes all notifications sent by the user.
+     */
+    private void deleteNotificationsSentByUser(int eventCount) {
+        db.collection("notifications")
+                .whereEqualTo("senderId", userId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int sentCount = querySnapshot.size();
+                    Log.d(TAG, "Found " + sentCount + " notifications sent by user: " + username);
+
+                    // Delete each notification sent by the user
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        doc.getReference()
+                                .delete()
+                                .addOnSuccessListener(aVoid ->
+                                        Log.d(TAG, "Deleted sent notification: " + doc.getId()))
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Error deleting sent notification", e));
+                    }
+
+                    // Step 4: Delete notifications received by this user
+                    deleteNotificationsReceivedByUser(eventCount, sentCount);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error finding sent notifications: " + e.getMessage(), e);
+                    // Continue with received notifications even if this fails
+                    deleteNotificationsReceivedByUser(eventCount, 0);
+                });
+    }
+
+    /**
+     * Deletes all notifications received by the user
+     * (where receiversId array contains the user's ID).
+     */
+    private void deleteNotificationsReceivedByUser(int eventCount, int sentCount) {
+        db.collection("notifications")
+                .whereArrayContains("receiversId", userId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int receivedCount = querySnapshot.size();
+                    Log.d(TAG, "Found " + receivedCount + " notifications received by user: " + username);
+
+                    // Delete each notification where user is a receiver
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        doc.getReference()
+                                .delete()
+                                .addOnSuccessListener(aVoid ->
+                                        Log.d(TAG, "Deleted received notification: " + doc.getId()))
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Error deleting received notification", e));
+                    }
+
+                    // Step 5: Finally delete the user document
+                    finalizeAccountDeletion(eventCount, sentCount, receivedCount);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error finding received notifications: " + e.getMessage(), e);
                     // Still try to delete the user even if this fails
-                    finalizeAccountDeletion(0);
+                    finalizeAccountDeletion(eventCount, sentCount, 0);
                 });
     }
 
@@ -236,19 +304,29 @@ public class AdminUserDetailsFragment extends Fragment {
      * Finalizes the account deletion by removing the user document from Firestore.
      *
      * @param eventCount Number of events that were deleted
+     * @param sentCount Number of sent notifications deleted
+     * @param receivedCount Number of received notifications deleted
      */
-    private void finalizeAccountDeletion(int eventCount) {
+    private void finalizeAccountDeletion(int eventCount, int sentCount, int receivedCount) {
         db.collection("users")
                 .document(userId)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User deleted: " + username);
 
-                    String message = "User " + username + " removed successfully.";
+                    // Build detailed success message
+                    StringBuilder message = new StringBuilder("User " + username + " removed successfully.");
                     if (eventCount > 0) {
-                        message += " " + eventCount + " event(s) also deleted.";
+                        message.append("\n• ").append(eventCount).append(" event(s) deleted");
                     }
-                    Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
+                    if (sentCount > 0) {
+                        message.append("\n• ").append(sentCount).append(" sent notification(s) deleted");
+                    }
+                    if (receivedCount > 0) {
+                        message.append("\n• ").append(receivedCount).append(" received notification(s) deleted");
+                    }
+
+                    Toast.makeText(requireContext(), message.toString(), Toast.LENGTH_LONG).show();
 
                     // Navigate back to admin profiles list
                     Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_admin).popBackStack();

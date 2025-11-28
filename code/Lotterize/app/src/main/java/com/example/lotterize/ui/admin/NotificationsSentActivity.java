@@ -125,7 +125,7 @@ public class NotificationsSentActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         notificationItem.setLayoutParams(params);
-        
+
         // Receivers - display count and list
         TextView receiverView = new TextView(this);
         if (receiversIdList != null && !receiversIdList.isEmpty()) {
