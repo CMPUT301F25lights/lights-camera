@@ -34,7 +34,6 @@ public class LotteryController {
             event.getSelectedList().remove(userId);
             event.getFinalList().add(userId);
             updateEventInFirestore(event);
-
         }
     }
 

@@ -106,7 +106,7 @@ public class Lottery {
         String message = "Congratulations! You have been selected for the event: "
                 + event.getEventName();
 
-        notifyUsers(message, winners);
+        notifyUsers(event, message, winners);
     }
 
     private void sendLoserNotifications(Event event, List<String> losers) {
@@ -115,12 +115,14 @@ public class Lottery {
         String message = "Unfortunately, you were not selected for the event: "
                 + event.getEventName() + ". Thank you for your interest.";
 
-        notifyUsers(message, losers);
+        notifyUsers(event, message, losers);
     }
 
-    private void notifyUsers(String message, List<String> userIds) {
+    private void notifyUsers(Event event, String message, List<String> userIds) {
         ArrayList<String> receivers = new ArrayList<>(userIds);
-        String senderId = CurrentUser.get().getUserId();
+        String senderId = event.getOwnerId(); // should grab owner's ID for message now
+
+        //String senderId = CurrentUser.get().getUserId();
 
         notificationSender.sendNotification(senderId, message, receivers);
     }
