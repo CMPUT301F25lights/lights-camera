@@ -7,11 +7,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.lotterize.Notification;
 import com.example.lotterize.R;
+import com.example.lotterize.ui.admin.adminNotifications.AdminNotificationDetailsDialog;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
@@ -39,6 +42,8 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
             return;
         }
 
+        Log.d(TAG, "Loading notifications for user: " + userId);
+
         // Initialize views
         notificationsContainer = findViewById(R.id.notifications_container);
         emptyStateText = findViewById(R.id.text_empty_state);
@@ -54,8 +59,9 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
     }
 
     private void loadReceivedNotifications() {
-        Log.d(TAG, "Loading notifications received by user: " + userId);
+        Log.d(TAG, "Querying notifications where receiversId array contains: " + userId);
 
+        // USE arrayContains BECAUSE receiversId IS AN ARRAY
         db.collection("notifications")
                 .whereArrayContains("receiversId", userId)
                 .get()
@@ -63,18 +69,35 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
                     notificationsContainer.removeAllViews();
 
                     if (querySnapshot.isEmpty()) {
-                        emptyStateText.setVisibility(View.VISIBLE);
-                        emptyStateText.setText("No notifications received");
+                        if (emptyStateText != null) {
+                            emptyStateText.setVisibility(View.VISIBLE);
+                            emptyStateText.setText("No notifications received");
+                        }
                         Log.d(TAG, "No notifications found");
                     } else {
-                        emptyStateText.setVisibility(View.GONE);
+                        if (emptyStateText != null) {
+                            emptyStateText.setVisibility(View.GONE);
+                        }
 
                         for (QueryDocumentSnapshot doc : querySnapshot) {
+                            String notificationId = doc.getString("notificationId");
                             String message = doc.getString("message");
                             String senderName = doc.getString("senderName");
+                            String senderId = doc.getString("senderId");
                             Timestamp timestamp = doc.getTimestamp("time");
+                            ArrayList<String> receiversId = (ArrayList<String>) doc.get("receiversId");
 
-                            addNotificationToView(message);
+                            // Create Notification object for the dialog
+                            Notification notification = new Notification(
+                                    notificationId,
+                                    senderId,
+                                    senderName,
+                                    message,
+                                    timestamp,
+                                    receiversId != null ? receiversId : new ArrayList<>()
+                            );
+
+                            addNotificationToView(message, notification);
                             Log.d(TAG, "Loaded notification: " + message);
                         }
 
@@ -84,17 +107,21 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error loading notifications: " + e.getMessage(), e);
                     Toast.makeText(this, "Failed to load notifications", Toast.LENGTH_SHORT).show();
-                    emptyStateText.setVisibility(View.VISIBLE);
-                    emptyStateText.setText("Error loading notifications");
+                    if (emptyStateText != null) {
+                        emptyStateText.setVisibility(View.VISIBLE);
+                        emptyStateText.setText("Error loading notifications");
+                    }
                 });
     }
 
-    private void addNotificationToView(String message) {
+    private void addNotificationToView(String message, Notification notification) {
         // Create container for notification
         LinearLayout notificationItem = new LinearLayout(this);
         notificationItem.setOrientation(LinearLayout.VERTICAL);
         notificationItem.setPadding(40, 32, 40, 32);
-        notificationItem.setBackgroundColor(0xFFFFFFFF);
+        notificationItem.setBackgroundColor(0xFFFFFFFF); // White background
+        notificationItem.setClickable(true);
+        notificationItem.setFocusable(true);
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -102,13 +129,19 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         );
         notificationItem.setLayoutParams(params);
 
-        // Message
+        // Message (main content - larger and bold)
         TextView messageView = new TextView(this);
         messageView.setText(message != null ? message : "No message");
         messageView.setTextSize(16);
         messageView.setTextColor(0xFF000000);
-        messageView.setPadding(0, 0, 0, 8);
+        messageView.setLineSpacing(4, 1.0f);
         notificationItem.addView(messageView);
+
+        // Set click listener to show details dialog
+        notificationItem.setOnClickListener(v -> {
+            AdminNotificationDetailsDialog dialog = AdminNotificationDetailsDialog.newInstance(notification);
+            dialog.show(getSupportFragmentManager(), "notification_details");
+        });
 
         // Add a thin divider line
         View divider = new View(this);
@@ -122,7 +155,6 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
 
         notificationsContainer.addView(notificationItem);
         notificationsContainer.addView(divider);
-
     }
 
 }

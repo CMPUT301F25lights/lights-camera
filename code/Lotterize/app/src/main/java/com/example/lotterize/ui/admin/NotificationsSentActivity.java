@@ -7,10 +7,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.lotterize.Notification;
 import com.example.lotterize.R;
+import com.example.lotterize.ui.admin.adminNotifications.AdminNotificationDetailsDialog;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Activity that displays all notifications sent by a specific user.
@@ -41,6 +44,8 @@ public class NotificationsSentActivity extends AppCompatActivity {
             return;
         }
 
+        Log.d(TAG, "Loading notifications sent by user: " + userId);
+
         // Initialize views
         notificationsContainer = findViewById(R.id.notifications_container);
         emptyStateText = findViewById(R.id.text_empty_state);
@@ -59,7 +64,7 @@ public class NotificationsSentActivity extends AppCompatActivity {
      * Queries Firestore for all notifications where senderId matches the current user.
      */
     private void loadSentNotifications() {
-        Log.d(TAG, "Loading notifications sent by user: " + userId);
+        Log.d(TAG, "Querying notifications where senderId equals: " + userId);
 
         db.collection("notifications")
                 .whereEqualTo("senderId", userId)
@@ -68,28 +73,36 @@ public class NotificationsSentActivity extends AppCompatActivity {
                     notificationsContainer.removeAllViews();
 
                     if (querySnapshot.isEmpty()) {
-                        // Show empty state
                         if (emptyStateText != null) {
                             emptyStateText.setVisibility(View.VISIBLE);
                             emptyStateText.setText("No notifications sent");
                         }
-                        Log.d(TAG, "No sent notifications found for user");
+                        Log.d(TAG, "No sent notifications found");
                     } else {
-                        // Hide empty state
                         if (emptyStateText != null) {
                             emptyStateText.setVisibility(View.GONE);
                         }
 
-                        // Add each notification to the view
                         for (QueryDocumentSnapshot doc : querySnapshot) {
-                            String notificationId = doc.getId();
+                            String notificationId = doc.getString("notificationId");
                             String message = doc.getString("message");
-                            // FIXED: receiversId is an ArrayList, not a String
-                            List<String> receiversIdList = (List<String>) doc.get("receiversId");
                             String senderName = doc.getString("senderName");
+                            String senderId = doc.getString("senderId");
+                            Timestamp timestamp = doc.getTimestamp("time");
+                            ArrayList<String> receiversId = (ArrayList<String>) doc.get("receiversId");
 
-                            addNotificationToView(notificationId, message, receiversIdList);
-                            Log.d(TAG, "Loaded notification: " + notificationId + " - " + message);
+                            // Create Notification object for the dialog
+                            Notification notification = new Notification(
+                                    notificationId,
+                                    senderId,
+                                    senderName,
+                                    message,
+                                    timestamp,
+                                    receiversId != null ? receiversId : new ArrayList<>()
+                            );
+
+                            addNotificationToView(message, notification);
+                            Log.d(TAG, "Loaded notification: " + message);
                         }
 
                         Log.d(TAG, "Total sent notifications loaded: " + querySnapshot.size());
@@ -109,16 +122,17 @@ public class NotificationsSentActivity extends AppCompatActivity {
     /**
      * Dynamically creates and adds a notification card to the view.
      *
-     * @param notificationId The notification document ID
      * @param message The notification message
-     * @param receiversIdList The list of user IDs who received the notification
+     * @param notification The complete Notification object for showing details
      */
-    private void addNotificationToView(String notificationId, String message, List<String> receiversIdList) {
+    private void addNotificationToView(String message, Notification notification) {
         // Create container for notification
         LinearLayout notificationItem = new LinearLayout(this);
         notificationItem.setOrientation(LinearLayout.VERTICAL);
         notificationItem.setPadding(40, 32, 40, 32);
-        notificationItem.setBackgroundColor(0xFFFFFFFF);
+        notificationItem.setBackgroundColor(0xFFFFFFFF); // White background
+        notificationItem.setClickable(true);
+        notificationItem.setFocusable(true);
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -126,32 +140,19 @@ public class NotificationsSentActivity extends AppCompatActivity {
         );
         notificationItem.setLayoutParams(params);
 
-        // Receivers - display count and list
-        TextView receiverView = new TextView(this);
-        if (receiversIdList != null && !receiversIdList.isEmpty()) {
-            if (receiversIdList.size() == 1) {
-                // Single recipient - show their ID
-                receiverView.setText("To: " + receiversIdList.get(0));
-            } else {
-                // Multiple recipients - show count
-                receiverView.setText("To: " + receiversIdList.size() + " recipients");
-            }
-        } else {
-            receiverView.setText("To: Unknown receivers");
-        }
-        receiverView.setTextSize(14);
-        receiverView.setTextColor(0xFF666666);
-        receiverView.setPadding(0, 0, 0, 8);
-        notificationItem.addView(receiverView);
-
-        // Message (main content)
+        // Message (main content - larger and bold)
         TextView messageView = new TextView(this);
         messageView.setText(message != null ? message : "No message");
         messageView.setTextSize(16);
         messageView.setTextColor(0xFF000000);
-        messageView.setPadding(0, 0, 0, 8);
-        messageView.setLineSpacing(0, 1.2f);
+        messageView.setLineSpacing(4, 1.0f);
         notificationItem.addView(messageView);
+
+        // Set click listener to show details dialog
+        notificationItem.setOnClickListener(v -> {
+            AdminNotificationDetailsDialog dialog = AdminNotificationDetailsDialog.newInstance(notification);
+            dialog.show(getSupportFragmentManager(), "notification_details");
+        });
 
         // Add a thin divider line
         View divider = new View(this);
@@ -165,7 +166,5 @@ public class NotificationsSentActivity extends AppCompatActivity {
 
         notificationsContainer.addView(notificationItem);
         notificationsContainer.addView(divider);
-
     }
-
 }
