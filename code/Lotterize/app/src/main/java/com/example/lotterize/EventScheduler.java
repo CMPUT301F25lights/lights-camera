@@ -47,17 +47,5 @@ public class EventScheduler {
         });
     }
 
-    /**
-     * runs the lottery
-     * @param event
-     */
-    /*
-    private void runLottery(Event event) {
-        Lottery lottery = new Lottery();
-        List<String> winners = lottery.drawWinners(event);
-
-        // Update event in Firestore (not going to change anything in db rn)
-        db.collection("events").document(event.getEventId()).set(event);
-    }*/
 }
 
