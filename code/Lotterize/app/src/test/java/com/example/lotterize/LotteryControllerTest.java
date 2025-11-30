@@ -9,10 +9,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import java.util.Random;
 
 public class LotteryControllerTest {
 
@@ -21,6 +23,7 @@ public class LotteryControllerTest {
     private DocumentReference mockDocument;
     private LotteryController controller;
     private Event event;
+    private Random random;
 
     @Before
     public void setUp() {
@@ -105,7 +108,7 @@ public class LotteryControllerTest {
         assertEquals(2, event.getSelectedList().size());
         assertTrue(event.getFinalList().isEmpty());
     }
-    /*@Test
+    @Test
     public void testAcceptWithReplacementDoesNotOverfillFinalList() {
 
         FirebaseFirestore mockDb = mock(FirebaseFirestore.class);
@@ -126,11 +129,39 @@ public class LotteryControllerTest {
         when(mockTask.addOnFailureListener(any())).thenReturn(mockTask);
 
         // Mock lottery replacement behavior
-        Lottery realLottery = new Lottery();
-        Lottery spyLottery = spy(realLottery);
+        Lottery mockLottery = mock(Lottery.class);
+
+        when(mockLottery.drawReplacement(any())).thenAnswer(invocation -> {
+            Event e = invocation.getArgument(0);
+            ArrayList<String> waitList = e.getWaitList();
+            ArrayList<String> selectedList = e.getSelectedList();
+            ArrayList<String> finalList = e.getFinalList();
+
+            if (waitList == null || waitList.isEmpty()) {
+                return null;
+            }
+
+            int totalSpots = (int) e.getTotalSpots();
+
+            // No open spots → no replacement allowed
+            if (selectedList.size() >= totalSpots) {
+                return null;
+            }
+
+            // shuffle for fairness
+            //Collections.shuffle(waitList, random);
+
+            // Pick the first after shuffle
+            String replacement = waitList.get(0);
+
+            // Update
+            waitList.remove(0);
+            selectedList.add(replacement);
+            return null;
+        });
 
 
-        LotteryController controller = new LotteryController(mockDb, spyLottery);
+        LotteryController controller = new LotteryController(mockDb, mockLottery);
 
         // --- Setup event ---
         Event event = new Event();
@@ -140,9 +171,7 @@ public class LotteryControllerTest {
         event.setFinalList(new ArrayList<>());
         event.setWaitList(new ArrayList<>(List.of("userC", "userD")));
         event.setCancelledList(new ArrayList<>());
-        /*event.setWaitList(new ArrayList<>());
-        event.setSelectedList(new ArrayList<>());
-        event.setFinalList(new ArrayList<>());
+
 
         // Accept userA
         controller.acceptInvitation(event, "userA");
@@ -157,7 +186,7 @@ public class LotteryControllerTest {
 
         // Decline userB → triggers replacement userC
 
-        //controller.acceptInvitation(event, "userC");
+        controller.acceptInvitation(event, "userC");
 
 
         // --- Assertions ---
@@ -165,5 +194,5 @@ public class LotteryControllerTest {
         assertTrue(event.getSelectedList().containsAll(event.getFinalList()));
         assertEquals(1, event.getWaitList().size());
         assertTrue(event.getFinalList().size() <= event.getTotalSpots());
-    }*/
+    }
 }
