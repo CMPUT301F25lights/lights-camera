@@ -82,20 +82,38 @@ public class Lottery {
     public String drawReplacement(Event event) {
         ArrayList<String> waitList = event.getWaitList();
         ArrayList<String> selectedList = event.getSelectedList();
+        ArrayList<String> finalList = event.getFinalList();
 
         if (waitList == null || waitList.isEmpty()) {
             return null;
         }
 
-        // Randomly pick a replacement
-        int index = random.nextInt(waitList.size());
-        String winner = waitList.get(index);
+        int totalSpots = (int) event.getTotalSpots();
 
-        selectedList.add(winner);
-        waitList.remove(index);
+        // No open spots → no replacement allowed
+        if (selectedList.size() >= totalSpots) {
+            return null;
+        }
 
-        sendWinnerNotifications(event, Collections.singletonList(winner));
-        return winner;
+        // shuffle for fairness
+        Collections.shuffle(waitList, random);
+
+        // Pick the first after shuffle
+        String replacement = waitList.get(0);
+
+        // Check for duplicates
+        if (selectedList.contains(replacement) || finalList.contains(replacement)) {
+            waitList.remove(0);
+            return drawReplacement(event); // try next candidate
+        }
+        // Update
+        waitList.remove(0);
+        selectedList.add(replacement);
+
+        // Notify the winner
+        sendWinnerNotifications(event, Collections.singletonList(replacement));
+
+        return replacement;
     }
 
 
