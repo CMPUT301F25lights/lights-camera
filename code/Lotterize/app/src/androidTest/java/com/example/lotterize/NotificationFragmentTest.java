@@ -28,7 +28,7 @@ import java.util.Set;
 public class NotificationFragmentTest {
     @Test
     public void test_Notifications_Tab_Is_Displayed() {
-        // 1. Create a fake logged-in user (entrant/organizer)
+        //Create a mock logged-in user (entrant/organizer)
         User mockUser = new User(
                 "testUserId",
                 "Test User",
