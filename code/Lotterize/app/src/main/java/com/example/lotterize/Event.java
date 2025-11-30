@@ -238,7 +238,9 @@ public class Event {
         Long totalSpots = doc.getLong("totalSpots");
         String description = doc.getString("description");
         Long entrantsLimit = doc.getLong("entrantsLimit");
-        String qrCode = doc.getString("qrCode");
+        // String qrCode = doc.getString("qrCode");  deprecated usage
+        // Force qrCode to match eventId
+        String qrCode = eventId;
         String imageUrl = doc.getString("imageUrl");
         String imagePath = doc.getString("imagePath");
 

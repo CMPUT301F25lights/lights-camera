@@ -24,7 +24,7 @@ import java.util.UUID;
  * Utility class for generating and saving QR codes.
  */
 public class QR {
-//    /**
+//    /** deprecated
 //     * Generates a random UUID string to be encoded to a QR code.
 //     * @return The generated code string.
 //     */
@@ -123,34 +123,7 @@ public class QR {
         }
     }
 
-    //---------------- Testing, not used yet --------------------------------
-//    public static void generatePNG(String code, String path) {
-//
-//        try {
-//            // Generate bitmap
-//            Bitmap bitmap = generateBitmap(code, 512);
-//
-//            if (bitmap == null) return;
-//
-//            // Save to file
-//            File file = new File(path);
-//            FileOutputStream fos = new FileOutputStream(file);
-//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-//            fos.close();
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-// testing
 
-    // In MainActivity.java
-
-    //        // test qr code
-//        String path = getExternalFilesDir(null) + "/qr_code.png";
-//        QR.generatePNG("test", path);
-    // path in android file system
-    // /storage/emulated/0/Android/data/com.example.lotterize/files/
 
 
 }

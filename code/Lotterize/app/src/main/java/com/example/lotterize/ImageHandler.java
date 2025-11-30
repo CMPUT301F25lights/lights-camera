@@ -27,6 +27,13 @@ public class ImageHandler {
         storageRef = storage.getReference().child("event_posters");
     }
 
+    // Constructor for testing
+    public ImageHandler(FirebaseStorage storage) {
+        this.storage = storage;
+        this.storageRef = storage.getReference().child("event_posters");
+    }
+
+
     /** Adds/uploads an image */
     public void addImage(Context context, @NonNull Uri uri, Runnable onSuccess, Runnable onFailure) {
         removeImage(context, null); // remove previous image if any
