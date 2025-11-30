@@ -21,7 +21,9 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Im
     private final OnDeleteClickListener listener;
     private List<Event> eventList;
 
-
+    /**
+     * Interface for handling click events on the delete button.
+     */
     public interface OnDeleteClickListener {
         void onDeleteClick(Event event);
     }
@@ -39,6 +41,14 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Im
         return new ImageViewHolder(view);
     }
 
+    /**
+     * Binds the data at the specified position to the given ViewHolder.
+     * Handles the click event for image deletion.
+     *
+     * @param holder   The ViewHolder which should be updated to represent the contents of the
+     *                 item at the given position in the data set.
+     * @param position The position of the item within the adapter's data set.
+     */
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         Event event = eventList.get(position);
@@ -67,6 +77,9 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Im
         return eventList.size();
     }
 
+    /**
+     * ViewHolder class for holding the views for each item in the RecyclerView.
+     */
     static class ImageViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         TextView eventName;
@@ -78,11 +91,19 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Im
         }
     }
 
+    /**
+     * Updates the data displayed in the RecyclerView.
+     * @param events
+     */
     public void updateData(List<Event> events) {
         this.eventList = events;
         notifyDataSetChanged();
     }
 
+    /**
+     * Removes the given event from the list and notifies the adapter.
+     * @param event
+     */
     public void removeEvent(Event event) {
         int position = eventList.indexOf(event);
         if (position != -1) {
