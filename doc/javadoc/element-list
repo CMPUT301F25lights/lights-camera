@@ -5,7 +5,6 @@ com.example.lotterize.ui.admin
 com.example.lotterize.ui.admin.adminEvents
 com.example.lotterize.ui.admin.adminImages
 com.example.lotterize.ui.admin.adminNotifications
-com.example.lotterize.ui.admin.adminUsers
 com.example.lotterize.ui.eventsRegistered
 com.example.lotterize.ui.home
 com.example.lotterize.ui.notifications

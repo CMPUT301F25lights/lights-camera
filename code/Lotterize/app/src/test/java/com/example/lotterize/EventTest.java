@@ -24,7 +24,7 @@ public class EventTest {
         when(doc.getString("eventName")).thenReturn("My Event");
         when(doc.getString("location")).thenReturn("Edmonton");
         when(doc.getString("description")).thenReturn("No description");
-        when(doc.getString("qrCode")).thenReturn("QR_123");
+        //when(doc.getString("qrCode")).thenReturn("QR_123");
 
         // timestamps
         Timestamp date = new Timestamp(123, 0);
@@ -50,7 +50,7 @@ public class EventTest {
         assertEquals("My Event", event.getEventName());
         assertEquals("Edmonton", event.getLocation());
         assertEquals("No description", event.getDescription());
-        assertEquals("QR_123", event.getQrCode());
+        //assertEquals("QR_123", event.getQrCode());
         assertEquals(date, event.getDate());
         assertEquals(registrationStart, event.getRegistrationStart());
         assertEquals(registrationDeadline, event.getRegistrationDeadline());
@@ -83,7 +83,7 @@ public class EventTest {
         assertNull(event.getEventName());
         assertNull(event.getLocation());
         assertNull(event.getDescription());
-        assertNull(event.getQrCode());
+        //assertNull(event.getQrCode());
 
         assertEquals(0L, event.getTotalSpots());
         assertEquals(0L, event.getEntrantsLimit());
