@@ -40,6 +40,7 @@ public class Lottery {
     public List<String> drawWinners(Event event) {
         ArrayList<String> waitList = event.getWaitList();
         ArrayList<String> selectedList = event.getSelectedList();
+        ArrayList<String> finalList = event.getFinalList();   // <-- added
 
         if (waitList == null || waitList.isEmpty()) {
             return List.of();
@@ -51,19 +52,31 @@ public class Lottery {
         if (spotsRemaining <= 0) {
             return List.of();
         }
+        // Filter eligible users: remove anyone already selected or final
+        ArrayList<String> eligible = new ArrayList<>();
+        for (String user : waitList) {
+            if (!selectedList.contains(user) && !finalList.contains(user)) {
+                eligible.add(user);
+            }
+        }
 
-        int winnersToPick = Math.min(spotsRemaining, waitList.size());
+        if (eligible.isEmpty()) {
+            return List.of();
+        }
 
-        // Shuffle a working copy
-        ArrayList<String> shuffled = new ArrayList<>(waitList);
-        Collections.shuffle(shuffled, random);
 
-        // Safe copies of winners/losers
-        List<String> winners = new ArrayList<>(shuffled.subList(0, winnersToPick));
-        List<String> losers  = new ArrayList<>(shuffled.subList(winnersToPick, shuffled.size()));
+        int winnersToPick = Math.min(spotsRemaining, eligible.size());
+
+        // Shuffle only the eligible users
+        Collections.shuffle(eligible, random);
+
+        List<String> winners = new ArrayList<>(eligible.subList(0, winnersToPick));
+        List<String> losers  = new ArrayList<>(eligible.subList(winnersToPick, eligible.size()));
 
         // Update event state
         selectedList.addAll(winners);
+
+        // Remove winners from *waitList*, not eligible
         waitList.removeAll(winners);
 
         // Notifications
@@ -84,35 +97,25 @@ public class Lottery {
         ArrayList<String> selectedList = event.getSelectedList();
         ArrayList<String> finalList = event.getFinalList();
 
-        if (waitList == null || waitList.isEmpty()) {
-            return null;
-        }
+        if (waitList == null || waitList.isEmpty()) return null;
 
         int totalSpots = (int) event.getTotalSpots();
+        if (selectedList.size() >= totalSpots) return null;
 
-        // No open spots → no replacement allowed
-        if (selectedList.size() >= totalSpots) {
-            return null;
+        // Filter eligible candidates
+        List<String> eligible = new ArrayList<>();
+        for (String u : waitList) {
+            if (!selectedList.contains(u) && !finalList.contains(u)) eligible.add(u);
         }
+        if (eligible.isEmpty()) return null;
 
-        // shuffle for fairness
-        Collections.shuffle(waitList, random);
+        Collections.shuffle(eligible, random);
+        String replacement = eligible.get(0);
 
-        // Pick the first after shuffle
-        String replacement = waitList.get(0);
-
-        // Check for duplicates
-        if (selectedList.contains(replacement) || finalList.contains(replacement)) {
-            waitList.remove(0);
-            return drawReplacement(event); // try next candidate
-        }
-        // Update
-        waitList.remove(0);
         selectedList.add(replacement);
+        waitList.remove(replacement);
 
-        // Notify the winner
         sendWinnerNotifications(event, Collections.singletonList(replacement));
-
         return replacement;
     }
 
