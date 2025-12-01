@@ -78,7 +78,7 @@ public class AdminProfileFragmentTest {
         u2.put("username", "User Two");
         usersCol.document("testUser1").set(u1).addOnSuccessListener(v -> insertLatch.countDown());
         usersCol.document("testUser2").set(u2).addOnSuccessListener(v -> insertLatch.countDown());
-        insertLatch.await(3, TimeUnit.SECONDS);
+        insertLatch.await(15, TimeUnit.SECONDS);
     }
 
     @Test
@@ -88,7 +88,7 @@ public class AdminProfileFragmentTest {
 
         // Navigate to AdminProfileFragment
         onView(withId(R.id.nav_view_admin))
-                .perform(click()); // adjust if you have a menu item or button to go to the fragment
+                .perform(click());
         // Or use Navigation component:
         scenario.onActivity(activity -> {
             NavController navController = Navigation.findNavController(
@@ -97,25 +97,25 @@ public class AdminProfileFragmentTest {
         });
 
         // Wait for Firestore to load the user
-        onView(isRoot()).perform(waitForView(withText("name2"), 5000));
+        onView(isRoot()).perform(waitForView(withText("User One"), 5000));
 
         // Verify the user exists in the list
-        onView(allOf(withText("name2"))).perform(scrollTo());
+        onView(allOf(withText("User One"))).perform(scrollTo());
 
         // Click the delete button next to that user
         onView(allOf(
-                withText("Delete"),
-                isDescendantOfA(hasDescendant(withText("name2")))
-        )).perform(click());
+                    withText("Delete"),
+                    isDescendantOfA(hasDescendant(withText("User One")))
+            )).perform(click());
 
         // Confirm deletion in the AlertDialog
         onView(withText("Delete")).perform(click());
 
-        // Wait for deletion to complete and Toast to appear (optional)
-        Thread.sleep(3000); // crude wait; replace with IdlingResource for production
+        // Wait for deletion to complete
+        Thread.sleep(10000);
 
         // Verify user is no longer in the list
-        onView(withText("name2")).check(doesNotExist());
+        onView(withText("User One")).check(doesNotExist());
     }
 
     /**
