@@ -122,8 +122,6 @@ public class AdminEventsAdapter extends RecyclerView.Adapter<AdminEventsAdapter.
                                                     Log.e("AdminDeleteEvent", "Failed to clean up user references", e));
 
                                     Toast.makeText(context, "Event deleted successfully", Toast.LENGTH_SHORT).show();
-                                    eventsList.remove(position);
-                                    notifyItemRemoved(position);
                                     notifyItemRangeChanged(position, eventsList.size());
                                 })
                                 .addOnFailureListener(e ->
