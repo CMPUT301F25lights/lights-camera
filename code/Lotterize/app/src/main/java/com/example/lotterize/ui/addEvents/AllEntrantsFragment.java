@@ -226,6 +226,7 @@ public class AllEntrantsFragment extends Fragment {
 
 
     
+
     }
 
     /**
