@@ -46,4 +46,16 @@ public class MockUsersRepository extends UsersRepository {
         }
         callback.onSuccess(users);
     }
+
+    @Override
+    public void fetchAllUsers(@NonNull UsersCallback callback) {
+        ArrayList<User> users = new ArrayList<>();
+        for (Map.Entry<String, String> entry : nameMap.entrySet()) {
+            User u = new User();
+            u.setUserId(entry.getKey());
+            u.setName(entry.getValue());
+            users.add(u);
+        }
+        callback.onSuccess(users);
+    }
 }

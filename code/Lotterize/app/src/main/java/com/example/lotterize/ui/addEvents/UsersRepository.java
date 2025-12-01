@@ -168,4 +168,31 @@ public class UsersRepository {
                     callback.onError(error);
                 });
     }
+
+    /**
+     * Fetches all users in the {@code users} collection.
+     *
+     * @param callback callback to receive the resulting users or an error
+     */
+    public void fetchAllUsers(@NonNull UsersCallback callback) {
+        db.collection("users")
+                .get()
+                .addOnSuccessListener(qs -> {
+                    ArrayList<User> users = new ArrayList<>();
+
+                    for (DocumentSnapshot doc : qs.getDocuments()) {
+                        if (!doc.exists()) continue;
+
+                        User user = new User();
+                        user.setUserId(doc.getId());
+                        user.setName(doc.getString("name"));
+                        user.setUsername(doc.getString("username"));
+
+                        users.add(user);
+                    }
+
+                    callback.onSuccess(users);
+                })
+                .addOnFailureListener(callback::onError);
+    }
 }

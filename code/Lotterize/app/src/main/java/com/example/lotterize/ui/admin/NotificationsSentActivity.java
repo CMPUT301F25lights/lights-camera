@@ -6,9 +6,12 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.lotterize.Notification;
+import com.example.lotterize.NotificationsRepository;
 import com.example.lotterize.R;
 import com.example.lotterize.ui.admin.adminNotifications.AdminNotificationDetailsDialog;
 import com.google.firebase.Timestamp;
@@ -27,8 +30,8 @@ import java.util.ArrayList;
 public class NotificationsSentActivity extends AppCompatActivity {
 
     private static final String TAG = "NotificationsSent";
-    private FirebaseFirestore db;
     private String userId;
+    private NotificationsRepository notificationsRepository;
     private LinearLayout notificationsContainer;
     private TextView emptyStateText;
 
@@ -45,8 +48,7 @@ public class NotificationsSentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications_sent);
 
-        // Initialize Firestore reference
-        db = FirebaseFirestore.getInstance();
+        notificationsRepository = NotificationsRepository.getInstance();
 
         // Retrieve userId passed via intent
         userId = getIntent().getStringExtra("userId");
@@ -78,61 +80,49 @@ public class NotificationsSentActivity extends AppCompatActivity {
      * current user's ID. Results are displayed dynamically in the container layout.
      */
     private void loadSentNotifications() {
-        Log.d(TAG, "Querying notifications where senderId equals: " + userId);
+        Log.d(TAG, "Querying notifications (repository) where senderId equals: " + userId);
 
-        db.collection("notifications")
-                .whereEqualTo("senderId", userId)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    notificationsContainer.removeAllViews();
+        notificationsRepository.fetchNotificationsSent(
+                userId,
+                new NotificationsRepository.NotificationsCallback() {
+                    @Override
+                    public void onSuccess(@NonNull ArrayList<Notification> notifications) {
+                        notificationsContainer.removeAllViews();
 
-                    if (querySnapshot.isEmpty()) {
+                        if (notifications.isEmpty()) {
+                            if (emptyStateText != null) {
+                                emptyStateText.setVisibility(View.VISIBLE);
+                                emptyStateText.setText("No notifications sent");
+                            }
+                            Log.d(TAG, "No sent notifications found");
+                        } else {
+                            if (emptyStateText != null) {
+                                emptyStateText.setVisibility(View.GONE);
+                            }
+
+                            for (Notification notification : notifications) {
+                                String message = notification.getMessage();
+                                addNotificationToView(message, notification);
+                                Log.d(TAG, "Loaded sent notification: " + message);
+                            }
+
+                            Log.d(TAG, "Total sent notifications loaded: " + notifications.size());
+                        }
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception e) {
+                        Log.e(TAG, "Error loading sent notifications", e);
+                        Toast.makeText(NotificationsSentActivity.this,
+                                "Failed to load notifications", Toast.LENGTH_SHORT).show();
+
                         if (emptyStateText != null) {
                             emptyStateText.setVisibility(View.VISIBLE);
-                            emptyStateText.setText("No notifications sent");
+                            emptyStateText.setText("Error loading notifications");
                         }
-                        Log.d(TAG, "No sent notifications found");
-                    } else {
-                        if (emptyStateText != null) {
-                            emptyStateText.setVisibility(View.GONE);
-                        }
-
-                        // Loop through all matching documents
-                        for (QueryDocumentSnapshot doc : querySnapshot) {
-                            String notificationId = doc.getString("notificationId");
-                            String message      = doc.getString("message");
-                            String senderName   = doc.getString("senderName");
-                            String senderId     = doc.getString("senderId");
-                            Timestamp timestamp = doc.getTimestamp("time");
-                            ArrayList<String> receiversId =
-                                    (ArrayList<String>) doc.get("receiversId");
-
-                            // Create notification object for full details dialog
-                            Notification notification = new Notification(
-                                    notificationId,
-                                    senderId,
-                                    senderName,
-                                    message,
-                                    timestamp,
-                                    receiversId != null ? receiversId : new ArrayList<>()
-                            );
-
-                            addNotificationToView(message, notification);
-                            Log.d(TAG, "Loaded sent notification: " + message);
-                        }
-
-                        Log.d(TAG, "Total sent notifications loaded: " + querySnapshot.size());
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error loading sent notifications: " + e.getMessage(), e);
-                    Toast.makeText(this, "Failed to load notifications", Toast.LENGTH_SHORT).show();
-
-                    if (emptyStateText != null) {
-                        emptyStateText.setVisibility(View.VISIBLE);
-                        emptyStateText.setText("Error loading notifications");
-                    }
-                });
+                }
+        );
     }
 
     /**
