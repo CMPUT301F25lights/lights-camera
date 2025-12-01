@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/navigation_admin_events"
-        android:icon="@drawable/ic_dashboard_black_24dp"
+        android:icon="@drawable/ic_home_black_24dp"
         android:title="Events" />
     <item
         android:id="@+id/navigation_admin_images"
@@ -14,7 +14,7 @@
         android:title="Notification" />
     <item
         android:id="@+id/navigation_admin_users"
-        android:icon="@drawable/ic_person"
+        android:icon="@drawable/ic_people_24dp"
         android:title="Users" />
     <item
         android:id="@+id/navigation_admin_profile"

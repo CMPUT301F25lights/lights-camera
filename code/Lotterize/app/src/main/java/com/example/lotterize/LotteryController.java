@@ -46,8 +46,8 @@ public class LotteryController {
     }
 
     public void declineInvitation(Event event, String userId) {
-        System.out.println("Decline called for user: " + userId);
-        //System.out.println("Selected List: " + event.getSelectedList());
+        //System.out.println("Decline called for user: " + userId);
+
         if (!event.getSelectedList().contains(userId)) return;
 
         // Removes the user who declines
@@ -57,10 +57,10 @@ public class LotteryController {
 
         // Draw one replacement
         String replacement = lottery.drawReplacement(event);
-        System.out.println("Selected List: " + event.getSelectedList());
+        //System.out.println("Selected List: " + event.getSelectedList());
 
         updateEventInFirestore(event);
-        System.out.println("Selected List: " + event.getSelectedList());
+        //System.out.println("Selected List: " + event.getSelectedList());
     }
 
     // Internal helper for Firestore update (can be mocked)

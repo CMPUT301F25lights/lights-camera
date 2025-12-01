@@ -210,6 +210,9 @@ public class ShowWaitingListActivity extends AppCompatActivity {
         });
 
     }
+    /**
+     * Checks if the app has permission to access the device's location.
+     */
     private boolean checkPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -218,27 +221,22 @@ public class ShowWaitingListActivity extends AppCompatActivity {
         return false;
     }
 
+    /**
+     * Requests permission for location access.
+     */
     private void requestPermissions() {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                 LOCATION_PERMISSION_REQUEST_CODE);
     }
 
+    /**
+     * Gets the current user's location using FusedLocationProviderClient.
+     *
+     * @param callback
+     */
     @SuppressLint("MissingPermission")
     private void getUserLocation(LocationCallback callback) {
-//        fusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(location -> {
-//                    if (location != null) {
-//                        callback.onLocationObtained(location);
-//                    } else {
-//                        Log.d("UserLocation", "Location is null");
-//                        callback.onLocationFailed();
-//                    }
-//                })
-//                .addOnFailureListener(e -> {
-//                    Log.e("UserLocation", "Failed to get location", e);
-//                    callback.onLocationFailed();
-//                });
         LocationRequest locationRequest =
                 new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 0)
                         .setMinUpdateIntervalMillis(0)

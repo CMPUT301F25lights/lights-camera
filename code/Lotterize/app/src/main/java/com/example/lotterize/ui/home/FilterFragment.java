@@ -27,8 +27,18 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+/**
+ * Creates dialog fragment allowing users to filter events using filters
+ * and availability
+ *
+ */
 public class FilterFragment extends DialogFragment {
 
+
+    /**
+     * Interface listener must implement to ensure correct functionality
+     * for FilterFragment
+     */
     public interface FilterFragmentsDialogListener {
         void addFilter(String f);
         void removeFilter(String f);
@@ -48,6 +58,14 @@ public class FilterFragment extends DialogFragment {
         this.listener = listener;
     }
 
+    /**
+     * Creates dialog fragment allowing users to filter events using filters
+     *  and availability
+     *  @param savedInstanceState The last saved instance state of the Fragment,
+     *  or null if this is a freshly created Fragment.
+     *
+     *  @return returns Dialog
+     */
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {

@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation(libs.play.services.maps)
+    implementation(libs.espresso.intents)
     testImplementation(libs.junit)
     //these will have to be removed
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
