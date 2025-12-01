@@ -19,7 +19,9 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.example.lotterize.R;
+import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentAdminProfileBinding;
+import com.example.lotterize.ui.addEvents.UsersRepository;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -36,6 +38,7 @@ public class AdminProfileFragment extends Fragment {
     static final String TAG = "AdminProfilesFragment";
     FragmentAdminProfileBinding binding;
     FirebaseFirestore db;
+    UsersRepository usersRepository;
     List<UserProfile> allUsers = new ArrayList<>();
 
     /**
@@ -58,13 +61,12 @@ public class AdminProfileFragment extends Fragment {
         binding = FragmentAdminProfileBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        // Initialize Firestore
         db = FirebaseFirestore.getInstance();
 
-        // Set up search functionality
+        usersRepository = UsersRepository.getInstance();
+
         setupSearch();
 
-        // Load all user profiles
         loadUserProfiles();
 
         return root;
@@ -94,6 +96,8 @@ public class AdminProfileFragment extends Fragment {
      * @param query The search query entered by the admin
      */
     public void filterUsers(String query) {
+        if (binding == null) return;
+
         binding.profilesContainer.removeAllViews();
 
         if (query.isEmpty()) {
@@ -101,6 +105,10 @@ public class AdminProfileFragment extends Fragment {
             for (UserProfile user : allUsers) {
                 addUserToView(user.userId, user.username);
             }
+
+            binding.textEmptyState.setVisibility(
+                    allUsers.isEmpty() ? View.VISIBLE : View.GONE
+            );
         } else {
             // Filter users by username
             int count = 0;
@@ -121,52 +129,66 @@ public class AdminProfileFragment extends Fragment {
     }
 
     /**
-     * Retrieves all users from Firestore and displays their usernames.
+     * Retrieves all users using UsersRepository and displays their usernames.
+     * This is test-friendly because UsersRepository can be replaced with a mock.
      */
     public void loadUserProfiles() {
-        Log.d(TAG, "Loading user profiles from Firestore...");
+        Log.d(TAG, "Loading user profiles from UsersRepository...");
 
-        db.collection("users")
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    binding.profilesContainer.removeAllViews();
-                    allUsers.clear();
+        usersRepository.fetchAllUsers(new UsersRepository.UsersCallback() {
+            @Override
+            public void onSuccess(@NonNull ArrayList<User> users) {
+                if (binding == null) return;
 
-                    // Loop through all user documents
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        String userId = doc.getId();
-                        String username = doc.getString("username");
+                binding.profilesContainer.removeAllViews();
+                allUsers.clear();
 
-                        if (username != null && !username.isEmpty()) {
-                            allUsers.add(new UserProfile(userId, username));
-                            addUserToView(userId, username);
-                            Log.d(TAG, "Loaded user: " + username);
-                        }
-                    }
+                for (User user : users) {
+                    String displayName;
 
-                    // Show empty state if no users found
-                    if (allUsers.isEmpty()) {
-                        binding.textEmptyState.setVisibility(View.VISIBLE);
-                        Log.d(TAG, "No users found");
+                    // Prefer username if present, then name, then raw ID
+                    if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+                        displayName = user.getUsername();
+                    } else if (user.getName() != null && !user.getName().isEmpty()) {
+                        displayName = user.getName();
                     } else {
-                        binding.textEmptyState.setVisibility(View.GONE);
+                        displayName = user.getUserId();
                     }
 
-                    Log.d(TAG, "Total users loaded: " + allUsers.size());
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error loading users: " + e.getMessage(), e);
+                    allUsers.add(new UserProfile(user.getUserId(), displayName));
+                    addUserToView(user.getUserId(), displayName);
+                    Log.d(TAG, "Loaded user: " + displayName);
+                }
+
+                if (allUsers.isEmpty()) {
+                    binding.textEmptyState.setVisibility(View.VISIBLE);
+                    Log.d(TAG, "No users found");
+                } else {
+                    binding.textEmptyState.setVisibility(View.GONE);
+                }
+
+                Log.d(TAG, "Total users loaded: " + allUsers.size());
+            }
+
+            @Override
+            public void onError(@NonNull Exception e) {
+                Log.e(TAG, "Error loading users from UsersRepository: " + e.getMessage(), e);
+                if (getContext() != null) {
                     Toast.makeText(getContext(), "Error loading users", Toast.LENGTH_SHORT).show();
-                });
+                }
+            }
+        });
     }
 
     /**
      * Dynamically adds a single user profile to the scrollable view.
      *
      * @param userId   The user's document ID in Firestore
-     * @param username The user's username
+     * @param username The user's username/display name
      */
     public void addUserToView(String userId, String username) {
+        if (binding == null) return;
+
         // Create a horizontal layout for each user row
         LinearLayout userItem = new LinearLayout(getContext());
         userItem.setOrientation(LinearLayout.HORIZONTAL);
@@ -223,7 +245,10 @@ public class AdminProfileFragment extends Fragment {
             NavController navController = Navigation.findNavController(v);
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
-            navController.navigate(R.id.action_navigation_admin_profile_to_navigation_admin_user_details, bundle);
+            navController.navigate(
+                    R.id.action_navigation_admin_profile_to_navigation_admin_user_details,
+                    bundle
+            );
         });
     }
 
@@ -258,7 +283,7 @@ public class AdminProfileFragment extends Fragment {
     public void deleteUser(String userId, String username) {
         Log.d(TAG, "Starting cascade delete for user: " + username);
 
-        // Step 1: Remove user from all events (waitList, selectedList, etc.)
+        // Remove user from all events (waitList, selectedList, etc.)
         db.collection("events")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
@@ -295,13 +320,14 @@ public class AdminProfileFragment extends Fragment {
                                             "cancelledList", cancelledList
                                     )
                                     .addOnSuccessListener(aVoid ->
-                                            Log.d(TAG, "Removed user from event: " + eventDoc.getString("eventName")))
+                                            Log.d(TAG, "Removed user from event: " +
+                                                    eventDoc.getString("eventName")))
                                     .addOnFailureListener(e ->
                                             Log.e(TAG, "Error removing user from event", e));
                         }
                     }
 
-                    // Step 2: Delete events owned by this user
+                    // Delete events owned by this user
                     deleteEventsOwnedByUser(userId, username);
                 })
                 .addOnFailureListener(e -> {
@@ -334,12 +360,11 @@ public class AdminProfileFragment extends Fragment {
                                         Log.e(TAG, "Error deleting event", e));
                     }
 
-                    // Step 3: Delete notifications sent by this user
+                    // Delete notifications sent by this user
                     deleteNotificationsSentByUser(userId, username, eventCount);
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error finding user's events: " + e.getMessage(), e);
-                    // Continue with notification deletion even if this fails
                     deleteNotificationsSentByUser(userId, username, 0);
                 });
     }
@@ -347,8 +372,8 @@ public class AdminProfileFragment extends Fragment {
     /**
      * Deletes all notifications sent by the user.
      *
-     * @param userId   The user's document ID
-     * @param username The user's username (for logging)
+     * @param userId     The user's document ID
+     * @param username   The user's username (for logging)
      * @param eventCount Number of events deleted
      */
     public void deleteNotificationsSentByUser(String userId, String username, int eventCount) {
@@ -369,12 +394,11 @@ public class AdminProfileFragment extends Fragment {
                                         Log.e(TAG, "Error deleting sent notification", e));
                     }
 
-                    // Step 4: Delete notifications received by this user
+                    // Delete notifications received by this user
                     deleteNotificationsReceivedByUser(userId, username, eventCount, sentCount);
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error finding sent notifications: " + e.getMessage(), e);
-                    // Continue with received notifications even if this fails
                     deleteNotificationsReceivedByUser(userId, username, eventCount, 0);
                 });
     }
@@ -383,12 +407,13 @@ public class AdminProfileFragment extends Fragment {
      * Removes user from notifications they received
      * (removes userId from receiversId array, or deletes notification if they're the only receiver).
      *
-     * @param userId   The user's document ID
-     * @param username The user's username (for logging)
-     * @param eventCount Number of events deleted
-     * @param sentCount Number of sent notifications deleted
+     * @param userId        The user's document ID
+     * @param username      The user's username (for logging)
+     * @param eventCount    Number of events deleted
+     * @param sentCount     Number of sent notifications deleted
      */
-    public void deleteNotificationsReceivedByUser(String userId, String username, int eventCount, int sentCount) {
+    public void deleteNotificationsReceivedByUser(String userId, String username,
+                                                  int eventCount, int sentCount) {
         db.collection("notifications")
                 .whereArrayContains("receiversId", userId)
                 .get()
@@ -423,7 +448,7 @@ public class AdminProfileFragment extends Fragment {
                         }
                     }
 
-                    // Step 5: Finally delete the user document
+                    // Finally delete the user document
                     deleteUserDocument(userId, username, eventCount, sentCount, receivedCount);
                 })
                 .addOnFailureListener(e -> {
@@ -436,13 +461,14 @@ public class AdminProfileFragment extends Fragment {
     /**
      * Deletes the user's document from Firestore.
      *
-     * @param userId     The user's document ID
-     * @param username   The user's username (for logging)
-     * @param eventCount Number of events deleted
-     * @param sentCount Number of sent notifications deleted
+     * @param userId        The user's document ID
+     * @param username      The user's username (for logging)
+     * @param eventCount    Number of events deleted
+     * @param sentCount     Number of sent notifications deleted
      * @param receivedCount Number of received notifications deleted
      */
-    public void deleteUserDocument(String userId, String username, int eventCount, int sentCount, int receivedCount) {
+    public void deleteUserDocument(String userId, String username,
+                                   int eventCount, int sentCount, int receivedCount) {
         db.collection("users")
                 .document(userId)
                 .delete()
@@ -461,15 +487,21 @@ public class AdminProfileFragment extends Fragment {
                         message.append("\n• ").append(receivedCount).append(" received notification(s) deleted");
                     }
 
-                    Toast.makeText(getContext(), message.toString(), Toast.LENGTH_LONG).show();
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), message.toString(), Toast.LENGTH_LONG).show();
+                    }
 
                     // Remove from list and refresh view
                     allUsers.removeIf(user -> user.userId.equals(userId));
-                    filterUsers(binding.searchProfiles.getText().toString());
+                    if (binding != null) {
+                        filterUsers(binding.searchProfiles.getText().toString());
+                    }
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error deleting user: " + e.getMessage(), e);
-                    Toast.makeText(getContext(), "Error deleting user", Toast.LENGTH_SHORT).show();
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Error deleting user", Toast.LENGTH_SHORT).show();
+                    }
                 });
     }
 
