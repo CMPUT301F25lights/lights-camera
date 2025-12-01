@@ -30,11 +30,19 @@ public class EventsRegisteredViewModel extends ViewModel {
             new MutableLiveData<>(new ArrayList<>());
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private FirebaseFirestore dbFake;
 
     public EventsRegisteredViewModel() {
         //loadHardcodedTestEvent(); // TEMPORARY TEST
         loadRegisteredEvents();
     }
+
+    public EventsRegisteredViewModel(FirebaseFirestore dbOverride) {
+        this.dbFake = dbOverride != null ? dbOverride : FirebaseFirestore.getInstance();
+        //registeredEventsLiveData = new MutableLiveData<>(new ArrayList<>());
+        loadRegisteredEvents();
+    }
+
 
     /**
      * Loads a hardcoded test event into the LiveData for testing purposes.

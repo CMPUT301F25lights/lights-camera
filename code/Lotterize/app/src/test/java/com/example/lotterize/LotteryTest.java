@@ -24,6 +24,7 @@ public class LotteryTest {
     private Event testEvent;
     private Lottery lottery;
     private User mockUser;
+    private NotificationSender mockSender;
 
     @Before
     public void setUp() {
@@ -54,7 +55,7 @@ public class LotteryTest {
         );
 
         // Mock NotificationSender and Lottery
-        NotificationSender mockSender = mock(NotificationSender.class);
+        mockSender = mock(NotificationSender.class);
         lottery = new Lottery(mockSender);
 
         // Mock CurrentUser for all tests
@@ -133,14 +134,14 @@ public class LotteryTest {
     @Test
     public void testDrawReplacement_SelectsOne() {
         withMockedCurrentUser(() -> {
-            lottery.drawWinners(testEvent);
-            int initialWaitSize = testEvent.getWaitList().size();
+            // simulate initial selected list with 1 spot taken, so 1 replacement is possible
+            testEvent.getSelectedList().add("u0");
 
+            int initialWaitSize = testEvent.getWaitList().size();
             String replacement = lottery.drawReplacement(testEvent);
 
             assertNotNull(replacement);
             assertTrue(testEvent.getSelectedList().contains(replacement));
-            //assertTrue(testEvent.getFinalList().contains(replacement));
             assertEquals(initialWaitSize - 1, testEvent.getWaitList().size());
         });
     }
@@ -178,18 +179,57 @@ public class LotteryTest {
         });
     }
 
-    /** Local stub class for notification verification (optional). */
-    private static class MockNotificationSender extends NotificationSender {
-        private boolean called = false;
-        private String lastMessage;
 
-        @Override
-        public void sendNotification(String senderId, String message, ArrayList<String> receiverIds) {
-            called = true;
-            lastMessage = message;
-        }
+    /** Verify that users in finalList are never selected again */
+    @Test
+    public void testFinalListUsersNotReselected() {
+        testEvent.getFinalList().add("u1");
+        List<String> winners = lottery.drawWinners(testEvent);
 
-        public boolean wasCalled() { return called; }
-        public String getLastMessage() { return lastMessage; }
+        assertFalse(winners.contains("u1"));
     }
+
+    /** Verify drawReplacement skips users already in selectedList or finalList */
+    @Test
+    public void testDrawReplacementSkipsExisting() {
+        testEvent.getSelectedList().add("u1");
+        testEvent.getFinalList().add("u2");
+
+        String replacement = lottery.drawReplacement(testEvent);
+
+        assertNotEquals("u1", replacement);
+        assertNotEquals("u2", replacement);
+        assertTrue(testEvent.getSelectedList().contains(replacement));
+    }
+
+    /** Verify no winners are drawn when total spots are already full */
+    @Test
+    public void testDrawWinnersWhenFull() {
+        testEvent.getSelectedList().addAll(Arrays.asList("a", "b")); // totalSpots=2
+        List<String> winners = lottery.drawWinners(testEvent);
+
+        assertTrue(winners.isEmpty());
+    }
+
+
+    /** Verify multiple replacement draws never select same user twice */
+    @Test
+    public void testMultipleDrawReplacementNoDuplicates() {
+        List<String> winners = lottery.drawWinners(testEvent);
+
+        String rep1 = lottery.drawReplacement(testEvent);
+        String rep2 = lottery.drawReplacement(testEvent);
+        String rep3 = lottery.drawReplacement(testEvent);
+
+        List<String> allSelected = new ArrayList<>(testEvent.getSelectedList());
+        allSelected.addAll(testEvent.getFinalList());
+
+        assertEquals(allSelected.size(), allSelected.stream().distinct().count());
+    }
+
+
+
+
+
+
 }
