@@ -29,9 +29,7 @@ import java.util.Map;
 public class AdminNotificationDetailsDialog extends DialogFragment {
 
     private static final String TAG = "AdminNotifDetails";
-    private static final String ARG_NOTIFICATION = "arg_notification";
     private final SimpleDateFormat tsFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-
     private FirebaseFirestore db;
     private TextView receiversTextView;
     private ArrayList<String> receiverIds;

@@ -70,6 +70,11 @@ dependencies {
     implementation(libs.play.services.maps)
     testImplementation(libs.junit)
     //these will have to be removed
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("org.mockito:mockito-android:5.2.0")
+    androidTestImplementation("com.google.android.gms:play-services-tasks:18.0.2")
+    androidTestImplementation("com.google.firebase:firebase-firestore:25.0.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
     testImplementation("org.mockito:mockito-core:5.5.0")
