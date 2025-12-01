@@ -22,6 +22,7 @@ public class User {
     private ArrayList<String> registeredEventIds;
     private ArrayList<String> ownedEventIds;
     private Boolean wantNotification;
+    private Boolean deviceLinked;
     /**
      * Full constructor for creating a complete User in memory.
      */
@@ -37,6 +38,7 @@ public class User {
         this.registeredEventIds = new ArrayList<>();
         this.ownedEventIds = new ArrayList<>();
         this.wantNotification = true;
+        this.deviceLinked = false;
     }
 
     /**
@@ -46,6 +48,7 @@ public class User {
         this.registeredEventIds = new ArrayList<>();
         this.ownedEventIds = new ArrayList<>();
         this.wantNotification = true;
+        this.deviceLinked = false;
     }
 
     /**
@@ -118,6 +121,9 @@ public class User {
     public Boolean getWantNotification(){
         return this.wantNotification;
     }
+
+    public void setDeviceLinked(boolean deviceLinked) {this.deviceLinked = deviceLinked;}
+    public Boolean getDeviceLinked() {return this.deviceLinked;}
 
     /**
      * Adds an event ID to the list of events that this user owns.
