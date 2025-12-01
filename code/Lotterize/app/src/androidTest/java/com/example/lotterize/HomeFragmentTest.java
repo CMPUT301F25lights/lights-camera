@@ -351,7 +351,13 @@ public class HomeFragmentTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        CountDownLatch latch2 = new CountDownLatch(1);
+        testDoc.get().addOnSuccessListener(documentSnapshot -> {latch2.countDown();});
+        try {
+            latch2.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         onData(anything())
                 .inAdapterView(withId(R.id.listView_showList))
                 .atPosition(1).onChildView(withId(R.id.user_name_text))
@@ -394,7 +400,13 @@ public class HomeFragmentTest {
             e.printStackTrace();
         }
         intended(allOf(hasComponent(ShowWaitingListActivity.class.getName()), hasExtra("eventId", testEventId)));
-
+        CountDownLatch latch2 = new CountDownLatch(1);
+        testDoc.get().addOnSuccessListener(documentSnapshot -> {latch2.countDown();});
+        try {
+            latch2.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         onView(withId(R.id.interactButton)).perform(click());
         try {
             Thread.sleep(1000);
