@@ -52,9 +52,9 @@ import kotlin._Assertions;
 
 
 /**
- * Fragment that shows the home screen. Includes a display of events
- * that user can join waitlist for along with text search, QR search (not implemented yet),
- * and info about the lottery.
+ * Displays events that user can join waitlist for along with text search,
+ * QR search, and info about the lottery. User can also filter events using filters and
+ * availability date.
  */
 public class HomeFragment extends Fragment implements FilterFragment.FilterFragmentsDialogListener {
     private FirebaseFirestore db;
@@ -103,7 +103,8 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
 
     /**
      * Displays events that user can join waitlist for along with text search,
-     * QR search (not implemented yet), and info about the lottery.
+     * QR search, and info about the lottery. User can also filter events using filters and
+     * availability date.
      *
      * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
      * @param savedInstanceState If non-null, this fragment is being re-constructed
@@ -237,7 +238,7 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
         });
 
     }
-
+    
     private void openEventFromQR(String eventId){
         try{
             DocumentReference ref = db.collection("events").document(eventId);
@@ -279,18 +280,32 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
 
     }
 
+    /**
+     * Adds filter to filtersList
+     * @param f
+     */
     @Override
     public void addFilter(String f) {
         filtersList.add(f);
         updateShownList();
     }
 
+    /**
+     * Removes filter to filtersList
+     * @param f
+     */
     @Override
     public void removeFilter(String f) {
         filtersList.remove(f);
         updateShownList();
     }
 
+    /**
+     * Sets the shownDate
+     * @param year
+     * @param month
+     * @param dayOfMonth
+     */
     @Override
     public void filterDate(int year, int month, int dayOfMonth) {
         Calendar c = Calendar.getInstance();
@@ -301,12 +316,18 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
         updateShownList();
     }
 
+    /**
+     * Resets the shownDate (makes it null)
+     */
     @Override
     public void resetDate() {
         shownDate = null;
         updateShownList();
     }
 
+    /**
+     * Updates shownList taking into account filters and shownDate
+     */
     private void updateShownList(){
         shownList.clear();
         for (DocumentSnapshot d : eventList){
