@@ -20,14 +20,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 
-public class NotificationFragmentTest {
+public class NotificationFragmentTest{
     @Test
-    public void test_Notifications_Tab_Is_Displayed() {
+    public void test_NotificationsTabIsDisplayed() {
         //Create a mock logged-in user (entrant/organizer)
         User mockUser = new User(
                 "testUserId",
@@ -38,8 +39,8 @@ public class NotificationFragmentTest {
                 "testUsername",
                 "testPassword"
         );
-        mockUser.setOwnedEventIds(new java.util.ArrayList<>());
-        mockUser.setRegisteredEventIds(new java.util.ArrayList<>());
+        mockUser.setOwnedEventIds(new ArrayList<>());
+        mockUser.setRegisteredEventIds(new ArrayList<>());
         mockUser.setWantNotification(true);
 
         //Set mockUser before launching the activity

@@ -70,6 +70,9 @@ public class EditEventFragment extends Fragment {
     private ImageHandler imageHandler;
     private TextView posterTextView;
 
+    private final EventsRepository eventsRepository = EventsRepository.getInstance();
+
+
     /**
      * Initializes the fragment by setting up:
      * <ul>
@@ -220,21 +223,29 @@ public class EditEventFragment extends Fragment {
         });
 
         // Listen for event document changes and bind to UI
-        eventRegistration = db.collection("events")
-                .document(eventIdArg)
-                .addSnapshotListener((doc, err) -> {
-                    if (err != null) {
-                        Toast.makeText(requireContext(), "Failed to load event", Toast.LENGTH_SHORT).show();
-                        return;
+        eventRegistration = eventsRepository.listenToEventById(
+                eventIdArg,
+                    new EventsRepository.EventsDetailCallback() {
+                    @Override
+                    public void onEvents(Event event, DocumentSnapshot doc, Exception e) {
+                        if (event == null) {
+                            Toast.makeText(requireContext(), "Failed to load event", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        if (eventIdArg == null){
+                            Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        currentQrCode = event.getQrCode();
+                        bindEventToUi(event, doc);
                     }
-                    if (doc == null || !doc.exists()) {
-                        Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show();
-                        return;
+
+                    @Override
+                    public void onError(@NonNull Exception e) {
+                        Log.e("EditEvent", e.toString());
                     }
-                    Event e = Event.addEventDetailsFromSnapShot(doc);
-                    currentQrCode = e.getQrCode();
-                    bindEventToUi(e, doc);
-                });
+                }
+        );
     }
 
     /**

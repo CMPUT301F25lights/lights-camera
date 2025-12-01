@@ -225,7 +225,7 @@ public class AllEntrantsFragment extends Fragment {
         });
 
 
-
+    
         // TODOs for the bottom buttons
         binding.btnDrawReplacement.setOnClickListener(v15 -> {/* draw */});
     }

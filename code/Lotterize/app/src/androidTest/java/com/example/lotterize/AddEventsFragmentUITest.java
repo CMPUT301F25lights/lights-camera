@@ -1,102 +1,109 @@
 package com.example.lotterize;
-import static androidx.test.espresso.Espresso.onData;
+
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
+
+import static org.hamcrest.CoreMatchers.allOf;
 
 import androidx.test.core.app.ActivityScenario;
-import androidx.test.espresso.action.ViewActions;
-import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 
-import org.junit.Before;
-import org.junit.Rule;
+import com.google.firebase.Timestamp;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Set;
+import java.util.ArrayList;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
+public class AddEventsFragmentUITest extends BaseUITest {
 
-public class AddEventsFragmentUITest {
-    @Before
-    public void setUp(){
-        User mockUser = new User(
-                "testUserId",
-                "Test User",
-                "555-5555",
-                "test@example.com",
+
+    @Test
+    public void TestShowOnlyOwnedEvents() {
+        // Event that belongs to different user
+        Event otherUserEvent = new Event(
+                "testEventId2",
+                "testUserId2",
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                "TestEvent2",
+                Timestamp.now(),
                 null,
-                "testUsername",
-                "testPassword"
+                null,
+                "Edmonton",
+                10,
+                "This event is used for testing",
+                0,
+                null,
+                null,
+                null,
+                new ArrayList<>(),
+                false,
+                null
         );
-        mockUser.setOwnedEventIds(new java.util.ArrayList<>());
-        mockUser.setRegisteredEventIds(new java.util.ArrayList<>());
-        mockUser.setWantNotification(true);
-        CurrentUser.set(mockUser);
+        mockEventsRepository.addEvent(otherUserEvent);
+
+        try (ActivityScenario<UserActivity> scenario = ActivityScenario.launch(UserActivity.class)) {
+
+            //Navigate to Add_Event tab
+            onView(withId(R.id.navigation_addEvents)).perform(click());
+
+            //Assert The current user's event ("TestEvent") is visible
+            onView(withText("TestEvent")).check(matches(isDisplayed()));
+
+            //Assert the other user's event ("TestEvent2") is not in the listView
+            onView(withText("TestEvent2")).check(doesNotExist());
+
+        }
     }
 
-//    public void clickingEvent_opensEditScreenWithCorrectDetails() {
-//        // 1. Go to the organizer "My Events" tab if needed.
-//        //    Replace R.id.navigation_my_events with your bottom-nav ID.
-//        onView(withId(R.id.navigation_my_events))
-//                .perform(click());
-//
-//        // 2. Wait a bit for Firestore to load the events into the list.
-//        //    (Simple CMPUT-301 level hack instead of IdlingResource.)
-//        onView(isRoot()).perform(waitFor(2000));
-//
-//        // 3. Click on the event with name "testingnov2" in the list.
-//        onView(withText("testingnov2"))
-//                .perform(click());
-//
-//        // 4. We are now on EditEventFragment.
-//        //    Check that all fields show the correct values.
-//        //
-//        //    IMPORTANT: replace these IDs with your actual EditText IDs
-//        //    from fragment_edit_event.xml.
-//
-//        // Event name
-//        onView(withId(R.id.edit_event_name))
-//                .check(matches(withText("testingnov2")));
-//
-//        // Date
-//        onView(withId(R.id.edit_event_date))
-//                .check(matches(withText("October 10, 2001")));
-//
-//        // Time
-//        onView(withId(R.id.edit_event_time))
-//                .check(matches(withText("10:10 AM")));
-//
-//        // Location
-//        onView(withId(R.id.edit_event_location))
-//                .check(matches(withText("edmonton")));
-//
-//        // Total spots
-//        onView(withId(R.id.edit_event_total_spots))
-//                .check(matches(withText("10")));
-//
-//        // Description
-//        onView(withId(R.id.edit_event_description))
-//                .check(matches(withText("a")));
-//
-//        // Limit entrants on waitlist
-//        onView(withId(R.id.edit_event_waitlist_limit))
-//                .check(matches(withText("10")));
-//
-//        // Sample attendees
-//        onView(withId(R.id.edit_event_sample_attendees))
-//                .check(matches(withText("0")));
-//
-//        // Optional: check that the "Edit Event" title is visible
-//        onView(withText("Edit Event"))
-//                .check(matches(isDisplayed()));
-//    }
+    @Test
+    public void TestShowEventWithLongName() {
+        // Event
+        Event otherUserEvent = new Event(
+                "testEventId3",
+                "testUserId1",
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                "This is an event with a very long name and i'm testing whether it's shown on the screen",
+                Timestamp.now(),
+                null,
+                null,
+                "Edmonton",
+                10,
+                "This event is used for testing",
+                0,
+                null,
+                null,
+                null,
+                new ArrayList<>(),
+                false,
+                null
+        );
+        mockEventsRepository.addEvent(otherUserEvent);
+
+        try (ActivityScenario<UserActivity> scenario = ActivityScenario.launch(UserActivity.class)) {
+
+            //Navigate to Add_Event tab
+            onView(withId(R.id.navigation_addEvents)).perform(click());
+
+            //Assert The current event with long name  is visible
+            onView(withText("TestEvent")).check(matches(isDisplayed()));
+
+            onView(allOf(withId(R.id.text_title),withText("This is an event with a very long name and i'm testing whether it's shown on the screen"))).check(matches(isDisplayed()));
+
+        }
+    }
 }

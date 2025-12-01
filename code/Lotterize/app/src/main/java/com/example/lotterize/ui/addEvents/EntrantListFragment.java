@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.lotterize.Event;
 import com.example.lotterize.R;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -52,10 +53,10 @@ public class EntrantListFragment extends Fragment {
     private ArrayAdapter<String> adapter;
     private final ArrayList<String> rows = new ArrayList<>();
 
-    /** Cache mapping user document id -> display name (fallback to id). */
-    private final Map<String, String> idToNameMap = new HashMap<>();
-
     ListenerRegistration registration;
+
+    private final UsersRepository usersRepo = UsersRepository.getInstance();
+    private final EventsRepository eventsRepo = EventsRepository.getInstance();
 
     /**
      * This inflates the fragment layout.
@@ -155,8 +156,8 @@ public class EntrantListFragment extends Fragment {
     }
 
     /**
-     * This starts a real-time listener on the event document and refreshes the
-     * entrant list whenever the document changes in Firestore.
+     * This attaches a Firestore snapshot listener for events owned by the current user.
+     * The listener is created via {@link EventsRepository#listenToEvents(String, EventsRepository.MyEventsCallback)}
      */
     private void startEntrantsListener() {
         final String field = listField(status);
@@ -165,29 +166,44 @@ public class EntrantListFragment extends Fragment {
             return;
         }
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         //Clean up existing listener in case we called it twice
         if (registration != null){
             registration.remove();
             registration = null;
         }
-        registration =
-                db.collection("events").document(eventId)
-                        .addSnapshotListener((doc, e)->{
-                            if (e != null) {
-                                toast("Listen failed: " + e.getMessage());
-                                return;
-                            }
-                            if(doc != null && doc.exists()){
-                                bindFromDoc(doc, field);
-                            }
-                            else{
-                                toast("Failed to load event");
-                                rows.clear();
-                                adapter.notifyDataSetChanged();
-                            }
-                        });
+
+        registration = eventsRepo.listenToEventById(
+                eventId,
+                new EventsRepository.EventsDetailCallback() {
+                    @Override
+                    public void onEvents(Event event, DocumentSnapshot doc, Exception e) {
+                        if (!isAdded()) return;
+
+                        if (e != null) {
+                            toast("Listen failed: " + e.getMessage());
+                            return;
+                        }
+                        if (doc == null || !doc.exists()) {
+                            toast("Failed to load event");
+                            rows.clear();
+                            adapter.notifyDataSetChanged();
+                            return;
+                        }
+
+                        bindFromDoc(doc, field);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception e) {
+                        if (!isAdded()) return;
+                        Log.e("EntrantListFragment", "EventsRepo error", e);
+                        toast("Failed to load event");
+                        rows.clear();
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+        );
     }
 
     /**
@@ -250,27 +266,22 @@ public class EntrantListFragment extends Fragment {
      */
     private void resolveNamesByDocId(@NonNull ArrayList<String> docIds) {
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        usersRepo.resolveDisplayNames(docIds, new UsersRepository.NamesCallback() {
+            @Override
+            public void onSuccess(@NonNull ArrayList<String> displayNames) {
+                rows.clear();
+                rows.addAll(displayNames);
+                adapter.notifyDataSetChanged();
+            }
 
-        db.collection("users")
-                .get()
-                .addOnSuccessListener(qs -> {
-                    for (DocumentSnapshot d : qs.getDocuments()) {
-                        String id   = d.getId();
-                        String name = d.getString("name");
-                        idToNameMap.put(id, (name != null && !name.isEmpty()) ? name : id);
-                    }
-                    rows.clear();
-                    rows.addAll(applyNames(docIds, idToNameMap));
-                    adapter.notifyDataSetChanged();                })
-                .addOnFailureListener(e -> {
-
-                    // If we fail to build the cache, show raw ids
-                    rows.clear();
-                    rows.addAll(docIds);
-                    adapter.notifyDataSetChanged();
-                    Log.w("EntrantListFragment", "Failed to preload users: " + e.getMessage());
-                });
+            @Override
+            public void onError(@NonNull Exception e, @NonNull ArrayList<String> fallbackIds) {
+                Log.e("EntrantListFragment", "Failed to preload users: " + e.getMessage());
+                rows.clear();
+                rows.addAll(fallbackIds);
+                adapter.notifyDataSetChanged();
+            }
+        });
     }
 
     /**
@@ -293,7 +304,7 @@ public class EntrantListFragment extends Fragment {
     }
 
     /**
-     * This shows a short toast message.
+     * This shows a short to    ast message.
      *
      * @param msg
      *      The message to display
