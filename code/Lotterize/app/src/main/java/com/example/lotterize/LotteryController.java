@@ -30,24 +30,37 @@ public class LotteryController {
     }
 
     public void acceptInvitation(Event event, String userId) {
-        if (event.getSelectedList().contains(userId)) {
-            event.getSelectedList().remove(userId);
+        if (!event.getSelectedList().contains(userId)) return;
+
+        int totalSpots = (int) event.getTotalSpots();
+
+        // Prevent overfilling final list
+        if (event.getFinalList().size() >= totalSpots) return;
+
+
+        if (!event.getFinalList().contains(userId)) {
             event.getFinalList().add(userId);
-            updateEventInFirestore(event);
         }
+
+        updateEventInFirestore(event);
     }
 
     public void declineInvitation(Event event, String userId) {
-        if (event.getSelectedList().contains(userId)) {
-            event.getSelectedList().remove(userId);
-            event.getCancelledList().add(userId);
+        //System.out.println("Decline called for user: " + userId);
 
-            if (!event.getWaitList().isEmpty()) {
-                String nextUser = event.getWaitList().remove(0);
-                event.getSelectedList().add(nextUser);
-            }
-            updateEventInFirestore(event);
-        }
+        if (!event.getSelectedList().contains(userId)) return;
+
+        // Removes the user who declines
+        event.getSelectedList().remove(userId);
+        event.getCancelledList().add(userId);
+
+
+        // Draw one replacement
+        String replacement = lottery.drawReplacement(event);
+        //System.out.println("Selected List: " + event.getSelectedList());
+
+        updateEventInFirestore(event);
+        //System.out.println("Selected List: " + event.getSelectedList());
     }
 
     // Internal helper for Firestore update (can be mocked)

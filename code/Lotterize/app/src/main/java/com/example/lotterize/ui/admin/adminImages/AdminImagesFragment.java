@@ -44,26 +44,12 @@ public class AdminImagesFragment extends Fragment {
         recyclerView.setAdapter(adapter);
         startRealtimeListener();
 
-//        // load images from firestore
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//
-//        db.collection("events")
-//                .whereNotEqualTo("imageUrl", null)
-//                .get()
-//                .addOnSuccessListener(snapshot -> {
-//
-//                    List<Event> events = new ArrayList<>();
-//
-//                    for (DocumentSnapshot doc : snapshot) {
-//                        Event event = Event.addEventDetailsFromSnapShot(doc);
-//                        event.setEventId(doc.getId()); // ensure ID is stored
-//                        events.add(event);
-//                    }
-//
-//                    adapter.updateData(events);
-//                });
         return view;
     }
+
+    /**
+     * Starts a real-time listener for events in the Firestore database.
+     */
     private void startRealtimeListener() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -92,6 +78,12 @@ public class AdminImagesFragment extends Fragment {
                 });
     }
 
+    /**
+     * Deletes the image associated with the given event
+     * from Firebase Storage and the Firestore document.
+     *
+     * @param event
+     */
     private void deleteImage(Event event) {
         ImageHandler handler = new ImageHandler();
         handler.setExistingImage(event.getImageUrl(), event.getImagePath());
