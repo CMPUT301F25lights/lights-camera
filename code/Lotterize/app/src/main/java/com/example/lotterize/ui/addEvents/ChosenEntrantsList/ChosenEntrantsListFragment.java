@@ -15,11 +15,17 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.lotterize.CurrentUser;
+import com.example.lotterize.Event;
+import com.example.lotterize.Notification;
+import com.example.lotterize.NotificationSender;
 import com.example.lotterize.R;
 import com.example.lotterize.User;
 import com.example.lotterize.databinding.FragmentAllEntrantsBinding;
 import com.example.lotterize.databinding.FragmentChosenEntrantsBinding;
 import com.example.lotterize.ui.addEvents.EntrantListFragment;
+import com.example.lotterize.ui.addEvents.EventsRepository;
+import com.example.lotterize.ui.addEvents.UsersRepository;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -30,6 +36,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +54,7 @@ import java.util.Map;
  * </ul>
  * The fragment uses {@link ChosenEntrantsArrayAdapter} to render each entrant row.
  */
+
 public class ChosenEntrantsListFragment extends Fragment {
     private String eventId;
 
@@ -64,13 +72,11 @@ public class ChosenEntrantsListFragment extends Fragment {
     private final ArrayList<String> finalEntrantsList = new ArrayList<>();
     FragmentChosenEntrantsBinding binding;
 
-    private FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-    /**
-     * Registration handle for the Firestore snapshot listener on the event document.
-     * It is removed in {@link #onDestroyView()} to avoid leaks.
-     */
+    private final EventsRepository eventsRepo = EventsRepository.getInstance();
+    private final UsersRepository usersRepo = UsersRepository.getInstance();
     private ListenerRegistration registration;
+
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     /**
      * This inflates the fragment layout and initializes the view binding.
@@ -92,11 +98,14 @@ public class ChosenEntrantsListFragment extends Fragment {
 
     /**
      * Configures the UI and starts loading data:
-     * <ul>
-     *     <li>Sets up the back button to pop the back stack.</li>
-     *     <li>Reads the {@code eventId} from fragment arguments.</li>
-     *     <li>Initializes the {@link ChosenEntrantsArrayAdapter} and attaches it to the ListView.</li>
-     *     <li>Begins listening to the event document for chosen / final entrant updates.</li>
+     <ul>
+     *     <li>Sets up the back button to pop the navigation back stack.</li>
+     *     <li>Reads {@code eventId} from the fragment arguments.</li>
+     *     <li>Initializes {@link ChosenEntrantsArrayAdapter} with the current
+     *     {@link #chosenEntrants} and {@link #finalEntrantsList}.</li>
+     *     <li>Registers a listener that reacts to "cancel" actions and calls
+     *     {@link #cancelChosenEntrant(String)} for that user.</li>
+     *     <li>Starts listening to the event document for updates to the chosen / final lists.</li>
      * </ul>
      *
      * @param v                  the root view returned by {@link #onCreateView}
@@ -132,99 +141,109 @@ public class ChosenEntrantsListFragment extends Fragment {
     }
 
     /**
-     * Starts a Firestore snapshot listener on the current event document.
+     * This starts or re-starts a Firestore snapshot listener on the current event document.
      * <p>
-     * Whenever the event document changes:
+     * When the event document updates:
      * <ul>
-     *     <li>Reads {@code selectedList} to determine which users are chosen.</li>
-     *     <li>Reads {@code finalList} to determine which chosen entrants are enrolled.</li>
-     *     <li>Fetches details for all chosen entrants from the {@code users} collection.</li>
-     *     <li>Updates the adapter so the UI reflects the latest state.</li>
+     *     <li>Reads {@code selectedList} to determine the chosen entrant IDs.</li>
+     *     <li>Reads {@code finalList} to determine which entrants are enrolled.</li>
+     *     <li>Clears and repopulates {@link #finalEntrantsList} from the snapshot.</li>
+     *     <li>Calls {@link #fetchChosenUsers(ArrayList)} to load {@link User} details
+     *     for all chosen IDs, or clears the list and shows a toast if there are none.</li>
      * </ul>
-     * Any existing in-memory lists are cleared and repopulated based on the snapshot.
+     * If an error occurs or the document does not exist, a toast is shown and the
+     * in-memory lists are cleared.
      */
     private void startListeningToEvent() {
-        registration = db.collection("events")
-                .document(eventId)
-                .addSnapshotListener((snap, e) -> {
-                    if (e != null) {
-                        Toast.makeText(requireContext(),"Failed to load entrants: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if (snap == null || !snap.exists()) {
-                        Toast.makeText(requireContext(),"Event not found", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    ArrayList<String> chosenList = (ArrayList<String>) (snap.get("selectedList") != null ? snap.get("selectedList") : new ArrayList<String>());
-                    ArrayList<String> finalList = (ArrayList<String>) (snap.get("finalList") != null ? snap.get("finalList") : new ArrayList<String>());
-
-                    chosenEntrants.clear();
-                    if (chosenList != null) {
-                        fetchChosenUsers(chosenList);
-                    }
-
-                    finalEntrantsList.clear();
-                    if (finalList != null) {
-                        finalEntrantsList.addAll(finalList);
-                    }
-                    adapter.notifyDataSetChanged();
-
-                });
-    }
-
-    /**
-     * This fetches {@link User} documents for the given list of user IDs from the {@code users} collection.
-     * <p>
-     * Because {@code whereIn} is limited to 10 values per query, the list of IDs is split into
-     * chunks of size 10 or less, and multiple queries are performed. Once all queries succeed:
-     * <ul>
-     *     <li>{@link #chosenEntrants} is repopulated with the fetched user data.</li>
-     *     <li>The adapter is notified to refresh the UI.</li>
-     *     <li>If no users are found, a toast is shown.</li>
-     * </ul>
-     *
-     * @param chosenIds list of user IDs in the event's {@code selectedList}
-     */
-    private void fetchChosenUsers(ArrayList<String> chosenIds) {
-
-        ArrayList<Task<QuerySnapshot>> tasks = new ArrayList<>();
-
-        for (int i = 0; i < chosenIds.size(); i += 10) {
-            ArrayList<String> chunk = new ArrayList<>(chosenIds.subList(i, Math.min(i + 10, chosenIds.size())));
-
-            Task<QuerySnapshot> t = db.collection("users")
-                    .whereIn(FieldPath.documentId(), chunk)
-                    .get();
-
-            tasks.add(t);
+        if (registration != null) {
+            registration.remove();
+            registration = null;
         }
 
-        Tasks.whenAllSuccess(tasks)
-                .addOnSuccessListener(results -> {
-                    chosenEntrants.clear();
 
-                    // results is a List<Object> where each Object is a QuerySnapshot
-                    for (Object o : results) {
-                        QuerySnapshot qs = (QuerySnapshot) o;
-                        for (DocumentSnapshot doc : qs) {
-                            if (!doc.exists()) continue;
+        registration = eventsRepo.listenToEventById(
+                eventId,
+                new EventsRepository.EventsDetailCallback() {
+                    @Override
+                    public void onEvents(Event event, DocumentSnapshot snap, Exception e) {
+                        if (!isAdded()) return;
 
-                            User user = new User();
-                            user.setName(doc.getString("name"));
-                            user.setUserId(doc.getId());
+                        if (e != null) {
+                            Toast.makeText(requireContext(), "Failed to load entrants: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        if (snap == null || !snap.exists()) {
+                            Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                            chosenEntrants.add(user);
+                        ArrayList<String> chosenList = (ArrayList<String>) (snap.get("selectedList") != null ? snap.get("selectedList") : new ArrayList<String>());
+
+                        ArrayList<String> finalList = (ArrayList<String>) (snap.get("finalList") != null ? snap.get("finalList") : new ArrayList<String>());
+
+                        chosenEntrants.clear();
+                        finalEntrantsList.clear();
+
+                        if (finalList != null) {
+                            finalEntrantsList.addAll(finalList);
+                        }
+
+                        if (chosenList != null && !chosenList.isEmpty()) {
+                            fetchChosenUsers(chosenList);
+                        }
+                        else {
+                            adapter.notifyDataSetChanged();
+                            Toast.makeText(requireContext(), "No entrants in the list", Toast.LENGTH_SHORT).show();
                         }
                     }
 
-                    adapter.notifyDataSetChanged();
-                    if(chosenEntrants.isEmpty()){
-                        Toast.makeText(requireContext(), "No entrants in the list",Toast.LENGTH_SHORT).show();
+                    @Override
+                    public void onError(@NonNull Exception e) {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(), "Failed to load event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        chosenEntrants.clear();
+                        finalEntrantsList.clear();
+                        adapter.notifyDataSetChanged();
                     }
-                })
-                .addOnFailureListener(err -> {
-                    Toast.makeText(requireContext(), "Failed to load user info: " + err.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+        );
+    }
+
+    /**
+     * This loads {@link User} details for the given chosen entrant IDs from the {@code users} collection
+     * using {@link UsersRepository}.
+     * <p>
+     * On success:
+     * <ul>
+     *     <li>{@link #chosenEntrants} is cleared and repopulated with the loaded users.</li>
+     *     <li>The adapter is notified to refresh the UI.</li>
+     *     <li>If no users are returned, a short "No entrants in the list" toast is shown.</li>
+     * </ul>
+     * On error, a toast is shown; the previously loaded {@link #chosenEntrants} list is left
+     * unchanged.
+     *
+     * @param chosenIds list of user IDs from the event's {@code selectedList}
+     */
+    private void fetchChosenUsers(ArrayList<String> chosenIds) {
+        usersRepo.fetchUsersByIds(chosenIds,
+                new UsersRepository.UsersCallback() {
+                    @Override
+                    public void onSuccess(@NonNull ArrayList<User> users) {
+                        if (!isAdded())
+                            return;
+
+                        chosenEntrants.clear();
+                        chosenEntrants.addAll(users);
+                        adapter.notifyDataSetChanged();
+                        if (chosenEntrants.isEmpty()) {
+                            Toast.makeText(requireContext(), "No entrants in the list", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception e) {
+                        Toast.makeText(requireContext(), "Failed to load user info: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 });
     }
 
@@ -244,20 +263,36 @@ public class ChosenEntrantsListFragment extends Fragment {
                     dialog.dismiss();
                 })
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    db.collection("events").document(eventId)
-                            .update(
-                                    "selectedList", FieldValue.arrayRemove(userId),
-                                    "cancelledList", FieldValue.arrayUnion(userId)
-                            )
-                            .addOnSuccessListener(unused ->
-                                    Toast.makeText(requireContext(),"Entrant cancelled", Toast.LENGTH_SHORT).show()
-                            )
-                            .addOnFailureListener(e ->
-                                            Toast.makeText(requireContext(),"Failed to cancel entrant: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                            );
+                    db.collection("events").document(eventId).get()
+                            .addOnSuccessListener(doc -> {
+                                if (!doc.exists()){
+                                    Toast.makeText(requireContext(),
+                                            "Event not found", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+
+                                String eventName = doc.getString("eventName");
+                                db.collection("events").document(eventId)
+                                        .update(
+                                                "selectedList", FieldValue.arrayRemove(userId),
+                                                "cancelledList", FieldValue.arrayUnion(userId)
+                                        )
+                                        .addOnSuccessListener(unused -> {
+                                            Toast.makeText(requireContext(),
+                                                    "Entrant cancelled", Toast.LENGTH_SHORT).show();
+
+                                            String message = "You have been cancelled from the " + (eventName != null ? eventName : "") + " event";
+
+                                            NotificationSender sender = new NotificationSender();
+                                            sender.sendNotification(CurrentUser.get().getUserId(), message, new ArrayList<>(Collections.singletonList(userId))
+                                            );
+                                        })
+                                        .addOnFailureListener(e ->
+                                                Toast.makeText(requireContext(), "Failed to cancel entrant: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                                        );
+                            });
                 })
                 .show();
-
     }
 
     /**

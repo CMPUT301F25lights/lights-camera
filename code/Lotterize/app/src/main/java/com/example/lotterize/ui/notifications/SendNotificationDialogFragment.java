@@ -3,6 +3,7 @@ package com.example.lotterize.ui.notifications;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.customtabs.IPostMessageService;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -123,10 +124,26 @@ public class SendNotificationDialogFragment extends DialogFragment {
 
         // This creates the dialog with no default positive/negative.
         return new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Send to " + status.toLowerCase())
+                .setTitle("Send to " + (status == null ? "" : getListName(status)))
                 .setView(content)
                 .create();
 
+    }
+
+    /**
+     * This returns the appropriate list's title for sending notification Dialog
+     */
+    private String getListName(String status){
+        switch (status){
+            case "cancelledList":
+                return "Cancelled Entrants";
+            case "selectedList":
+                return "Chosen Entrants";
+            case "waitList":
+                return "Entrants in waiting list";
+            default:
+                return "Entrants";
+        }
     }
 }
 

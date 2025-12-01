@@ -41,23 +41,53 @@ public class NotificationsViewModel extends ViewModel {
     /** LiveData for one-shot snack bar messages when a new notification arrives in-app. */
     private final MutableLiveData<String> snackMessage = new MutableLiveData<>();
 
-    private final NotificationSender sender = new NotificationSender();
+    private final NotificationSender sender;
 
     /** Firestore listener registration used to remove the listener when cleared. */
     private ListenerRegistration registration;
-    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private final FirebaseFirestore db;
 
     private final MutableLiveData<String> toast = new MutableLiveData<>();
-    private final String currentUserId = CurrentUser.get().getUserId();
+    private final String currentUserId;
 
     private Timestamp lastSeenTime = null;
 
     /**
-     * This is the constructor for the ViewModel.
-     * It initializes the Firestore listener to begin receiving updates.
+     * Creates a {@link NotificationsViewModel} with the real production dependencies.
+     * <p>
+     * This constructor is used by the app at runtime via {@code ViewModelProvider}. It:
+     * <ul>
+     *     <li>Uses {@link FirebaseFirestore#getInstance()} as the backing database,</li>
+     *     <li>Creates a new {@link NotificationSender} for sending notifications,</li>
+     *     <li>Reads the current user id from {@link CurrentUser},</li>
+     *     <li>Immediately starts listening for notification updates by calling {@link #startListening()}.</li>
+     * </ul>
      */
     public NotificationsViewModel() {
-        startListening();
+        this(FirebaseFirestore.getInstance(), new NotificationSender(), CurrentUser.get().getUserId(), true);
+    }
+
+    /**
+     * A constructor primarily intended for tests.
+     * <p>
+     * It allows injecting a custom {@link FirebaseFirestore} instance and {@link NotificationSender},
+     * as well as a specific {@code currentUserId}, and lets the caller decide whether to attach
+     * the Firestore snapshot listener immediately.
+     *
+     * @param db             the Firestore instance used to query and listen for notifications
+     * @param sender         the helper responsible for sending notifications
+     * @param currentUserId  the id of the user whose notifications should be observed
+     * @param attachListener if {@code true}, this constructor calls {@link #startListening()}
+     *                       immediately; if {@code false}, no listener is attached and the caller
+     *                       may invoke {@link #startListening()} manually (e.g., in tests)
+     */
+    public NotificationsViewModel(FirebaseFirestore db, NotificationSender sender, String currentUserId, boolean attachListener) {
+        this.db = db;
+        this.sender = sender;
+        this.currentUserId = currentUserId;
+        if (attachListener) {
+            startListening();
+        }
     }
 
     /**
@@ -75,11 +105,10 @@ public class NotificationsViewModel extends ViewModel {
                 .get()
                 .addOnSuccessListener(snap -> {
                     if (snap == null || !snap.exists()) {
-                        toast.postValue("Event not found");
+                        toast.setValue("Event not found");
                         return;
                     }
 
-                    // Read the array field (e.g., "WAITLIST", "CHOSEN", etc.)
                     Object raw = snap.get(listStatus);
 
                     ArrayList<String> ids = new ArrayList<>();
@@ -90,7 +119,7 @@ public class NotificationsViewModel extends ViewModel {
                     }
 
                     if (ids.isEmpty()) {
-                        toast.postValue("No recipients for " + listStatus.toLowerCase());
+                        toast.setValue("No recipients for " + listStatus.toLowerCase());
                         return;
                     }
 
@@ -99,20 +128,20 @@ public class NotificationsViewModel extends ViewModel {
                         @Override
                         public void onComplete(int count) {
                             if (count == 0) {
-                                toast.postValue("No entrants in this list want to receive notifications!!");
+                                toast.setValue("No entrants in this list want to receive notifications!!");
                             } else {
-                                toast.postValue("Sent to " + count + " entrant(s)");
+                                toast.setValue("Sent to " + count + " entrant(s)");
                             }
                         }
 
                         @Override
                         public void onError(Exception e) {
-                            toast.postValue("Failed to send notifications: " + e.getMessage());
+                            toast.setValue("Failed to send notifications: " + e.getMessage());
                         }
                     });
                 })
                 .addOnFailureListener(e -> {
-                    toast.postValue("Failed to load recipients: " + e.getMessage());
+                    toast.setValue("Failed to load recipients: " + e.getMessage());
                 });
     }
 
