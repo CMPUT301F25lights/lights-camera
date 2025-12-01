@@ -2,6 +2,7 @@ package com.example.lotterize;
 
 import com.example.lotterize.ui.addEvents.EventsRepository;
 import com.example.lotterize.ui.addEvents.UsersRepository;
+import com.example.lotterize.NotificationsRepository;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 public abstract class BaseUITest {
     protected MockEventsRepository mockEventsRepository;
     protected MockUsersRepository mockUsersRepository;
+    protected MockNotificationsRepository mockNotificationsRepository;
 
     @Before
     public void setUp() {
@@ -21,6 +23,9 @@ public abstract class BaseUITest {
 
         mockUsersRepository = new MockUsersRepository();
         UsersRepository.setInstance(mockUsersRepository);
+
+        mockNotificationsRepository = new MockNotificationsRepository();
+        NotificationsRepository.setInstance(mockNotificationsRepository);
 
         User mockUser = new User(
                 "testUserId1",
@@ -71,6 +76,7 @@ public abstract class BaseUITest {
     @After
     public void tearDown() {
         EventsRepository.setInstance(new EventsRepository());
-        EventsRepository.setInstance(new EventsRepository());
+        UsersRepository.setInstance(new UsersRepository());
+        NotificationsRepository.setInstance(new NotificationsRepository());
     }
 }
