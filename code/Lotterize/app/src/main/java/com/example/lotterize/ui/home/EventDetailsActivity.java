@@ -28,7 +28,7 @@ import com.bumptech.glide.Glide;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 /**
- * Displays event details relevant to the user.
+ * Displays event details relevant to the user or admin.
  */
 public class EventDetailsActivity extends AppCompatActivity {
 
@@ -38,11 +38,11 @@ public class EventDetailsActivity extends AppCompatActivity {
     ActivityEventDetailsBinding binding;
 
     /**
-     * Displays event details relevant to the user.
+     * Displays event details relevant to the user or admin. Expects intent to have eventId, and
+     * optionally context (for admins)
      *
      * @param savedInstanceState intent contains a String in
      *                           "eventId" field
-     *
      */
     protected void onCreate(Bundle savedInstanceState) {
         showingEvent.increment();
