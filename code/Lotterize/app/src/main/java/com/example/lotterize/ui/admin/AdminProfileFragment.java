@@ -33,19 +33,19 @@ import java.util.List;
  */
 public class AdminProfileFragment extends Fragment {
 
-    private static final String TAG = "AdminProfilesFragment";
-    private FragmentAdminProfileBinding binding;
-    private FirebaseFirestore db;
-    private List<UserProfile> allUsers = new ArrayList<>();
+    static final String TAG = "AdminProfilesFragment";
+    FragmentAdminProfileBinding binding;
+    FirebaseFirestore db;
+    List<UserProfile> allUsers = new ArrayList<>();
 
     /**
      * Simple class to hold user profile data.
      */
-    private static class UserProfile {
+    public static class UserProfile {
         String userId;
         String username;
 
-        UserProfile(String userId, String username) {
+        public UserProfile(String userId, String username) {
             this.userId = userId;
             this.username = username;
         }
@@ -73,7 +73,7 @@ public class AdminProfileFragment extends Fragment {
     /**
      * Sets up the search bar to filter users by username.
      */
-    private void setupSearch() {
+    public void setupSearch() {
         binding.searchProfiles.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -93,7 +93,7 @@ public class AdminProfileFragment extends Fragment {
      *
      * @param query The search query entered by the admin
      */
-    private void filterUsers(String query) {
+    public void filterUsers(String query) {
         binding.profilesContainer.removeAllViews();
 
         if (query.isEmpty()) {
@@ -123,7 +123,7 @@ public class AdminProfileFragment extends Fragment {
     /**
      * Retrieves all users from Firestore and displays their usernames.
      */
-    private void loadUserProfiles() {
+    public void loadUserProfiles() {
         Log.d(TAG, "Loading user profiles from Firestore...");
 
         db.collection("users")
@@ -166,7 +166,7 @@ public class AdminProfileFragment extends Fragment {
      * @param userId   The user's document ID in Firestore
      * @param username The user's username
      */
-    private void addUserToView(String userId, String username) {
+    public void addUserToView(String userId, String username) {
         // Create a horizontal layout for each user row
         LinearLayout userItem = new LinearLayout(getContext());
         userItem.setOrientation(LinearLayout.HORIZONTAL);
@@ -233,7 +233,7 @@ public class AdminProfileFragment extends Fragment {
      * @param userId   The user's document ID
      * @param username The user's username
      */
-    private void showDeleteConfirmation(String userId, String username) {
+    public void showDeleteConfirmation(String userId, String username) {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete User")
                 .setMessage("Are you sure you want to delete user '" + username + "'?\n\n" +
@@ -255,7 +255,7 @@ public class AdminProfileFragment extends Fragment {
      * @param userId   The user's document ID
      * @param username The user's username (for logging)
      */
-    private void deleteUser(String userId, String username) {
+    public void deleteUser(String userId, String username) {
         Log.d(TAG, "Starting cascade delete for user: " + username);
 
         // Step 1: Remove user from all events (waitList, selectedList, etc.)
@@ -316,7 +316,7 @@ public class AdminProfileFragment extends Fragment {
      * @param userId   The user's document ID
      * @param username The user's username (for logging)
      */
-    private void deleteEventsOwnedByUser(String userId, String username) {
+    public void deleteEventsOwnedByUser(String userId, String username) {
         db.collection("events")
                 .whereEqualTo("ownerId", userId)
                 .get()
@@ -351,7 +351,7 @@ public class AdminProfileFragment extends Fragment {
      * @param username The user's username (for logging)
      * @param eventCount Number of events deleted
      */
-    private void deleteNotificationsSentByUser(String userId, String username, int eventCount) {
+    public void deleteNotificationsSentByUser(String userId, String username, int eventCount) {
         db.collection("notifications")
                 .whereEqualTo("senderId", userId)
                 .get()
@@ -388,7 +388,7 @@ public class AdminProfileFragment extends Fragment {
      * @param eventCount Number of events deleted
      * @param sentCount Number of sent notifications deleted
      */
-    private void deleteNotificationsReceivedByUser(String userId, String username, int eventCount, int sentCount) {
+    public void deleteNotificationsReceivedByUser(String userId, String username, int eventCount, int sentCount) {
         db.collection("notifications")
                 .whereArrayContains("receiversId", userId)
                 .get()
@@ -442,7 +442,7 @@ public class AdminProfileFragment extends Fragment {
      * @param sentCount Number of sent notifications deleted
      * @param receivedCount Number of received notifications deleted
      */
-    private void deleteUserDocument(String userId, String username, int eventCount, int sentCount, int receivedCount) {
+    public void deleteUserDocument(String userId, String username, int eventCount, int sentCount, int receivedCount) {
         db.collection("users")
                 .document(userId)
                 .delete()
