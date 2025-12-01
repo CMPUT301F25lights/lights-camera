@@ -14,18 +14,19 @@ import com.example.lotterize.Notification;
 import com.example.lotterize.NotificationsRepository;
 import com.example.lotterize.R;
 import com.example.lotterize.ui.admin.adminNotifications.AdminNotificationDetailsDialog;
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
 /**
  * Activity responsible for displaying all notifications received by a specific user.
- * <p>
- * This activity loads notifications from Firestore where the user's ID appears in the
- * {@code receiversId} array field. Each notification is displayed as a clickable view
- * that opens a dialog showing detailed information.
+ *
+ * <p>This activity queries Firestore (via {@link NotificationsRepository}) for
+ * all {@link Notification} objects in which the user's ID is present in the
+ * {@code receiversId} array field. The results are displayed in a scrollable list,
+ * and tapping a notification opens a detailed dialog using
+ * {@link com.example.lotterize.ui.admin.adminNotifications.AdminNotificationDetailsDialog}.</p>
+ *
+ * <p>If no notifications are found, an empty state message is shown instead.</p>
  */
 public class NotificationsReceivedActivity extends AppCompatActivity {
 
@@ -36,10 +37,14 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
     private TextView emptyStateText;
 
     /**
-     * Called when the activity is created.
-     * Initializes the UI, retrieves the user ID, and triggers loading of notifications.
+     * Called when the activity is first created.
      *
-     * @param savedInstanceState Previously saved activity state.
+     * <p>This method initializes UI components, retrieves the user ID passed
+     * through the launching {@link android.content.Intent}, and triggers the
+     * loading of notifications for the user.</p>
+     *
+     * @param savedInstanceState The previously saved instance state, or {@code null}
+     *                           if this is the first creation.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +52,6 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         setContentView(R.layout.activity_notifications_received);
 
         notificationsRepository = NotificationsRepository.getInstance();
-
-        // Retrieve userId passed from the previous activity
         userId = getIntent().getStringExtra("userId");
 
         if (userId == null) {
@@ -59,23 +62,24 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
 
         Log.d(TAG, "Loading notifications for user: " + userId);
 
-        // Initialize views
         notificationsContainer = findViewById(R.id.notifications_container);
         emptyStateText = findViewById(R.id.text_empty_state);
 
-        // Back button
+        // Back button functionality
         View backButton = findViewById(R.id.buttonBack);
         if (backButton != null) {
             backButton.setOnClickListener(v -> finish());
         }
 
-        // Load all notifications for this user
         loadReceivedNotifications();
     }
 
     /**
-     * Loads notifications from Firestore where the {@code receiversId} array
-     * contains the user ID. Updates the UI based on results.
+     * Loads notifications for the current user through the {@link NotificationsRepository}.
+     *
+     * <p>This method queries Firestore for all notifications where
+     * the {@code receiversId} array contains the user's ID. Upon completion,
+     * the UI is updated to either show the list of notifications or an empty/error state.</p>
      */
     private void loadReceivedNotifications() {
         Log.d(TAG, "Loading received notifications via repository for user: " + userId);
@@ -83,6 +87,12 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         notificationsRepository.fetchNotificationsReceived(
                 userId,
                 new NotificationsRepository.NotificationsCallback() {
+
+                    /**
+                     * Called when notifications are successfully fetched.
+                     *
+                     * @param notifications A list of notifications received by the user.
+                     */
                     @Override
                     public void onSuccess(@NonNull ArrayList<Notification> notifications) {
                         notificationsContainer.removeAllViews();
@@ -107,11 +117,19 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
                         }
                     }
 
+                    /**
+                     * Called when the notification fetch operation fails.
+                     *
+                     * @param e The exception describing the failure.
+                     */
                     @Override
                     public void onError(@NonNull Exception e) {
                         Log.e(TAG, "Error loading notifications", e);
-                        Toast.makeText(NotificationsReceivedActivity.this,
-                                "Failed to load notifications", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(
+                                NotificationsReceivedActivity.this,
+                                "Failed to load notifications",
+                                Toast.LENGTH_SHORT
+                        ).show();
 
                         if (emptyStateText != null) {
                             emptyStateText.setVisibility(View.VISIBLE);
@@ -122,17 +140,19 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         );
     }
 
-
     /**
-     * Creates a styled view for a single notification and adds it to the container.
-     * When clicked, it shows the {@link AdminNotificationDetailsDialog} dialog.
+     * Creates a styled UI element representing a single notification and adds it to the view.
      *
-     * @param message      Notification message text.
-     * @param notification The full notification object containing details.
+     * <p>The created view is clickable and opens an
+     * {@link com.example.lotterize.ui.admin.adminNotifications.AdminNotificationDetailsDialog}
+     * showing the full details of the notification.</p>
+     *
+     * @param message      The notification message text displayed to the user.
+     * @param notification The complete {@link Notification} object containing detailed information.
      */
     private void addNotificationToView(String message, Notification notification) {
 
-        // Create container for a single notification item
+        // Container layout for a single notification entry
         LinearLayout notificationItem = new LinearLayout(this);
         notificationItem.setOrientation(LinearLayout.VERTICAL);
         notificationItem.setPadding(40, 32, 40, 32);
@@ -146,7 +166,7 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         );
         notificationItem.setLayoutParams(params);
 
-        // Create and style the message text
+        // Message text view
         TextView messageView = new TextView(this);
         messageView.setText(message != null ? message : "No message");
         messageView.setTextSize(16);
@@ -154,14 +174,14 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         messageView.setLineSpacing(4, 1.0f);
         notificationItem.addView(messageView);
 
-        // Click opens details dialog
+        // Clicking opens detailed dialog
         notificationItem.setOnClickListener(v -> {
             AdminNotificationDetailsDialog dialog =
                     AdminNotificationDetailsDialog.newInstance(notification);
             dialog.show(getSupportFragmentManager(), "notification_details");
         });
 
-        // Divider line
+        // Divider between notifications
         View divider = new View(this);
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
