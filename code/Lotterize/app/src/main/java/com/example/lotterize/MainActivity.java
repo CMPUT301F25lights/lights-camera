@@ -1,9 +1,9 @@
 package com.example.lotterize;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -27,6 +27,7 @@ import java.util.ArrayList;
  */
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
     private FirebaseFirestore db;
     private CollectionReference users;
     private ActivityMainBinding binding;
@@ -36,18 +37,16 @@ public class MainActivity extends AppCompatActivity {
     private Button createAccountButton;
     private Button adminSignInButton;
 
-    /**
-     * Called when the activity is first created.
-     *
-     * This method initializes Firestore, sets up view binding, connects UI elements,
-     * and defines click listeners for both login and account creation actions.
-     *
-     * @param savedInstanceState If non-null, this activity is being re-created from a previous state.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Check for device linking BEFORE showing login screen
+        if (checkAndAutoLogin()) {
+            return; // Auto-login successful, activity will be finished
+        }
+
+        // Show normal login screen
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -59,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         signInButton = findViewById(R.id.buttonSignin);
         createAccountButton = findViewById(R.id.buttonCreateAccount);
         adminSignInButton = findViewById(R.id.buttonAdminSignin);
-
 
         signInButton.setOnClickListener(v -> {
             String enteredUsername = usernameEditText.getText().toString().trim();
@@ -75,9 +73,9 @@ public class MainActivity extends AppCompatActivity {
                     .addOnSuccessListener(queryDocumentSnapshots -> {
                         if (!queryDocumentSnapshots.isEmpty()) {
                             boolean passwordMatch = false;
-                            DocumentSnapshot[] successDoc = new DocumentSnapshot[1]; // mutable holder
+                            DocumentSnapshot[] successDoc = new DocumentSnapshot[1];
 
-                            // Checks password
+                            // Check password
                             for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
                                 String dbPassword = doc.getString("password");
                                 if (enteredPassword.equals(dbPassword)) {
@@ -88,34 +86,7 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             if (passwordMatch) {
-                                // Load data into static instance CurrentUser
-                                User user = new User(
-                                        successDoc[0].getId(),
-                                        successDoc[0].getString("name"),
-                                        successDoc[0].getString("phoneNumber"),
-                                        successDoc[0].getString("email"),
-                                        successDoc[0].getString("coordinates"),
-                                        successDoc[0].getString("username"),
-                                        successDoc[0].getString("password")
-                                );
-
-                                user.setWantNotification(successDoc[0].getBoolean("wantNotification") == null || Boolean.TRUE.equals(successDoc[0].getBoolean("wantNotification")));
-
-                                // Get Owned Event list from Firestore
-                                ArrayList<String> ownedEvents =
-                                        (ArrayList<String>) successDoc[0].get("ownedEventIds");
-                                if (ownedEvents == null) ownedEvents = new ArrayList<>();
-                                user.setOwnedEventIds(ownedEvents);
-
-                                // Get Registered Event list from Firestore
-                                ArrayList<String> registeredEvents =
-                                        (ArrayList<String>) successDoc[0].get("registeredEventIds");
-                                if (registeredEvents == null) registeredEvents = new ArrayList<>();
-                                user.setRegisteredEventIds(registeredEvents);
-                                CurrentUser.set(user); // set the logged-in user
-                                startActivity(new Intent(MainActivity.this, UserActivity.class));
-
-
+                                loadUserAndNavigate(successDoc[0]);
                             } else {
                                 Toast.makeText(MainActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
                             }
@@ -135,7 +106,105 @@ public class MainActivity extends AppCompatActivity {
         adminSignInButton.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, AdminSignInActivity.class))
         );
-
     }
 
+    /**
+     * Checks if device linking is enabled and attempts auto-login.
+     * @return true if auto-login was initiated, false otherwise
+     */
+    private boolean checkAndAutoLogin() {
+        SharedPreferences prefs = getSharedPreferences("LotterizePrefs", MODE_PRIVATE);
+        boolean deviceLinked = prefs.getBoolean("deviceLinked", false);
+        String linkedUserId = prefs.getString("linkedUserId", null);
+
+        if (deviceLinked && linkedUserId != null && !linkedUserId.isEmpty()) {
+            Log.d(TAG, "Device linking enabled, attempting auto-login for user: " + linkedUserId);
+
+            // Auto-login: Load user from Firestore
+            FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(linkedUserId)
+                    .get()
+                    .addOnSuccessListener(document -> {
+                        if (document.exists()) {
+                            Boolean deviceLinkedInDb = document.getBoolean("deviceLinked");
+                            if (deviceLinkedInDb != null && deviceLinkedInDb) {
+                                // User still has device linking enabled in Firestore
+                                Log.d(TAG, "Auto-login successful");
+                                loadUserAndNavigate(document);
+                            } else {
+                                // Device linking was disabled remotely
+                                Log.d(TAG, "Device linking disabled remotely");
+                                clearDeviceLinking();
+                            }
+                        } else {
+                            // User document no longer exists
+                            Log.d(TAG, "User document not found");
+                            clearDeviceLinking();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error checking device linking", e);
+                        // Continue to normal login on error
+                    });
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Loads user data from Firestore document and navigates to appropriate activity.
+     * @param document The Firestore document containing user data
+     */
+    private void loadUserAndNavigate(DocumentSnapshot document) {
+        // Create User object from Firestore data
+        User user = new User(
+                document.getId(),
+                document.getString("name"),
+                document.getString("phoneNumber"),
+                document.getString("email"),
+                document.getString("coordinates"),
+                document.getString("username"),
+                document.getString("password")
+        );
+
+        // Set notification preference
+        Boolean wantNotification = document.getBoolean("wantNotification");
+        user.setWantNotification(wantNotification == null || wantNotification);
+
+        // Set device linking status
+        Boolean deviceLinked = document.getBoolean("deviceLinked");
+        user.setDeviceLinked(deviceLinked != null && deviceLinked);
+
+        // Get Owned Event list from Firestore
+        ArrayList<String> ownedEvents = (ArrayList<String>) document.get("ownedEventIds");
+        if (ownedEvents == null) ownedEvents = new ArrayList<>();
+        user.setOwnedEventIds(ownedEvents);
+
+        // Get Registered Event list from Firestore
+        ArrayList<String> registeredEvents = (ArrayList<String>) document.get("registeredEventIds");
+        if (registeredEvents == null) registeredEvents = new ArrayList<>();
+        user.setRegisteredEventIds(registeredEvents);
+
+        // Set the logged-in user
+        CurrentUser.set(user);
+
+        // Navigate to appropriate activity
+        startActivity(new Intent(MainActivity.this, UserActivity.class));
+        finish(); // Close login screen
+    }
+
+    /**
+     * Clears device linking data from SharedPreferences.
+     */
+    private void clearDeviceLinking() {
+        SharedPreferences prefs = getSharedPreferences("LotterizePrefs", MODE_PRIVATE);
+        prefs.edit()
+                .putBoolean("deviceLinked", false)
+                .remove("linkedUserId")
+                .apply();
+        Log.d(TAG, "Device linking cleared");
+    }
 }

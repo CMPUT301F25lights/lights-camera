@@ -56,6 +56,8 @@
         <activity android:name=".AdminActivity"></activity>
         <activity android:name=".ui.home.EventDetailsActivity"></activity>
         <activity android:name=".ui.home.ShowWaitingListActivity"></activity>
+        <activity android:name=".ui.admin.NotificationsReceivedActivity"></activity>
+        <activity android:name=".ui.admin.NotificationsSentActivity"></activity>
     </application>
 
 </manifest>
