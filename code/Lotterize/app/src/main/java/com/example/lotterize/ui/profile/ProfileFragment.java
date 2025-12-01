@@ -44,16 +44,9 @@ import java.util.List;
  */
 public class ProfileFragment extends Fragment {
 
-    /** Logging tag used for debugging Firestore operations */
     private static final String TAG = "ProfileFragment";
-
-    /** View binding for the Fragment layout */
     private FragmentProfileBinding binding;
-
-    /** ViewModel storing the user's observable profile data */
     private ProfileViewModel profileViewModel;
-
-    /** Firestore instance used for all data interactions */
     private FirebaseFirestore db;
 
     /**
@@ -102,66 +95,79 @@ public class ProfileFragment extends Fragment {
                         .show()
         );
 
-        // Logout process
+        // Logout
         binding.buttonLogout.setOnClickListener(v -> {
-            SharedPreferences prefs = requireContext()
-                    .getSharedPreferences("LotterizePrefs", android.content.Context.MODE_PRIVATE);
-
-            prefs.edit()
-                    .putBoolean("deviceLinked", false)
-                    .remove("linkedUserId")
-                    .apply();
-
-            CurrentUser.clear();
-
-            if (getActivity() != null) getActivity().finish();
+            if (getActivity() != null) {
+                getActivity().finish();
+            }
         });
 
-        // Navigation listeners
-        View.OnClickListener accountClick = v ->
-                Navigation.findNavController(v).navigate(R.id.navigation_account);
-        binding.iconAccount.setOnClickListener(accountClick);
-        binding.textAccount.setOnClickListener(accountClick);
-        binding.textAccountDesc.setOnClickListener(accountClick);
+        // Navigate to Account Fragment when account section is clicked
+        View.OnClickListener accountClickListener = v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.navigation_account);
+        };
 
-        View.OnClickListener eventHistoryClick = v ->
-                Navigation.findNavController(v).navigate(R.id.navigation_event_history);
-        binding.iconEvent.setOnClickListener(eventHistoryClick);
-        binding.textEvent.setOnClickListener(eventHistoryClick);
-        binding.textEventDesc.setOnClickListener(eventHistoryClick);
+        binding.iconAccount.setOnClickListener(accountClickListener);
+        binding.textAccount.setOnClickListener(accountClickListener);
+        binding.textAccountDesc.setOnClickListener(accountClickListener);
 
-        // Notification preference toggle
+        // Navigate to Event History Fragment when event section is clicked
+        View.OnClickListener eventHistoryClickListener = v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.navigation_event_history);
+        };
+
+        binding.iconEvent.setOnClickListener(eventHistoryClickListener);
+        binding.textEvent.setOnClickListener(eventHistoryClickListener);
+        binding.textEventDesc.setOnClickListener(eventHistoryClickListener);
+
+        // Notification toggle
         binding.switchNotifications.setChecked(CurrentUser.get().getWantNotification());
+
         binding.switchNotifications.setOnClickListener(v -> {
             boolean enabled = binding.switchNotifications.isChecked();
+
+            // Update in-memory current user
             CurrentUser.get().setWantNotification(enabled);
 
+            // Update Firestore
+            String userId = CurrentUser.get().getUserId();
+
             db.collection("users")
-                    .document(CurrentUser.get().getUserId())
+                    .document(userId)
                     .update("wantNotification", enabled)
-                    .addOnSuccessListener(unused ->
-                            Toast.makeText(requireContext(),
-                                    enabled ? "Notifications turned on"
-                                            : "Opted out of notifications",
-                                    Toast.LENGTH_SHORT).show())
-                    .addOnFailureListener(e ->
-                            Log.e(TAG, "Failed to update notification preference", e));
+                    .addOnSuccessListener(unused -> {
+                        Toast.makeText(requireContext(), enabled ? "Notifications turned on" : "Opted out of notifications", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to update notification preference", e);
+                    });
         });
 
         // Device linking toggle
         binding.switchLinkDevice.setChecked(CurrentUser.get().getDeviceLinked());
+
         binding.switchLinkDevice.setOnClickListener(v -> {
             boolean enabled = binding.switchLinkDevice.isChecked();
+
             if (enabled) {
+                // Show confirmation dialog
                 new AlertDialog.Builder(requireContext())
                         .setTitle("Link Device")
-                        .setMessage("This will enable automatic login on this device.\n"
-                                + "Only enable on devices you trust.\n\nContinue?")
-                        .setPositiveButton("Yes", (dialog, which) -> enableDeviceLinking())
-                        .setNegativeButton("Cancel", (dialog, which) ->
-                                binding.switchLinkDevice.setChecked(false))
+                        .setMessage("This will allow automatic login on this device. " +
+                                "Only enable this on devices you trust.\n\n" +
+                                "Are you sure you want to link this device?")
+                        .setPositiveButton("Yes, Link Device", (dialog, which) -> {
+                            enableDeviceLinking();
+                        })
+                        .setNegativeButton("Cancel", (dialog, which) -> {
+                            // Revert toggle
+                            binding.switchLinkDevice.setChecked(false);
+                        })
                         .show();
             } else {
+                // Disable device linking
                 disableDeviceLinking();
             }
         });
@@ -174,62 +180,62 @@ public class ProfileFragment extends Fragment {
      */
     private void enableDeviceLinking() {
         String userId = CurrentUser.get().getUserId();
+
+        // Update in-memory current user
         CurrentUser.get().setDeviceLinked(true);
 
-        SharedPreferences prefs = requireContext()
+        // Save to SharedPreferences for automatic login
+        android.content.SharedPreferences prefs = requireContext()
                 .getSharedPreferences("LotterizePrefs", android.content.Context.MODE_PRIVATE);
-
         prefs.edit()
                 .putBoolean("deviceLinked", true)
                 .putString("linkedUserId", userId)
                 .apply();
 
+        // Update Firestore
         db.collection("users")
                 .document(userId)
                 .update("deviceLinked", true)
                 .addOnSuccessListener(unused -> {
                     Toast.makeText(requireContext(), "Device linked successfully", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Device linked for user: " + userId);
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to link device", e);
                     Toast.makeText(requireContext(), "Error linking device", Toast.LENGTH_SHORT).show();
+                    // Revert on failure
                     binding.switchLinkDevice.setChecked(false);
                     CurrentUser.get().setDeviceLinked(false);
-                    clearDeviceLinkingPrefs();
                 });
     }
 
     /**
-     * Disables device linking both locally and in Firestore.
+     * Disables device linking by removing stored credentials
      */
     private void disableDeviceLinking() {
         String userId = CurrentUser.get().getUserId();
+
+        // Update in-memory current user
         CurrentUser.get().setDeviceLinked(false);
 
-        clearDeviceLinkingPrefs();
-
-        db.collection("users")
-                .document(userId)
-                .update("deviceLinked", false)
-                .addOnSuccessListener(unused -> {
-                    Toast.makeText(requireContext(), "Device unlinked successfully", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Device unlinked for user: " + userId);
-                })
-                .addOnFailureListener(e ->
-                        Log.e(TAG, "Failed to unlink device", e));
-    }
-
-    /**
-     * Clears all device-link data from SharedPreferences.
-     */
-    private void clearDeviceLinkingPrefs() {
-        SharedPreferences prefs = requireContext()
+        // Remove from SharedPreferences
+        android.content.SharedPreferences prefs = requireContext()
                 .getSharedPreferences("LotterizePrefs", android.content.Context.MODE_PRIVATE);
         prefs.edit()
                 .putBoolean("deviceLinked", false)
                 .remove("linkedUserId")
                 .apply();
+
+        // Update Firestore
+        db.collection("users")
+                .document(userId)
+                .update("deviceLinked", false)
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(requireContext(), "Device unlinked successfully", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to unlink device", e);
+                    Toast.makeText(requireContext(), "Error unlinking device", Toast.LENGTH_SHORT).show();
+                });
     }
 
     /**
@@ -414,8 +420,13 @@ public class ProfileFragment extends Fragment {
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User deleted: " + username);
 
-                    clearDeviceLinkingPrefs();
-
+                    // Clear device linking
+                    android.content.SharedPreferences prefs = requireContext()
+                            .getSharedPreferences("LotterizePrefs", android.content.Context.MODE_PRIVATE);
+                    prefs.edit()
+                            .putBoolean("deviceLinked", false)
+                            .remove("linkedUserId")
+                            .apply();
                     StringBuilder message = new StringBuilder("Account deleted successfully.");
                     if (eventCount > 0) message.append("\n• ").append(eventCount).append(" event(s) deleted");
                     if (sentCount > 0) message.append("\n• ").append(sentCount).append(" sent notification(s)");
