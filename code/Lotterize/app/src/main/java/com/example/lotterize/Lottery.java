@@ -1,5 +1,9 @@
 package com.example.lotterize;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -78,7 +82,7 @@ public class Lottery {
 
         // Remove winners from *waitList*, not eligible
         waitList.removeAll(winners);
-
+        Log.d("DEBUG", "notifyUsers(): event.ownerId = " + event.getOwnerId());
         // Notifications
         sendWinnerNotifications(event, winners);
         sendLoserNotifications(event, losers);
@@ -114,7 +118,7 @@ public class Lottery {
 
         selectedList.add(replacement);
         waitList.remove(replacement);
-
+        Log.d("DEBUG", "notifyUsers(): event.ownerId = " + event.getOwnerId());
         sendWinnerNotifications(event, Collections.singletonList(replacement));
         return replacement;
     }
@@ -139,12 +143,13 @@ public class Lottery {
         notifyUsers(event, message, losers);
     }
 
-    private void notifyUsers(Event event, String message, List<String> userIds) {
+    private void notifyUsers(@NonNull Event event, String message, List<String> userIds) {
+        Log.d("DEBUG", "notifyUsers(): event.ownerId = " + event.getOwnerId());
         ArrayList<String> receivers = new ArrayList<>(userIds);
         String senderId = event.getOwnerId(); // should grab owner's ID for message now
 
         //String senderId = CurrentUser.get().getUserId();
 
-        notificationSender.sendNotification(senderId, message, receivers);
+        notificationSender.sendNotification(message, receivers);
     }
 }
