@@ -28,7 +28,7 @@
         android:textSize="14sp"
         android:textColor="@android:color/white"
         android:background="@drawable/background_rounded"
-        android:backgroundTint="@color/teal_700"
+        android:backgroundTint="@color/dark_red_for_blue_bg"
         android:clickable="true"
         android:focusable="true" />
 

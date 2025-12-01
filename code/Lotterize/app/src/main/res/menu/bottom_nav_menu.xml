@@ -13,12 +13,12 @@
 
     <item
         android:id="@+id/navigation_addEvents"
-        android:icon="@drawable/ic_dashboard_black_24dp"
+        android:icon="@drawable/ic_plus_box_24dp"
         android:title="@string/title_AddEvents" />
 
     <item
         android:id="@+id/navigation_eventsregistered"
-        android:icon="@drawable/ic_dashboard_black_24dp"
+        android:icon="@drawable/ic_folder_24dp"
         android:title="@string/title_EventsRegistered" />
 
     <item

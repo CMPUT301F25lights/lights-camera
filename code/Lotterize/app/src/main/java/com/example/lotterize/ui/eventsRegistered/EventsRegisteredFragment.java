@@ -6,9 +6,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.annotation.VisibleForTesting;
 
 import com.example.lotterize.R;
 import com.example.lotterize.ui.eventsRegistered.EventsRegisteredArrayAdapter;
@@ -31,6 +33,11 @@ public class EventsRegisteredFragment extends Fragment {
     private EventsRegisteredViewModel viewModel;
     private EventsRegisteredArrayAdapter adapter;
     private ListView listView;
+
+    @VisibleForTesting
+    public void setViewModel(EventsRegisteredViewModel vm) {
+        this.viewModel = vm;
+    }
 
     /**
      * Called to have the fragment instantiate its user interface view.
