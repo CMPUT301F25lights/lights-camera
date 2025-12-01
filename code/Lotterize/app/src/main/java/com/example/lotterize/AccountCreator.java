@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 /**
  * Handles the core logic of creating a new user account.
  * Separated from Android UI so it can be tested in JVM-only tests.
+ *
  */
 public class AccountCreator {
 
@@ -22,10 +23,22 @@ public class AccountCreator {
         void onFailure(String message);
     }
 
+    /**
+     Constructs an AccountCreator using the given Firestore users collection.
+
+     @param users Firestore {@link CollectionReference} representing the users collection
+     */
     public AccountCreator(CollectionReference users) {
         this.users = users;
     }
 
+    /**
+     Create a new user account with the given username and password.
+
+     @param username The username for the new account (must not be empty)
+     @param password The password for the new account (must not be empty)
+     @param callback The {@link Callback} to receive success or failure messages
+     */
     public void createAccount(@NonNull String username, @NonNull String password, @NonNull Callback callback) {
         if (username.isEmpty() || password.isEmpty()) {
             callback.onFailure("Username and password cannot be empty");

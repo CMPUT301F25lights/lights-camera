@@ -19,6 +19,14 @@ import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+/**
+
+ Unit tests for the {@link AccountCreator} class.
+
+ Uses Mockito to mock Firestore interactions for testing account creation scenarios,
+
+ including empty fields, username existence checks, and adding new users.
+ */
 public class AccountCreatorTest {
 
     private FirebaseFirestore db;
@@ -31,6 +39,14 @@ public class AccountCreatorTest {
     private AccountCreator accountCreator;
     private MockedStatic<FirebaseFirestore> firebaseFirestoreStaticMock;
 
+    /**
+
+     Sets up the test environment before each test.
+
+     Mocks Firestore, CollectionReference, Query, and Task objects.
+
+     Initializes an AccountCreator instance with the mocked users collection.
+     */
     @Before
     public void setUp() {
         db = mock(FirebaseFirestore.class);
@@ -61,11 +77,19 @@ public class AccountCreatorTest {
         accountCreator = new AccountCreator(usersCol);
     }
 
+    /**
+     Cleans up after each test.
+     Closes the mocked static FirebaseFirestore instance.
+     */
     @After
     public void tearDown() {
         firebaseFirestoreStaticMock.close();
     }
 
+    /**
+     Tests that attempting to create an account with empty username or password
+     triggers the appropriate failure callback.
+     */
     @Test
     public void testCreateAccount_EmptyFields() {
         AccountCreator.Callback callback = mock(AccountCreator.Callback.class);
