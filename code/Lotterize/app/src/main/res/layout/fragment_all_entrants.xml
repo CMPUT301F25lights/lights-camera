@@ -272,16 +272,6 @@
                     android:textColor="@android:color/white"
                     android:textSize="14sp" />
 
-                <Button
-                    android:id="@+id/btn_draw_replacement"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Draw replacement applicant"
-                    android:backgroundTint="@color/black"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp" />
-
             </LinearLayout>
 
             <Space

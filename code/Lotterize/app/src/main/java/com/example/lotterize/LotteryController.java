@@ -24,6 +24,10 @@ public class LotteryController {
         this.lottery = lottery;
     }
 
+    /**
+     * This runs the lottery and selects a list of winners.
+     * @param event
+     */
     public void runLottery(Event event) {
         if (event.getEventId() == null || event.getEventId().isEmpty()) {
             System.err.println("Event ID is null, cannot update Firestore");
@@ -34,6 +38,11 @@ public class LotteryController {
         updateEventInFirestore(event);
     }
 
+    /**
+     *
+     * @param event
+     * @param userId
+     */
     public void acceptInvitation(Event event, String userId) {
         if (!event.getSelectedList().contains(userId)) return;
 
@@ -50,6 +59,11 @@ public class LotteryController {
         updateEventInFirestore(event);
     }
 
+    /**
+     * This declines an invitation prompting a replacment draw.
+     * @param event
+     * @param userId
+     */
     public void declineInvitation(Event event, String userId) {
         //System.out.println("Decline called for user: " + userId);
 
@@ -68,6 +82,10 @@ public class LotteryController {
         //System.out.println("Selected List: " + event.getSelectedList());
     }
 
+    /**
+     * updates events in firestore
+     * @param event
+     */
     // Internal helper for Firestore update (can be mocked)
     protected void updateEventInFirestore(Event event) {
         db.collection("events")
