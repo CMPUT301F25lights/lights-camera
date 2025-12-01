@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 import com.example.lotterize.CurrentUser;
 import com.example.lotterize.R;
@@ -68,6 +69,7 @@ public class HomeFragment extends Fragment implements FilterFragment.FilterFragm
     private ArrayAdapter<DocumentSnapshot> shownListAdapter;
     private EventScheduler scheduler;
     private ImageButton qrButton;
+    public static CountingIdlingResource loadingEvents = new CountingIdlingResource("MakingEvents");
     private final ActivityResultLauncher<ScanOptions> qrLauncher =
             registerForActivityResult(new ScanContract(), result -> {
                 if (result.getContents() != null) {
