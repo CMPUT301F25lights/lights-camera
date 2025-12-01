@@ -7,17 +7,22 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.lotterize.Notification;
 import com.example.lotterize.R;
 import com.example.lotterize.ui.admin.adminNotifications.AdminNotificationDetailsDialog;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.util.ArrayList;
 
 /**
  * Activity that displays all notifications sent by a specific user.
- * Queries Firestore for notifications where senderId matches the user.
+ * <p>
+ * This activity queries Firestore for documents in the {@code notifications} collection
+ * where the {@code senderId} field matches the provided user ID. Each notification
+ * is displayed in a scrollable list, and tapping on one shows a detail dialog.
  */
 public class NotificationsSentActivity extends AppCompatActivity {
 
@@ -27,15 +32,23 @@ public class NotificationsSentActivity extends AppCompatActivity {
     private LinearLayout notificationsContainer;
     private TextView emptyStateText;
 
+    /**
+     * Called when the activity is created.
+     * <p>
+     * Sets up the UI, retrieves the user ID from the launching intent, configures
+     * the back button, and begins loading all notifications sent by this user.
+     *
+     * @param savedInstanceState Saved activity state, if any.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications_sent);
 
-        // Initialize Firestore
+        // Initialize Firestore reference
         db = FirebaseFirestore.getInstance();
 
-        // Get userId from intent
+        // Retrieve userId passed via intent
         userId = getIntent().getStringExtra("userId");
 
         if (userId == null) {
@@ -46,7 +59,7 @@ public class NotificationsSentActivity extends AppCompatActivity {
 
         Log.d(TAG, "Loading notifications sent by user: " + userId);
 
-        // Initialize views
+        // Initialize UI components
         notificationsContainer = findViewById(R.id.notifications_container);
         emptyStateText = findViewById(R.id.text_empty_state);
 
@@ -56,12 +69,13 @@ public class NotificationsSentActivity extends AppCompatActivity {
             backButton.setOnClickListener(v -> finish());
         }
 
-        // Load notifications sent by this user
+        // Load the notifications sent by the user
         loadSentNotifications();
     }
 
     /**
-     * Queries Firestore for all notifications where senderId matches the current user.
+     * Loads all notifications from Firestore where {@code senderId} equals the
+     * current user's ID. Results are displayed dynamically in the container layout.
      */
     private void loadSentNotifications() {
         Log.d(TAG, "Querying notifications where senderId equals: " + userId);
@@ -83,15 +97,17 @@ public class NotificationsSentActivity extends AppCompatActivity {
                             emptyStateText.setVisibility(View.GONE);
                         }
 
+                        // Loop through all matching documents
                         for (QueryDocumentSnapshot doc : querySnapshot) {
                             String notificationId = doc.getString("notificationId");
-                            String message = doc.getString("message");
-                            String senderName = doc.getString("senderName");
-                            String senderId = doc.getString("senderId");
+                            String message      = doc.getString("message");
+                            String senderName   = doc.getString("senderName");
+                            String senderId     = doc.getString("senderId");
                             Timestamp timestamp = doc.getTimestamp("time");
-                            ArrayList<String> receiversId = (ArrayList<String>) doc.get("receiversId");
+                            ArrayList<String> receiversId =
+                                    (ArrayList<String>) doc.get("receiversId");
 
-                            // Create Notification object for the dialog
+                            // Create notification object for full details dialog
                             Notification notification = new Notification(
                                     notificationId,
                                     senderId,
@@ -102,7 +118,7 @@ public class NotificationsSentActivity extends AppCompatActivity {
                             );
 
                             addNotificationToView(message, notification);
-                            Log.d(TAG, "Loaded notification: " + message);
+                            Log.d(TAG, "Loaded sent notification: " + message);
                         }
 
                         Log.d(TAG, "Total sent notifications loaded: " + querySnapshot.size());
@@ -120,13 +136,15 @@ public class NotificationsSentActivity extends AppCompatActivity {
     }
 
     /**
-     * Dynamically creates and adds a notification card to the view.
+     * Creates a styled UI card to represent a single sent notification and adds it
+     * into the notifications list. When clicked, the admin notification detail dialog opens.
      *
-     * @param message The notification message
-     * @param notification The complete Notification object for showing details
+     * @param message      The main notification message to display.
+     * @param notification The full notification object used for dialog details.
      */
     private void addNotificationToView(String message, Notification notification) {
-        // Create container for notification
+
+        // Create container for individual notification card
         LinearLayout notificationItem = new LinearLayout(this);
         notificationItem.setOrientation(LinearLayout.VERTICAL);
         notificationItem.setPadding(40, 32, 40, 32);
@@ -140,7 +158,7 @@ public class NotificationsSentActivity extends AppCompatActivity {
         );
         notificationItem.setLayoutParams(params);
 
-        // Message (main content - larger and bold)
+        // Add message text
         TextView messageView = new TextView(this);
         messageView.setText(message != null ? message : "No message");
         messageView.setTextSize(16);
@@ -148,13 +166,14 @@ public class NotificationsSentActivity extends AppCompatActivity {
         messageView.setLineSpacing(4, 1.0f);
         notificationItem.addView(messageView);
 
-        // Set click listener to show details dialog
+        // Clicking the card shows full details dialog
         notificationItem.setOnClickListener(v -> {
-            AdminNotificationDetailsDialog dialog = AdminNotificationDetailsDialog.newInstance(notification);
+            AdminNotificationDetailsDialog dialog =
+                    AdminNotificationDetailsDialog.newInstance(notification);
             dialog.show(getSupportFragmentManager(), "notification_details");
         });
 
-        // Add a thin divider line
+        // Divider line underneath
         View divider = new View(this);
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -162,7 +181,7 @@ public class NotificationsSentActivity extends AppCompatActivity {
         );
         dividerParams.setMargins(0, 16, 0, 0);
         divider.setLayoutParams(dividerParams);
-        divider.setBackgroundColor(0xFFE0E0E0); // Light gray
+        divider.setBackgroundColor(0xFFE0E0E0);
 
         notificationsContainer.addView(notificationItem);
         notificationsContainer.addView(divider);

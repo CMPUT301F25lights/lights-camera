@@ -2,6 +2,7 @@ package com.example.lotterize.ui.profile;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,116 +27,220 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.List;
 
 /**
- * The ProfileFragment class manages the user profile screen in the Lotterize app.
- * It displays user information, such as their username, and provides options
- * to navigate to account details, event history, delete the account, or log out.
+ * Fragment responsible for displaying and managing the user's profile settings.
+ *
+ * <p>This fragment provides:
+ * <ul>
+ *   <li>Greeting and user information display</li>
+ *   <li>Device linking toggle for automatic login</li>
+ *   <li>Notification preference toggle</li>
+ *   <li>Navigation to Account and Event History screens</li>
+ *   <li>Account deletion with full cascade delete (events, notifications, lists)</li>
+ *   <li>Logout functionality</li>
+ * </ul>
+ *
+ * It connects to Firestore for all user-related operations and stores device link
+ * preferences using {@link SharedPreferences}.
  */
 public class ProfileFragment extends Fragment {
 
+    /** Logging tag used for debugging Firestore operations */
     private static final String TAG = "ProfileFragment";
+
+    /** View binding for the Fragment layout */
     private FragmentProfileBinding binding;
+
+    /** ViewModel storing the user's observable profile data */
     private ProfileViewModel profileViewModel;
+
+    /** Firestore instance used for all data interactions */
     private FirebaseFirestore db;
 
+    /**
+     * Inflates the view, sets up observers, listeners, and initializes UI components.
+     *
+     * @param inflater The layout inflater
+     * @param container Parent view group
+     * @param savedInstanceState Previously saved state, or null
+     * @return Inflated and configured fragment view
+     */
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            ViewGroup container,
+            Bundle savedInstanceState
+    ) {
         profileViewModel = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
         binding = FragmentProfileBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        // Initialize Firestore
         db = FirebaseFirestore.getInstance();
 
-        // Ensure bottom navigation is visible when viewing the profile
         showBottomNavigation();
 
-        // Observe user data changes and update greeting text based on username
+        // Observe and update greeting message
         profileViewModel.getUserData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 String username = user.getUsername() != null ? user.getUsername() : "User";
-                String greeting = "Hello, " + username + "!";
-                binding.textGreeting.setText(greeting);
+                binding.textGreeting.setText("Hello, " + username + "!");
             }
         });
 
-        // Delete Account with cascade deletion
-        binding.buttonDelete.setOnClickListener(v -> {
-            new AlertDialog.Builder(requireContext())
-                    .setTitle("Delete Account")
-                    .setMessage("Are you sure you want to permanently delete your account?\n\n" +
-                            "This will:\n" +
-                            "• Remove you from all events\n" +
-                            "• Delete all events you created\n" +
-                            "• Delete all notifications you sent/received\n" +
-                            "• Permanently delete your account\n\n" +
-                            "This action cannot be undone.")
-                    .setPositiveButton("Delete", (dialog, which) -> performCascadeDelete())
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        });
+        // Account deletion dialog + cascade delete
+        binding.buttonDelete.setOnClickListener(v ->
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Delete Account")
+                        .setMessage("Are you sure you want to permanently delete your account?\n\n"
+                                + "This will:\n"
+                                + "• Remove you from all events\n"
+                                + "• Delete all events you created\n"
+                                + "• Delete all notifications you sent/received\n"
+                                + "• Permanently delete your account\n\n"
+                                + "This action cannot be undone.")
+                        .setPositiveButton("Delete", (dialog, which) -> performCascadeDelete())
+                        .setNegativeButton("Cancel", null)
+                        .show()
+        );
 
-        // Logout
+        // Logout process
         binding.buttonLogout.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().finish();
-            }
+            SharedPreferences prefs = requireContext()
+                    .getSharedPreferences("LotterizePrefs", android.content.Context.MODE_PRIVATE);
+
+            prefs.edit()
+                    .putBoolean("deviceLinked", false)
+                    .remove("linkedUserId")
+                    .apply();
+
+            CurrentUser.clear();
+
+            if (getActivity() != null) getActivity().finish();
         });
 
-        // Navigate to Account Fragment when account section is clicked
-        View.OnClickListener accountClickListener = v -> {
-            NavController navController = Navigation.findNavController(v);
-            navController.navigate(R.id.navigation_account);
-        };
+        // Navigation listeners
+        View.OnClickListener accountClick = v ->
+                Navigation.findNavController(v).navigate(R.id.navigation_account);
+        binding.iconAccount.setOnClickListener(accountClick);
+        binding.textAccount.setOnClickListener(accountClick);
+        binding.textAccountDesc.setOnClickListener(accountClick);
 
-        binding.iconAccount.setOnClickListener(accountClickListener);
-        binding.textAccount.setOnClickListener(accountClickListener);
-        binding.textAccountDesc.setOnClickListener(accountClickListener);
+        View.OnClickListener eventHistoryClick = v ->
+                Navigation.findNavController(v).navigate(R.id.navigation_event_history);
+        binding.iconEvent.setOnClickListener(eventHistoryClick);
+        binding.textEvent.setOnClickListener(eventHistoryClick);
+        binding.textEventDesc.setOnClickListener(eventHistoryClick);
 
-        // Navigate to Event History Fragment when event section is clicked
-        View.OnClickListener eventHistoryClickListener = v -> {
-            NavController navController = Navigation.findNavController(v);
-            navController.navigate(R.id.navigation_event_history);
-        };
-
-        binding.iconEvent.setOnClickListener(eventHistoryClickListener);
-        binding.textEvent.setOnClickListener(eventHistoryClickListener);
-        binding.textEventDesc.setOnClickListener(eventHistoryClickListener);
-
-        // Notification toggle
+        // Notification preference toggle
         binding.switchNotifications.setChecked(CurrentUser.get().getWantNotification());
-
         binding.switchNotifications.setOnClickListener(v -> {
             boolean enabled = binding.switchNotifications.isChecked();
-
-            // Update in-memory current user
             CurrentUser.get().setWantNotification(enabled);
 
-            // Update Firestore
-            String userId = CurrentUser.get().getUserId();
-
             db.collection("users")
-                    .document(userId)
+                    .document(CurrentUser.get().getUserId())
                     .update("wantNotification", enabled)
-                    .addOnSuccessListener(unused -> {
-                        Toast.makeText(requireContext(), enabled ? "Notifications turned on" : "Opted out of notifications", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to update notification preference", e);
-                    });
+                    .addOnSuccessListener(unused ->
+                            Toast.makeText(requireContext(),
+                                    enabled ? "Notifications turned on"
+                                            : "Opted out of notifications",
+                                    Toast.LENGTH_SHORT).show())
+                    .addOnFailureListener(e ->
+                            Log.e(TAG, "Failed to update notification preference", e));
+        });
+
+        // Device linking toggle
+        binding.switchLinkDevice.setChecked(CurrentUser.get().getDeviceLinked());
+        binding.switchLinkDevice.setOnClickListener(v -> {
+            boolean enabled = binding.switchLinkDevice.isChecked();
+            if (enabled) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Link Device")
+                        .setMessage("This will enable automatic login on this device.\n"
+                                + "Only enable on devices you trust.\n\nContinue?")
+                        .setPositiveButton("Yes", (dialog, which) -> enableDeviceLinking())
+                        .setNegativeButton("Cancel", (dialog, which) ->
+                                binding.switchLinkDevice.setChecked(false))
+                        .show();
+            } else {
+                disableDeviceLinking();
+            }
         });
 
         return root;
     }
 
     /**
-     * Performs a cascade delete that removes:
-     * - User from all events (waitList, selectedList, finalList, cancelledList)
-     * - All events created by the user
-     * - All notifications sent by the user
-     * - All notifications received by the user
-     * - The user's account document
+     * Enables device linking by saving user ID in SharedPreferences and updating Firestore.
+     */
+    private void enableDeviceLinking() {
+        String userId = CurrentUser.get().getUserId();
+        CurrentUser.get().setDeviceLinked(true);
+
+        SharedPreferences prefs = requireContext()
+                .getSharedPreferences("LotterizePrefs", android.content.Context.MODE_PRIVATE);
+
+        prefs.edit()
+                .putBoolean("deviceLinked", true)
+                .putString("linkedUserId", userId)
+                .apply();
+
+        db.collection("users")
+                .document(userId)
+                .update("deviceLinked", true)
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(requireContext(), "Device linked successfully", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Device linked for user: " + userId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to link device", e);
+                    Toast.makeText(requireContext(), "Error linking device", Toast.LENGTH_SHORT).show();
+                    binding.switchLinkDevice.setChecked(false);
+                    CurrentUser.get().setDeviceLinked(false);
+                    clearDeviceLinkingPrefs();
+                });
+    }
+
+    /**
+     * Disables device linking both locally and in Firestore.
+     */
+    private void disableDeviceLinking() {
+        String userId = CurrentUser.get().getUserId();
+        CurrentUser.get().setDeviceLinked(false);
+
+        clearDeviceLinkingPrefs();
+
+        db.collection("users")
+                .document(userId)
+                .update("deviceLinked", false)
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(requireContext(), "Device unlinked successfully", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Device unlinked for user: " + userId);
+                })
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to unlink device", e));
+    }
+
+    /**
+     * Clears all device-link data from SharedPreferences.
+     */
+    private void clearDeviceLinkingPrefs() {
+        SharedPreferences prefs = requireContext()
+                .getSharedPreferences("LotterizePrefs", android.content.Context.MODE_PRIVATE);
+        prefs.edit()
+                .putBoolean("deviceLinked", false)
+                .remove("linkedUserId")
+                .apply();
+    }
+
+    /**
+     * Starts the full cascade account deletion process.
+     *
+     * <p>This removes the user from:
+     * <ul>
+     *   <li>All event lists</li>
+     *   <li>All owned events</li>
+     *   <li>All sent/received notifications</li>
+     * </ul>
      */
     private void performCascadeDelete() {
         String userId = CurrentUser.get().getUserId();
@@ -148,12 +253,10 @@ public class ProfileFragment extends Fragment {
 
         Log.d(TAG, "Starting cascade delete for user: " + username);
 
-        // Step 1: Remove user from all events (waitList, selectedList, etc.)
         db.collection("events")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     for (QueryDocumentSnapshot eventDoc : querySnapshot) {
-                        // Get all user lists from the event
                         List<String> waitList = (List<String>) eventDoc.get("waitList");
                         List<String> selectedList = (List<String>) eventDoc.get("selectedList");
                         List<String> finalList = (List<String>) eventDoc.get("finalList");
@@ -161,29 +264,17 @@ public class ProfileFragment extends Fragment {
 
                         boolean needsUpdate = false;
 
-                        // Remove user from all lists
-                        if (waitList != null && waitList.remove(userId)) {
-                            needsUpdate = true;
-                        }
-                        if (selectedList != null && selectedList.remove(userId)) {
-                            needsUpdate = true;
-                        }
-                        if (finalList != null && finalList.remove(userId)) {
-                            needsUpdate = true;
-                        }
-                        if (cancelledList != null && cancelledList.remove(userId)) {
-                            needsUpdate = true;
-                        }
+                        if (waitList != null && waitList.remove(userId)) needsUpdate = true;
+                        if (selectedList != null && selectedList.remove(userId)) needsUpdate = true;
+                        if (finalList != null && finalList.remove(userId)) needsUpdate = true;
+                        if (cancelledList != null && cancelledList.remove(userId)) needsUpdate = true;
 
-                        // Update the event if user was found in any list
                         if (needsUpdate) {
                             eventDoc.getReference()
-                                    .update(
-                                            "waitList", waitList,
+                                    .update("waitList", waitList,
                                             "selectedList", selectedList,
                                             "finalList", finalList,
-                                            "cancelledList", cancelledList
-                                    )
+                                            "cancelledList", cancelledList)
                                     .addOnSuccessListener(aVoid ->
                                             Log.d(TAG, "Removed user from event: " + eventDoc.getString("eventName")))
                                     .addOnFailureListener(e ->
@@ -191,17 +282,18 @@ public class ProfileFragment extends Fragment {
                         }
                     }
 
-                    // Step 2: Delete events owned by this user
                     deleteEventsOwnedByUser(userId);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error removing user from events: " + e.getMessage(), e);
+                    Log.e(TAG, "Error removing user from events", e);
                     Toast.makeText(requireContext(), "Error during account deletion", Toast.LENGTH_SHORT).show();
                 });
     }
 
     /**
-     * Deletes all events created by the current user.
+     * Deletes all events created by the user.
+     *
+     * @param userId ID of the user whose events are being deleted
      */
     private void deleteEventsOwnedByUser(String userId) {
         db.collection("events")
@@ -211,7 +303,6 @@ public class ProfileFragment extends Fragment {
                     int eventCount = querySnapshot.size();
                     Log.d(TAG, "Found " + eventCount + " events owned by user");
 
-                    // Delete each event owned by the user
                     for (QueryDocumentSnapshot eventDoc : querySnapshot) {
                         eventDoc.getReference()
                                 .delete()
@@ -221,18 +312,19 @@ public class ProfileFragment extends Fragment {
                                         Log.e(TAG, "Error deleting event", e));
                     }
 
-                    // Step 3: Delete notifications sent by this user
                     deleteNotificationsSentByUser(userId, eventCount);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error finding user's events: " + e.getMessage(), e);
-                    // Continue with notification deletion even if this fails
+                    Log.e(TAG, "Error finding user's events", e);
                     deleteNotificationsSentByUser(userId, 0);
                 });
     }
 
     /**
      * Deletes all notifications sent by the user.
+     *
+     * @param userId ID of the user
+     * @param eventCount number of events deleted earlier in the cascade
      */
     private void deleteNotificationsSentByUser(String userId, int eventCount) {
         db.collection("notifications")
@@ -240,31 +332,31 @@ public class ProfileFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int sentCount = querySnapshot.size();
-                    Log.d(TAG, "Found " + sentCount + " notifications sent by user");
+                    Log.d(TAG, "Found " + sentCount + " sent notifications");
 
-                    // Delete each notification sent by the user
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         doc.getReference()
                                 .delete()
                                 .addOnSuccessListener(aVoid ->
                                         Log.d(TAG, "Deleted sent notification: " + doc.getId()))
                                 .addOnFailureListener(e ->
-                                        Log.e(TAG, "Error deleting sent notification", e));
+                                        Log.e(TAG, "Error deleting notification", e));
                     }
 
-                    // Step 4: Delete notifications received by this user
                     deleteNotificationsReceivedByUser(userId, eventCount, sentCount);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error finding sent notifications: " + e.getMessage(), e);
-                    // Continue with received notifications even if this fails
+                    Log.e(TAG, "Error finding sent notifications", e);
                     deleteNotificationsReceivedByUser(userId, eventCount, 0);
                 });
     }
 
     /**
-     * Deletes all notifications received by the user
-     * (where receiversId array contains the user's ID).
+     * Deletes or updates all notifications where the user is a receiver.
+     *
+     * @param userId ID of the user
+     * @param eventCount number of events deleted
+     * @param sentCount number of notifications sent by the user
      */
     private void deleteNotificationsReceivedByUser(String userId, int eventCount, int sentCount) {
         db.collection("notifications")
@@ -272,35 +364,45 @@ public class ProfileFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int receivedCount = querySnapshot.size();
-                    Log.d(TAG, "Found " + receivedCount + " notifications received by user");
+                    Log.d(TAG, "Found " + receivedCount + " received notifications");
 
-                    // Delete each notification where user is a receiver
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        doc.getReference()
-                                .delete()
-                                .addOnSuccessListener(aVoid ->
-                                        Log.d(TAG, "Deleted received notification: " + doc.getId()))
-                                .addOnFailureListener(e ->
-                                        Log.e(TAG, "Error deleting received notification", e));
+                        List<String> receivers = (List<String>) doc.get("receiversId");
+                        if (receivers != null) {
+                            receivers.remove(userId);
+
+                            if (receivers.isEmpty()) {
+                                doc.getReference()
+                                        .delete()
+                                        .addOnSuccessListener(aVoid ->
+                                                Log.d(TAG, "Deleted notification with no receivers: " + doc.getId()))
+                                        .addOnFailureListener(e ->
+                                                Log.e(TAG, "Error deleting notification", e));
+                            } else {
+                                doc.getReference()
+                                        .update("receiversId", receivers)
+                                        .addOnSuccessListener(aVoid ->
+                                                Log.d(TAG, "Updated notification: " + doc.getId()))
+                                        .addOnFailureListener(e ->
+                                                Log.e(TAG, "Error updating notification", e));
+                            }
+                        }
                     }
 
-                    // Step 5: Finally delete the user document
                     finalizeAccountDeletion(eventCount, sentCount, receivedCount);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error finding received notifications: " + e.getMessage(), e);
-                    // Still try to delete the user even if this fails
+                    Log.e(TAG, "Error finding received notifications", e);
                     finalizeAccountDeletion(eventCount, sentCount, 0);
                 });
     }
 
     /**
-     * Finalizes the account deletion by removing the user document from Firestore
-     * and logging the user out.
+     * Final step in cascade delete: deletes the user document and resets app state.
      *
-     * @param eventCount Number of events that were deleted
-     * @param sentCount Number of sent notifications deleted
-     * @param receivedCount Number of received notifications deleted
+     * @param eventCount number of deleted events
+     * @param sentCount number of deleted sent notifications
+     * @param receivedCount number of deleted received notifications
      */
     private void finalizeAccountDeletion(int eventCount, int sentCount, int receivedCount) {
         String userId = CurrentUser.get().getUserId();
@@ -312,32 +414,29 @@ public class ProfileFragment extends Fragment {
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User deleted: " + username);
 
-                    // Build detailed success message
+                    clearDeviceLinkingPrefs();
+
                     StringBuilder message = new StringBuilder("Account deleted successfully.");
-                    if (eventCount > 0) {
-                        message.append("\n• ").append(eventCount).append(" event(s) deleted");
-                    }
-                    if (sentCount > 0) {
-                        message.append("\n• ").append(sentCount).append(" sent notification(s) deleted");
-                    }
-                    if (receivedCount > 0) {
-                        message.append("\n• ").append(receivedCount).append(" received notification(s) deleted");
-                    }
+                    if (eventCount > 0) message.append("\n• ").append(eventCount).append(" event(s) deleted");
+                    if (sentCount > 0) message.append("\n• ").append(sentCount).append(" sent notification(s)");
+                    if (receivedCount > 0) message.append("\n• ").append(receivedCount).append(" received notification(s)");
 
                     Toast.makeText(requireContext(), message.toString(), Toast.LENGTH_LONG).show();
 
-                    // Clear the current user session and navigate to login screen
                     CurrentUser.clear();
                     Intent intent = new Intent(requireContext(), MainActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error deleting user: " + e.getMessage(), e);
+                    Log.e(TAG, "Error deleting user", e);
                     Toast.makeText(requireContext(), "Error deleting account", Toast.LENGTH_SHORT).show();
                 });
     }
 
+    /**
+     * Ensures bottom navigation bar is visible when this fragment is active.
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -345,17 +444,18 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Makes the bottom navigation bar visible if it exists in the current activity.
+     * Makes the bottom navigation visible.
      */
     private void showBottomNavigation() {
         if (getActivity() != null) {
             BottomNavigationView navView = getActivity().findViewById(R.id.nav_view);
-            if (navView != null) {
-                navView.setVisibility(View.VISIBLE);
-            }
+            if (navView != null) navView.setVisibility(View.VISIBLE);
         }
     }
 
+    /**
+     * Clears binding reference to prevent memory leaks.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

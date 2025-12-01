@@ -24,8 +24,22 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.List;
 
 /**
- * Fragment that displays detailed user information for admin review.
- * Allows admin to view user details and perform cascade delete of the account.
+ * Fragment responsible for displaying user information to an admin.
+ * <p>
+ * Allows the admin to:
+ * <ul>
+ *     <li>View user profile details (name, email, phone)</li>
+ *     <li>Navigate to notifications the user has sent/received</li>
+ *     <li>Perform a cascade delete that removes the user from all Firestore references</li>
+ * </ul>
+ *
+ * This includes:
+ * <ul>
+ *     <li>Removing user from all event lists</li>
+ *     <li>Deleting events created by the user</li>
+ *     <li>Deleting notifications sent or received</li>
+ *     <li>Deleting the user account document</li>
+ * </ul>
  */
 public class AdminUserDetailsFragment extends Fragment {
 
@@ -35,6 +49,15 @@ public class AdminUserDetailsFragment extends Fragment {
     private String userId;
     private String username;
 
+    /**
+     * Inflates the admin user details layout, loads data, initializes buttons,
+     * and hides the admin bottom navigation bar.
+     *
+     * @param inflater  LayoutInflater to inflate the fragment UI
+     * @param container Parent container the fragment UI will be attached to
+     * @param savedInstanceState Saved instance state bundle
+     * @return The root view of the inflated layout
+     */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -44,7 +67,7 @@ public class AdminUserDetailsFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
 
-        // Get userId from arguments
+        // Retrieve userId passed from previous fragment
         if (getArguments() != null) {
             userId = getArguments().getString("userId");
         }
@@ -55,31 +78,34 @@ public class AdminUserDetailsFragment extends Fragment {
             loadUserData(userId);
         }
 
+        // Navigate to received notifications list
         binding.btnReceivedNotifications.setOnClickListener(v -> {
             Intent i = new Intent(requireContext(), NotificationsReceivedActivity.class);
             i.putExtra("userId", userId);
             startActivity(i);
         });
 
+        // Navigate to sent notifications list
         binding.btnSentNotifications.setOnClickListener(v -> {
             Intent i = new Intent(requireContext(), NotificationsSentActivity.class);
             i.putExtra("userId", userId);
             startActivity(i);
         });
 
-        // Back button click
-        binding.buttonBack.setOnClickListener(v -> {
-            Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_admin).popBackStack();
-        });
+        // Back button returns to previous admin fragment
+        binding.buttonBack.setOnClickListener(v ->
+                Navigation.findNavController(requireActivity(),
+                        R.id.nav_host_fragment_activity_admin).popBackStack()
+        );
 
-        // Remove Account button with cascade delete
-        binding.buttonRemove.setOnClickListener(v -> {
-            showDeleteConfirmation();
-        });
+        // Cascade delete confirmation dialog
+        binding.buttonRemove.setOnClickListener(v -> showDeleteConfirmation());
 
-        // Hide bottom navigation bar
+        // Hide bottom navigation bar while viewing user details
         if (getActivity() != null) {
-            BottomNavigationView navView = getActivity().findViewById(R.id.nav_view_admin);
+            BottomNavigationView navView =
+                    getActivity().findViewById(R.id.nav_view_admin);
+
             if (navView != null) {
                 navView.setVisibility(View.GONE);
             }
@@ -89,21 +115,22 @@ public class AdminUserDetailsFragment extends Fragment {
     }
 
     /**
-     * Loads user data from Firestore and displays it.
+     * Loads the user's profile information from Firestore.
      *
-     * @param userId The user's document ID
+     * @param userId ID of the user whose data will be fetched
      */
     private void loadUserData(String userId) {
         db.collection("users").document(userId).get()
                 .addOnSuccessListener(this::setUserDetails)
                 .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Failed to load data", Toast.LENGTH_SHORT).show());
+                        Toast.makeText(getContext(),
+                                "Failed to load data", Toast.LENGTH_SHORT).show());
     }
 
     /**
-     * Populates the UI with user details from Firestore.
+     * Populates UI fields with user information from Firestore.
      *
-     * @param document The Firestore document containing user data
+     * @param document Firestore user document snapshot
      */
     private void setUserDetails(DocumentSnapshot document) {
         if (document.exists()) {
@@ -115,13 +142,15 @@ public class AdminUserDetailsFragment extends Fragment {
             binding.textNameValue.setText(name != null && !name.isEmpty() ? name : "Not set");
             binding.textEmailValue.setText(email != null && !email.isEmpty() ? email : "Not set");
             binding.textPhoneValue.setText(phone != null && !phone.isEmpty() ? phone : "Not set");
+
         } else {
             Toast.makeText(getContext(), "User does not exist", Toast.LENGTH_SHORT).show();
         }
     }
 
     /**
-     * Shows a confirmation dialog before deleting the user account.
+     * Displays a confirmation dialog informing the admin about the irreversible
+     * cascade delete action before proceeding.
      */
     private void showDeleteConfirmation() {
         new AlertDialog.Builder(requireContext())
@@ -139,12 +168,16 @@ public class AdminUserDetailsFragment extends Fragment {
     }
 
     /**
-     * Performs a cascade delete that removes:
-     * - User from all events (waitList, selectedList, finalList, cancelledList)
-     * - All events created by the user
-     * - All notifications sent by the user
-     * - All notifications received by the user
-     * - The user's account document
+     * Initiates a full cascade delete operation which removes:
+     * <ul>
+     *     <li>User from all event participant lists</li>
+     *     <li>All events created by the user</li>
+     *     <li>All notifications sent by the user</li>
+     *     <li>User from notifications they have received</li>
+     *     <li>The user document itself</li>
+     * </ul>
+     *
+     * This ensures no Firestore data remains referencing the deleted user.
      */
     private void performCascadeDelete() {
         if (userId == null) {
@@ -154,12 +187,11 @@ public class AdminUserDetailsFragment extends Fragment {
 
         Log.d(TAG, "Starting cascade delete for user: " + username);
 
-        // Step 1: Remove user from all events (waitList, selectedList, etc.)
         db.collection("events")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     for (QueryDocumentSnapshot eventDoc : querySnapshot) {
-                        // Get all user lists from the event
+
                         List<String> waitList = (List<String>) eventDoc.get("waitList");
                         List<String> selectedList = (List<String>) eventDoc.get("selectedList");
                         List<String> finalList = (List<String>) eventDoc.get("finalList");
@@ -167,21 +199,12 @@ public class AdminUserDetailsFragment extends Fragment {
 
                         boolean needsUpdate = false;
 
-                        // Remove user from all lists
-                        if (waitList != null && waitList.remove(userId)) {
-                            needsUpdate = true;
-                        }
-                        if (selectedList != null && selectedList.remove(userId)) {
-                            needsUpdate = true;
-                        }
-                        if (finalList != null && finalList.remove(userId)) {
-                            needsUpdate = true;
-                        }
-                        if (cancelledList != null && cancelledList.remove(userId)) {
-                            needsUpdate = true;
-                        }
+                        // Remove user from all event lists
+                        if (waitList != null && waitList.remove(userId)) needsUpdate = true;
+                        if (selectedList != null && selectedList.remove(userId)) needsUpdate = true;
+                        if (finalList != null && finalList.remove(userId)) needsUpdate = true;
+                        if (cancelledList != null && cancelledList.remove(userId)) needsUpdate = true;
 
-                        // Update the event if user was found in any list
                         if (needsUpdate) {
                             eventDoc.getReference()
                                     .update(
@@ -191,13 +214,13 @@ public class AdminUserDetailsFragment extends Fragment {
                                             "cancelledList", cancelledList
                                     )
                                     .addOnSuccessListener(aVoid ->
-                                            Log.d(TAG, "Removed user from event: " + eventDoc.getString("eventName")))
+                                            Log.d(TAG, "Removed user from event: " +
+                                                    eventDoc.getString("eventName")))
                                     .addOnFailureListener(e ->
                                             Log.e(TAG, "Error removing user from event", e));
                         }
                     }
 
-                    // Step 2: Delete events owned by this user
                     deleteEventsOwnedByUser();
                 })
                 .addOnFailureListener(e -> {
@@ -207,9 +230,14 @@ public class AdminUserDetailsFragment extends Fragment {
     }
 
     /**
-     * Deletes all events created by the specified user.
+     * Queries and deletes all events where this user is the owner.
+     * After completion, continues the cascade deletion process
+     * by deleting notifications sent by the user.
      */
     private void deleteEventsOwnedByUser() {
+        Log.d(TAG, "=== QUERYING EVENTS OWNED BY USER ===");
+        Log.d(TAG, "Searching for ownerId: " + userId);
+
         db.collection("events")
                 .whereEqualTo("ownerId", userId)
                 .get()
@@ -217,28 +245,31 @@ public class AdminUserDetailsFragment extends Fragment {
                     int eventCount = querySnapshot.size();
                     Log.d(TAG, "Found " + eventCount + " events owned by user: " + username);
 
-                    // Delete each event owned by the user
                     for (QueryDocumentSnapshot eventDoc : querySnapshot) {
+                        String eventId = eventDoc.getId();
+                        String eventName = eventDoc.getString("eventName");
+
                         eventDoc.getReference()
                                 .delete()
                                 .addOnSuccessListener(aVoid ->
-                                        Log.d(TAG, "Deleted event: " + eventDoc.getString("eventName")))
+                                        Log.d(TAG, "Deleted event: " + eventName))
                                 .addOnFailureListener(e ->
-                                        Log.e(TAG, "Error deleting event", e));
+                                        Log.e(TAG, "Error deleting event: " + eventName, e));
                     }
 
-                    // Step 3: Delete notifications sent by this user
                     deleteNotificationsSentByUser(eventCount);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error finding user's events: " + e.getMessage(), e);
-                    // Continue with notification deletion even if this fails
+                    Log.e(TAG, "Failed querying events owned by user", e);
                     deleteNotificationsSentByUser(0);
                 });
     }
 
     /**
-     * Deletes all notifications sent by the user.
+     * Deletes all notifications where this user is the sender.
+     * Continues the cascade delete by removing the user from received notifications.
+     *
+     * @param eventCount Number of events deleted previously
      */
     private void deleteNotificationsSentByUser(int eventCount) {
         db.collection("notifications")
@@ -246,9 +277,8 @@ public class AdminUserDetailsFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int sentCount = querySnapshot.size();
-                    Log.d(TAG, "Found " + sentCount + " notifications sent by user: " + username);
+                    Log.d(TAG, "Found " + sentCount + " sent notifications.");
 
-                    // Delete each notification sent by the user
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         doc.getReference()
                                 .delete()
@@ -258,19 +288,20 @@ public class AdminUserDetailsFragment extends Fragment {
                                         Log.e(TAG, "Error deleting sent notification", e));
                     }
 
-                    // Step 4: Delete notifications received by this user
                     deleteNotificationsReceivedByUser(eventCount, sentCount);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error finding sent notifications: " + e.getMessage(), e);
-                    // Continue with received notifications even if this fails
+                    Log.e(TAG, "Error querying sent notifications", e);
                     deleteNotificationsReceivedByUser(eventCount, 0);
                 });
     }
 
     /**
-     * Deletes all notifications received by the user
-     * (where receiversId array contains the user's ID).
+     * Removes the user from the receivers list of all notifications they received.
+     * If a notification has no receivers left after removal, the notification is deleted entirely.
+     *
+     * @param eventCount    Number of events deleted
+     * @param sentCount     Number of sent notifications deleted
      */
     private void deleteNotificationsReceivedByUser(int eventCount, int sentCount) {
         db.collection("notifications")
@@ -278,72 +309,90 @@ public class AdminUserDetailsFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int receivedCount = querySnapshot.size();
-                    Log.d(TAG, "Found " + receivedCount + " notifications received by user: " + username);
+                    Log.d(TAG, "Found " + receivedCount + " received notifications.");
 
-                    // Delete each notification where user is a receiver
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        doc.getReference()
-                                .delete()
-                                .addOnSuccessListener(aVoid ->
-                                        Log.d(TAG, "Deleted received notification: " + doc.getId()))
-                                .addOnFailureListener(e ->
-                                        Log.e(TAG, "Error deleting received notification", e));
+                        List<String> receivers = (List<String>) doc.get("receiversId");
+
+                        if (receivers != null) {
+                            receivers.remove(userId);
+
+                            if (receivers.isEmpty()) {
+                                doc.getReference().delete()
+                                        .addOnSuccessListener(aVoid ->
+                                                Log.d(TAG, "Deleted notification (no receivers): "
+                                                        + doc.getId()));
+                            } else {
+                                doc.getReference()
+                                        .update("receiversId", receivers)
+                                        .addOnSuccessListener(aVoid ->
+                                                Log.d(TAG, "Updated receivers list: " + doc.getId()));
+                            }
+                        }
                     }
 
-                    // Step 5: Finally delete the user document
                     finalizeAccountDeletion(eventCount, sentCount, receivedCount);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error finding received notifications: " + e.getMessage(), e);
-                    // Still try to delete the user even if this fails
+                    Log.e(TAG, "Error querying received notifications", e);
                     finalizeAccountDeletion(eventCount, sentCount, 0);
                 });
     }
 
     /**
-     * Finalizes the account deletion by removing the user document from Firestore.
+     * Deletes the user account document itself from Firestore.
+     * Shows a summary report and navigates back to the previous admin screen.
      *
-     * @param eventCount Number of events that were deleted
-     * @param sentCount Number of sent notifications deleted
-     * @param receivedCount Number of received notifications deleted
+     * @param eventCount    Number of deleted events
+     * @param sentCount     Number of deleted sent notifications
+     * @param receivedCount Number of deleted received notifications
      */
     private void finalizeAccountDeletion(int eventCount, int sentCount, int receivedCount) {
         db.collection("users")
                 .document(userId)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
+
                     Log.d(TAG, "User deleted: " + username);
 
-                    // Build detailed success message
-                    StringBuilder message = new StringBuilder("User " + username + " removed successfully.");
-                    if (eventCount > 0) {
+                    StringBuilder message = new StringBuilder(
+                            "User " + username + " removed successfully."
+                    );
+
+                    if (eventCount > 0)
                         message.append("\n• ").append(eventCount).append(" event(s) deleted");
-                    }
-                    if (sentCount > 0) {
+                    if (sentCount > 0)
                         message.append("\n• ").append(sentCount).append(" sent notification(s) deleted");
-                    }
-                    if (receivedCount > 0) {
+                    if (receivedCount > 0)
                         message.append("\n• ").append(receivedCount).append(" received notification(s) deleted");
-                    }
 
                     Toast.makeText(requireContext(), message.toString(), Toast.LENGTH_LONG).show();
 
-                    // Navigate back to admin profiles list
-                    Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_admin).popBackStack();
+                    NavController navController =
+                            Navigation.findNavController(requireActivity(),
+                                    R.id.nav_host_fragment_activity_admin);
+
+                    navController.popBackStack();
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error deleting user: " + e.getMessage(), e);
-                    Toast.makeText(requireContext(), "Error removing user account", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error deleting user", e);
+                    Toast.makeText(requireContext(),
+                            "Error removing user account", Toast.LENGTH_SHORT).show();
                 });
     }
 
+    /**
+     * Restores the admin bottom navigation view when the fragment is destroyed.
+     * Ensures UI consistency across admin screens.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
 
-        // Show bottom navigation when leaving
         if (getActivity() != null) {
-            BottomNavigationView navView = getActivity().findViewById(R.id.nav_view_admin);
+            BottomNavigationView navView =
+                    getActivity().findViewById(R.id.nav_view_admin);
+
             if (navView != null) {
                 navView.setVisibility(View.VISIBLE);
             }

@@ -7,17 +7,23 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.lotterize.Notification;
 import com.example.lotterize.R;
 import com.example.lotterize.ui.admin.adminNotifications.AdminNotificationDetailsDialog;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
 
+import java.util.ArrayList;
+
+/**
+ * Activity responsible for displaying all notifications received by a specific user.
+ * <p>
+ * This activity loads notifications from Firestore where the user's ID appears in the
+ * {@code receiversId} array field. Each notification is displayed as a clickable view
+ * that opens a dialog showing detailed information.
+ */
 public class NotificationsReceivedActivity extends AppCompatActivity {
 
     private static final String TAG = "NotificationsReceived";
@@ -26,6 +32,12 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
     private LinearLayout notificationsContainer;
     private TextView emptyStateText;
 
+    /**
+     * Called when the activity is created.
+     * Initializes the UI, retrieves the user ID, and triggers loading of notifications.
+     *
+     * @param savedInstanceState Previously saved activity state.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,7 +45,7 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        // Get userId from intent
+        // Retrieve userId passed from the previous activity
         userId = getIntent().getStringExtra("userId");
 
         if (userId == null) {
@@ -54,14 +66,17 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
             backButton.setOnClickListener(v -> finish());
         }
 
-        // Load notifications
+        // Load all notifications for this user
         loadReceivedNotifications();
     }
 
+    /**
+     * Loads notifications from Firestore where the {@code receiversId} array
+     * contains the user ID. Updates the UI based on results.
+     */
     private void loadReceivedNotifications() {
         Log.d(TAG, "Querying notifications where receiversId array contains: " + userId);
 
-        // USE arrayContains BECAUSE receiversId IS AN ARRAY
         db.collection("notifications")
                 .whereArrayContains("receiversId", userId)
                 .get()
@@ -79,15 +94,16 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
                             emptyStateText.setVisibility(View.GONE);
                         }
 
+                        // Loop through documents and build Notification objects
                         for (QueryDocumentSnapshot doc : querySnapshot) {
                             String notificationId = doc.getString("notificationId");
                             String message = doc.getString("message");
                             String senderName = doc.getString("senderName");
                             String senderId = doc.getString("senderId");
                             Timestamp timestamp = doc.getTimestamp("time");
-                            ArrayList<String> receiversId = (ArrayList<String>) doc.get("receiversId");
+                            ArrayList<String> receiversId =
+                                    (ArrayList<String>) doc.get("receiversId");
 
-                            // Create Notification object for the dialog
                             Notification notification = new Notification(
                                     notificationId,
                                     senderId,
@@ -107,6 +123,7 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error loading notifications: " + e.getMessage(), e);
                     Toast.makeText(this, "Failed to load notifications", Toast.LENGTH_SHORT).show();
+
                     if (emptyStateText != null) {
                         emptyStateText.setVisibility(View.VISIBLE);
                         emptyStateText.setText("Error loading notifications");
@@ -114,12 +131,20 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Creates a styled view for a single notification and adds it to the container.
+     * When clicked, it shows the {@link AdminNotificationDetailsDialog} dialog.
+     *
+     * @param message      Notification message text.
+     * @param notification The full notification object containing details.
+     */
     private void addNotificationToView(String message, Notification notification) {
-        // Create container for notification
+
+        // Create container for a single notification item
         LinearLayout notificationItem = new LinearLayout(this);
         notificationItem.setOrientation(LinearLayout.VERTICAL);
         notificationItem.setPadding(40, 32, 40, 32);
-        notificationItem.setBackgroundColor(0xFFFFFFFF); // White background
+        notificationItem.setBackgroundColor(0xFFFFFFFF);
         notificationItem.setClickable(true);
         notificationItem.setFocusable(true);
 
@@ -129,7 +154,7 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         );
         notificationItem.setLayoutParams(params);
 
-        // Message (main content - larger and bold)
+        // Create and style the message text
         TextView messageView = new TextView(this);
         messageView.setText(message != null ? message : "No message");
         messageView.setTextSize(16);
@@ -137,13 +162,14 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         messageView.setLineSpacing(4, 1.0f);
         notificationItem.addView(messageView);
 
-        // Set click listener to show details dialog
+        // Click opens details dialog
         notificationItem.setOnClickListener(v -> {
-            AdminNotificationDetailsDialog dialog = AdminNotificationDetailsDialog.newInstance(notification);
+            AdminNotificationDetailsDialog dialog =
+                    AdminNotificationDetailsDialog.newInstance(notification);
             dialog.show(getSupportFragmentManager(), "notification_details");
         });
 
-        // Add a thin divider line
+        // Divider line
         View divider = new View(this);
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -151,10 +177,9 @@ public class NotificationsReceivedActivity extends AppCompatActivity {
         );
         dividerParams.setMargins(0, 16, 0, 0);
         divider.setLayoutParams(dividerParams);
-        divider.setBackgroundColor(0xFFE0E0E0); // Light gray
+        divider.setBackgroundColor(0xFFE0E0E0);
 
         notificationsContainer.addView(notificationItem);
         notificationsContainer.addView(divider);
     }
-
 }

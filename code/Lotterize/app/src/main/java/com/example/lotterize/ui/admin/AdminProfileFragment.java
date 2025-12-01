@@ -380,8 +380,8 @@ public class AdminProfileFragment extends Fragment {
     }
 
     /**
-     * Deletes all notifications received by the user
-     * (where receiversId array contains the user's ID).
+     * Removes user from notifications they received
+     * (removes userId from receiversId array, or deletes notification if they're the only receiver).
      *
      * @param userId   The user's document ID
      * @param username The user's username (for logging)
@@ -396,14 +396,31 @@ public class AdminProfileFragment extends Fragment {
                     int receivedCount = querySnapshot.size();
                     Log.d(TAG, "Found " + receivedCount + " notifications received by user: " + username);
 
-                    // Delete each notification where user is a receiver
+                    // Remove user from each notification's receiversId array
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        doc.getReference()
-                                .delete()
-                                .addOnSuccessListener(aVoid ->
-                                        Log.d(TAG, "Deleted received notification: " + doc.getId()))
-                                .addOnFailureListener(e ->
-                                        Log.e(TAG, "Error deleting received notification", e));
+                        List<String> receiversId = (List<String>) doc.get("receiversId");
+
+                        if (receiversId != null) {
+                            receiversId.remove(userId);
+
+                            if (receiversId.isEmpty()) {
+                                // If no more receivers, delete the entire notification
+                                doc.getReference()
+                                        .delete()
+                                        .addOnSuccessListener(aVoid ->
+                                                Log.d(TAG, "Deleted notification (no more receivers): " + doc.getId()))
+                                        .addOnFailureListener(e ->
+                                                Log.e(TAG, "Error deleting notification", e));
+                            } else {
+                                // Otherwise, just update the receiversId array
+                                doc.getReference()
+                                        .update("receiversId", receiversId)
+                                        .addOnSuccessListener(aVoid ->
+                                                Log.d(TAG, "Removed user from notification: " + doc.getId()))
+                                        .addOnFailureListener(e ->
+                                                Log.e(TAG, "Error updating notification", e));
+                            }
+                        }
                     }
 
                     // Step 5: Finally delete the user document
@@ -467,5 +484,8 @@ public class AdminProfileFragment extends Fragment {
         super.onResume();
         BottomNavigationView navView = getActivity().findViewById(R.id.nav_view_admin);
         if (navView != null) navView.setVisibility(View.VISIBLE);
+
+        // Refresh user list when returning to this fragment
+        loadUserProfiles();
     }
 }
