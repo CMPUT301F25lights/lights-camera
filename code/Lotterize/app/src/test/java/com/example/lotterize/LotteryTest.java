@@ -2,9 +2,11 @@ package com.example.lotterize;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,13 +14,16 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+
 
 /**
  * Unit tests for the Lottery class.
  * Static mocking is used for CurrentUser.get(), since it is Android-dependent,
  * and did not want to touch DB yet.
  */
+@RunWith(RobolectricTestRunner.class)
 public class LotteryTest {
 
     private Event testEvent;
@@ -65,7 +70,7 @@ public class LotteryTest {
 
     /** Utility wrapper to run code with CurrentUser.get() mocked. */
     private void withMockedCurrentUser(Runnable testLogic) {
-        try (MockedStatic<CurrentUser> mockedStatic = Mockito.mockStatic(CurrentUser.class)) {
+        try (MockedStatic<CurrentUser> mockedStatic = mockStatic(CurrentUser.class)) {
             mockedStatic.when(CurrentUser::get).thenReturn(mockUser);
             testLogic.run();
         }
