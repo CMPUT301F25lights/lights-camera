@@ -25,6 +25,11 @@ public class LotteryController {
     }
 
     public void runLottery(Event event) {
+        if (event.getEventId() == null || event.getEventId().isEmpty()) {
+            System.err.println("Event ID is null, cannot update Firestore");
+            return;
+        }
+
         List<String> winners = lottery.drawWinners(event);
         updateEventInFirestore(event);
     }

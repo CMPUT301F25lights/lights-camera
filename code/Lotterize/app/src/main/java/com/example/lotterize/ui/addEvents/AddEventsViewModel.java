@@ -2,6 +2,7 @@ package com.example.lotterize.ui.addEvents;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -29,6 +30,7 @@ public class AddEventsViewModel extends ViewModel {
 
     /** Firestore listener registration used to remove the listener when cleared. */
     private ListenerRegistration registration;
+    private final EventsRepository eventsRepository = EventsRepository.getInstance();
 
     private final String currentUserId = CurrentUser.get().getUserId();
 
@@ -42,36 +44,30 @@ public class AddEventsViewModel extends ViewModel {
 
 
     /**
-     * This starts a Firestore snapshot listener that loads events where
-     * the {@code ownerId} equals the current user's id.
-     * It converts each document into an {@link Event} and updates the LiveData.
+     * This starts (or re-starts) a Firestore snapshot listener for the current user's events.
+     *
+     * The listener is scoped to documents in the {@code events} collection where
+     * {@code ownerId} equals {@link #currentUserId}. Every time the query snapshot
+     * changes, {@link EventsRepository} converts the documents to {@link Event}
+     * instances and delivers them via {@link EventsRepository.MyEventsCallback}.
+     * The resulting list is then posted into {@link #myEventsLiveData} so that
+     * observers can update the UI.
      */
     private void startListening() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        registration = db.collection("events")
-                .whereEqualTo("ownerId", currentUserId)
-                .addSnapshotListener((value, error) -> {
-                    if (error != null) {
-                        Log.e("FireStore", error.toString());
-                        return;
+                registration = EventsRepository.getInstance().listenToEvents(
+                currentUserId,
+                new EventsRepository.MyEventsCallback() {
+                    @Override
+                    public void onEvents(@NonNull ArrayList<Event> events) {
+                        myEventsLiveData.setValue(events);
                     }
 
-
-                    ArrayList<Event> myEventsList = new ArrayList<>();
-
-                    if (value != null && !value.isEmpty()) {
-                        for (QueryDocumentSnapshot doc : value) {
-                            try {
-                                myEventsList.add(Event.addEventDetailsFromSnapShot(doc));
-                            } catch (Exception e) {
-                                Log.w("MyEvents", e.toString());
-                            }
-                        }
-                        myEventsLiveData.setValue(myEventsList);
-                        System.out.println(String.valueOf(myEventsList.size()));
+                    @Override
+                    public void onError(@NonNull Exception e) {
+                        Log.e("AddEvents", e.toString());
                     }
-                });
+                }
+        );
     }
 
     /**

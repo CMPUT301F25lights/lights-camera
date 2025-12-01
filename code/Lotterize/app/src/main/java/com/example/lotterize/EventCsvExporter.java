@@ -113,7 +113,7 @@ public final class EventCsvExporter {
         for (String id : ids){
             Map<String, Object> user = mapByIds.get(id);
             String name = getField(user, "name");
-            String userName = getField(user, "userName");
+            String userName = getField(user, "username");
             String userId = getField(user, "userId");
             String email = getField(user, "email");
             String phoneNumber = getField(user,"phoneNumber");

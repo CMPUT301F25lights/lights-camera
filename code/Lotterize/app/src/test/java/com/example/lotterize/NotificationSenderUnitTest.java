@@ -26,6 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
+import android.util.Log;
+
 public class NotificationSenderUnitTest {
 
     private FirebaseFirestore db;
@@ -44,6 +46,7 @@ public class NotificationSenderUnitTest {
     private MockedStatic<FirebaseFirestore> firebaseFirestoreStaticMock;
     private MockedStatic<Tasks> tasksStaticMock;
 
+    private MockedStatic<Log> logStaticMock;
 
     @Before
     public void setUp() {
@@ -65,6 +68,14 @@ public class NotificationSenderUnitTest {
         firebaseFirestoreStaticMock.when(FirebaseFirestore::getInstance).thenReturn(db);
 
         tasksStaticMock = mockStatic(Tasks.class);
+
+        // mock Log s
+        logStaticMock = mockStatic(Log.class);
+        logStaticMock.when(() -> Log.d(anyString(), anyString())).thenReturn(0);
+        logStaticMock.when(() -> Log.d(anyString(), anyString(), any(Throwable.class))).thenReturn(0);
+        logStaticMock.when(() -> Log.e(anyString(), anyString())).thenReturn(0);
+        logStaticMock.when(() -> Log.e(anyString(), anyString(), any(Throwable.class))).thenReturn(0);
+
 
         // notifications collection mocking
         when(db.collection("notifications")).thenReturn(notificationsCol);
@@ -109,6 +120,7 @@ public class NotificationSenderUnitTest {
         CurrentUser.set(null);
         firebaseFirestoreStaticMock.close();
         tasksStaticMock.close();
+        logStaticMock.close();
     }
 
     private User mockCurrentUser() {
@@ -177,5 +189,46 @@ public class NotificationSenderUnitTest {
         }).when(docRef).set(isA(Notification.class));
 
         sender.sendNotification(notification);
+    }
+
+    @Test
+    public void TestSendNotification_NoCandidateReceivers(){
+        CurrentUser.set(mockCurrentUser());
+
+        NotificationSender sender = new NotificationSender();
+        NotificationSender.NotificationCallback callback = mock(NotificationSender.NotificationCallback.class);
+
+        ArrayList<String> receiversId = new ArrayList<>();
+
+
+        sender.sendNotification(CurrentUser.get().getUserId(), "No receivers for this notification", receiversId, callback);
+
+        verify(callback).onComplete(0);
+        verify(callback, never()).onError(any());
+
+        verify(docRef, never()).set(any(Notification.class));
+    }
+
+    @Test
+    public void TestSendNotification_AllReceiversOptedOutReceivingNotif(){
+        CurrentUser.set(mockCurrentUser());
+
+        NotificationSender sender = new NotificationSender();
+        NotificationSender.NotificationCallback callback = mock(NotificationSender.NotificationCallback.class);
+
+        ArrayList<String> receiversId = new ArrayList<>();
+        receiversId.add("ReceiverA");
+        receiversId.add("ReceiverB");
+
+        when(userSnapA.getBoolean("wantNotification")).thenReturn(false);
+        when(userSnapB.getBoolean("wantNotification")).thenReturn(false);
+
+
+        sender.sendNotification(CurrentUser.get().getUserId(), "Testing notification sender ", receiversId, callback);
+
+        verify(callback).onComplete(0);
+        verify(callback, never()).onError(any());
+
+        verify(docRef, never()).set(any(Notification.class));
     }
 }
