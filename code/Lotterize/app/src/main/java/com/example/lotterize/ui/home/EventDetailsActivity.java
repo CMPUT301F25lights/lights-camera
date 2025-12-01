@@ -14,11 +14,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 import com.example.lotterize.QR;
 import com.example.lotterize.databinding.ActivityEventDetailsBinding;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Calendar;
@@ -32,6 +32,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
  */
 public class EventDetailsActivity extends AppCompatActivity {
 
+    public static CountingIdlingResource showingEvent = new CountingIdlingResource("MakingEvents");
     FirebaseFirestore db;
     CollectionReference events;
     ActivityEventDetailsBinding binding;
@@ -44,6 +45,7 @@ public class EventDetailsActivity extends AppCompatActivity {
      *
      */
     protected void onCreate(Bundle savedInstanceState) {
+        showingEvent.increment();
         super.onCreate(savedInstanceState);
 
         db = FirebaseFirestore.getInstance();
@@ -147,6 +149,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                                                                         Log.e("AdminDeleteEvent", "Failed to clean up user references", e));
 
                                                         Toast.makeText(EventDetailsActivity.this, "Event deleted successfully", Toast.LENGTH_SHORT).show();
+                                                        finish();
                                                     })
                                                     .addOnFailureListener(e ->
                                                             Toast.makeText(EventDetailsActivity.this, "Failed to delete event", Toast.LENGTH_SHORT).show()
@@ -199,6 +202,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                     } else {
                         posterImage.setVisibility(View.GONE);
                     }
+                    showingEvent.decrement();
 
                 } else {
                     Toast.makeText(this, "Couldn't find event - EventDetailsActivity", Toast.LENGTH_SHORT).show();
