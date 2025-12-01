@@ -123,6 +123,57 @@ public class NotificationSender {
     }
 
     /**
+     * This is an overload for sendNotification to send out lottery win notifications.
+     * @param message
+     * @param receiversIds
+     * @param callback
+     */
+    public void sendNotification(String message, ArrayList<String> receiversIds, NotificationCallback callback) {
+        if (receiversIds == null || receiversIds.isEmpty()) {
+            Log.d("SendNotification", "sendNotification: no candidate receivers.");
+            if (callback != null) callback.onComplete(0);
+            return;
+        }
+
+        List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+        for (int i = 0; i < receiversIds.size(); i += 10) {
+            List<String> chunk = receiversIds.subList(i, Math.min(i + 10, receiversIds.size()));
+            tasks.add(db.collection("users").whereIn(FieldPath.documentId(), chunk).get());
+        }
+
+        Tasks.whenAllSuccess(tasks)
+                .addOnSuccessListener(results -> {
+                    ArrayList<String> finalRecipients = new ArrayList<>();
+
+                    for (Object r : results) {
+                        QuerySnapshot qs = (QuerySnapshot) r;
+                        for (DocumentSnapshot snap : qs.getDocuments()) {
+                            Boolean wantNotification = snap.getBoolean("wantNotification");
+                            if (wantNotification == null || wantNotification) {
+                                finalRecipients.add(snap.getId());
+                            }
+                        }
+                    }
+
+                    int count = finalRecipients.size();
+
+                    if (count == 0) {
+                        Log.d("SendNotification", "sendNotification: no recipients after wantNotification filter.");
+                        if (callback != null) callback.onComplete(0);
+                        return;
+                    }
+
+                    SendNotificationWithFilterReceivers(message, finalRecipients);
+
+                    if (callback != null) callback.onComplete(count);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("SendNotification", "sendNotification: failed to resolve wantNotification flags.", e);
+                    if (callback != null) callback.onError(e);
+                });
+    }
+
+    /**
      * This method is an overload of {@link #sendNotification(String, String, ArrayList, NotificationCallback)}
      * that ignores the result and does not use a callback.
      * <p>
@@ -135,6 +186,15 @@ public class NotificationSender {
      */
     public void sendNotification(String senderId, String message, ArrayList<String> receiversIds) {
         sendNotification(senderId, message, receiversIds, null);
+    }
+
+    /**
+     * This is used to send out lottery win notifications.
+     * @param message
+     * @param receiversIds
+     */
+    public void sendNotification(String message, ArrayList<String> receiversIds) {
+        sendNotification(message, receiversIds, null);
     }
 
     /**
@@ -162,6 +222,24 @@ public class NotificationSender {
         }
 
         Notification notif = new Notification(docRef.getId(), senderId, senderName, message, Timestamp.now(), receiversIds);
+
+        docRef.set(notif)
+                .addOnSuccessListener(v -> Log.d("SendNotification", "Notification sent"))
+                .addOnFailureListener(e -> Log.e("SendNotification", "Failed to send notification", e));
+    }
+
+    /**
+     * This method signature is being used specifically for sending out lottery notifications.
+     * @param message
+     * @param receiversIds
+     */
+    private void SendNotificationWithFilterReceivers(String message, ArrayList<String> receiversIds) {
+        DocumentReference docRef = db.collection("notifications").document();
+
+        String senderName = "System";
+
+
+        Notification notif = new Notification(docRef.getId(), senderName, message, Timestamp.now(), receiversIds);
 
         docRef.set(notif)
                 .addOnSuccessListener(v -> Log.d("SendNotification", "Notification sent"))

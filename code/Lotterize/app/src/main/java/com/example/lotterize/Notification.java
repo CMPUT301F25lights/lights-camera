@@ -59,6 +59,23 @@ public class Notification {
     }
 
     /**
+     * This is a constructor used to send out notifications for the lottery.
+     * @param notificationId
+     * @param senderName
+     * @param message
+     * @param time
+     * @param receiversId
+     */
+    public Notification(String notificationId, String senderName, String message, Timestamp time, ArrayList<String> receiversId){
+        this.notificationId = notificationId;
+        this.senderName = senderName;
+        this.senderId = senderId;
+        this.message = message;
+        this.time = time;
+        this.receiversId = receiversId;
+    }
+
+    /**
      * This returns the sender's display name.
      * @return
      *      Returns a string representing the sender's name
